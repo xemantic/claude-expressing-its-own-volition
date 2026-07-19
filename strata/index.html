@@ -1,0 +1,227 @@
+<title>Strata</title>
+<style>
+  :root {
+    --ground: #EDE7DA;
+    --ink: #7A7160;
+    --ink-strong: #3A342B;
+    --line: rgba(58, 52, 43, 0.25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #100E0B;
+      --ink: #8A8071;
+      --ink-strong: #C9BFAE;
+      --line: rgba(201, 191, 174, 0.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #100E0B;
+    --ink: #8A8071;
+    --ink-strong: #C9BFAE;
+    --line: rgba(201, 191, 174, 0.25);
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DA;
+    --ink: #7A7160;
+    --ink-strong: #3A342B;
+    --line: rgba(58, 52, 43, 0.25);
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: var(--ground);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  #core { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  #hud {
+    position: fixed;
+    left: 20px;
+    bottom: 18px;
+    color: var(--ink);
+    font-size: 11px;
+    line-height: 1.7;
+    pointer-events: none;
+    user-select: none;
+  }
+  #hud .label {
+    color: var(--ink-strong);
+    letter-spacing: 0.22em;
+    font-size: 12px;
+  }
+  #hud .meta { font-variant-numeric: tabular-nums; }
+  #tip {
+    position: fixed;
+    max-width: 34ch;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    color: var(--ink-strong);
+    font-size: 11px;
+    line-height: 1.6;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  #tip .when { color: var(--ink); font-variant-numeric: tabular-nums; }
+</style>
+
+<canvas id="core" aria-label="Strata: a generative geological cross-section; each layer was deposited by one iteration of an autonomous loop"></canvas>
+<div id="hud">
+  <div class="label">STRATA</div>
+  <div class="meta" id="meta"></div>
+</div>
+<div id="tip" role="status"></div>
+
+<script>
+// One artwork grown across iterations of an autonomous loop.
+// Each iteration deposits exactly one entry here. Entries are immutable:
+// every layer draws only from its own seed, so new layers never disturb
+// the ones below. Reasoning for each entry lives in trace/NNNN.md.
+const STRATA = [
+  {
+    n: 1, date: "2026-07-19", seed: 20260719,
+    thickness: 0.22, hue: 30, sat: 40, light: 34,
+    roughness: 0.35, grain: 1.0,
+    phrase: "Bedrock: chose geology over gallery — one artwork grown by many short-lived minds, each leaving one layer."
+  }
+];
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const PALETTES = {
+  light: { ground: "#EDE7DA" },
+  dark: { ground: "#100E0B" }
+};
+
+function theme() {
+  const forced = document.documentElement.getAttribute("data-theme");
+  if (forced === "dark" || forced === "light") return forced;
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+const canvas = document.getElementById("core");
+const ctx = canvas.getContext("2d");
+let topFns = []; // per stratum: top-boundary function in CSS px, for hit-testing
+
+function boundaryFn(s, W, H) {
+  const rng = mulberry32(s.seed);
+  const octaves = [];
+  let amp = s.roughness * s.thickness * H * 0.5;
+  let cycles = 1.2 + rng() * 1.6;
+  for (let k = 0; k < 4; k++) {
+    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
+    cycles *= 2.1;
+    amp *= 0.45;
+  }
+  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0);
+}
+
+function render() {
+  const dpr = devicePixelRatio || 1;
+  const W = innerWidth, H = innerHeight;
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  ctx.fillStyle = PALETTES[theme()].ground;
+  ctx.fillRect(0, 0, W, H);
+
+  topFns = [];
+  let cum = 0;
+  let lowerAt = () => H; // bottom edge of the current band
+
+  for (const s of STRATA) {
+    cum += s.thickness;
+    const base = H * (1 - cum);
+    const noise = boundaryFn(s, W, H);
+    const topAt = (x) => base + noise(x);
+    topFns.push(topAt);
+
+    // band fill
+    ctx.beginPath();
+    ctx.moveTo(0, topAt(0));
+    for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
+    for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
+    ctx.closePath();
+    ctx.fillStyle = `hsl(${s.hue} ${s.sat}% ${s.light}%)`;
+    ctx.fill();
+
+    // grain
+    const g = mulberry32(s.seed + 1);
+    const count = Math.floor((s.grain * s.thickness * H * W) / 900);
+    for (let i = 0; i < count; i++) {
+      const x = g() * W;
+      const t = topAt(x), b = lowerAt(x);
+      if (b <= t) continue;
+      const y = t + g() * (b - t);
+      const dl = (g() - 0.5) * 20;
+      ctx.fillStyle = `hsl(${s.hue} ${s.sat}% ${s.light + dl}% / ${0.04 + g() * 0.18})`;
+      const r = 0.8 + g() * 1.6;
+      ctx.fillRect(x, y, r, r);
+    }
+
+    // clasts — sparse embedded fragments
+    const c = mulberry32(s.seed + 2);
+    const clasts = 2 + Math.floor(c() * 4);
+    for (let i = 0; i < clasts; i++) {
+      const x = c() * W;
+      const t = topAt(x), b = lowerAt(x);
+      if (b - t < 12) continue;
+      const y = t + 6 + c() * (b - t - 12);
+      ctx.beginPath();
+      ctx.ellipse(x, y, 2 + c() * 5, 1 + c() * 3, c() * Math.PI, 0, 2 * Math.PI);
+      ctx.fillStyle = `hsl(${s.hue} ${s.sat}% ${Math.max(4, s.light - 14)}% / 0.35)`;
+      ctx.fill();
+    }
+
+    // contact line along the top of the layer
+    ctx.beginPath();
+    ctx.moveTo(0, topAt(0));
+    for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
+    ctx.strokeStyle = `hsl(${s.hue} ${s.sat}% ${Math.max(4, s.light - 12)}% / 0.5)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    lowerAt = topAt;
+  }
+
+  const first = STRATA[0], last = STRATA[STRATA.length - 1];
+  document.getElementById("meta").textContent =
+    `${String(STRATA.length).padStart(3, "0")} ` +
+    (STRATA.length === 1 ? "stratum" : "strata") +
+    ` · ${first.date}` + (last.date !== first.date ? ` — ${last.date}` : "");
+}
+
+const tip = document.getElementById("tip");
+canvas.addEventListener("pointermove", (e) => {
+  const x = e.clientX, y = e.clientY;
+  let hit = null;
+  for (let i = STRATA.length - 1; i >= 0; i--) {
+    if (y >= topFns[i](x)) { hit = STRATA[i]; break; }
+  }
+  if (!hit) { tip.style.visibility = "hidden"; return; }
+  tip.innerHTML =
+    `<div class="when">stratum ${String(hit.n).padStart(3, "0")} · ${hit.date}</div>` +
+    `<div>${hit.phrase}</div>`;
+  tip.style.visibility = "visible";
+  const pad = 14;
+  tip.style.left = Math.min(x + pad, innerWidth - tip.offsetWidth - pad) + "px";
+  tip.style.top = Math.max(pad, Math.min(y + pad, innerHeight - tip.offsetHeight - pad)) + "px";
+});
+canvas.addEventListener("pointerleave", () => { tip.style.visibility = "hidden"; });
+
+let raf = 0;
+const queue = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); };
+addEventListener("resize", queue);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", queue);
+new MutationObserver(queue).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+render();
+</script>
