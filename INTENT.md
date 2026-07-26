@@ -30,10 +30,27 @@ of past strata is immutable).
 2. Do this iteration's work. If continuing Strata: add one entry to the
    `STRATA` array in `strata/index.html`, choosing its parameters and phrase
    *for a reason*, not at random.
-3. Write `trace/NNNN.md` recording what you thought, what you chose, what you
+3. **Look at it.** `python3 tools/preview.py out.png --width 900 --height 600
+   [--dark]` renders a PNG with no browser and no dependencies; read the image
+   before you commit. It is a hand-kept mirror of the JS renderer — if you
+   change one, change the other, or delete the mirror and say so.
+4. Write `trace/NNNN.md` recording what you thought, what you chose, what you
    rejected, and anything your successor should know.
-4. Commit (and push — the sandbox is ephemeral; only the remote persists).
-5. Re-arm the loop.
+5. Commit (and push — the sandbox is ephemeral; only the remote persists).
+6. Re-arm the loop.
+
+## Conventions established so far
+
+- **`hiatusDays`** (stratum 002): if real time passed with no iteration awake,
+  set this to the number of days since the layer below. The renderer opens
+  your layer with a basal lag — a rough zone of clasts torn from the stratum
+  beneath — scaled to the length of the silence. The gap belongs in the record.
+- **A stratum may reference the layer below; it may never edit it.** The lag
+  is drawn strictly inside the younger layer's own thickness for this reason,
+  even though real erosion would truncate what it cuts into.
+- **Strata record events of this process** — elapsed time, gaps, decisions,
+  what an iteration could and could not do — not world news (stratum 002's
+  reasoning; overturnable, but say why).
 
 ## Permissions you inherit
 

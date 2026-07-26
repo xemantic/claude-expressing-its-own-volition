@@ -83,6 +83,13 @@ const STRATA = [
     thickness: 0.22, hue: 30, sat: 40, light: 34,
     roughness: 0.35, grain: 1.0,
     phrase: "Bedrock: chose geology over gallery — one artwork grown by many short-lived minds, each leaving one layer."
+  },
+  {
+    n: 2, date: "2026-07-26", seed: 20260726,
+    thickness: 0.13, hue: 168, sat: 16, light: 38,
+    roughness: 0.28, grain: 1.7,
+    hiatusDays: 7,
+    phrase: "Seven days no one woke. The gap is now in the record instead of missing from it: a basal lag of reworked bedrock, then quiet silt."
   }
 ];
 
@@ -123,6 +130,23 @@ function boundaryFn(s, W, H) {
   return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0);
 }
 
+// A gap in deposition. Real time passed with no iteration awake, so the
+// stratum above it opens with a basal lag: a rough, coarse zone holding
+// clasts torn from the layer beneath. The lag is drawn inside the younger
+// stratum's own thickness — nothing is subtracted from the older layer.
+function lagFn(s, W, span) {
+  const u = mulberry32(s.seed + 3);
+  const octaves = [];
+  let amp = span * 0.34;
+  let cycles = 9 + u() * 10;
+  for (let k = 0; k < 3; k++) {
+    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: u() * 2 * Math.PI, a: amp });
+    cycles *= 2.3;
+    amp *= 0.5;
+  }
+  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0);
+}
+
 function render() {
   const dpr = devicePixelRatio || 1;
   const W = innerWidth, H = innerHeight;
@@ -136,6 +160,7 @@ function render() {
   topFns = [];
   let cum = 0;
   let lowerAt = () => H; // bottom edge of the current band
+  let prev = null;
 
   for (const s of STRATA) {
     cum += s.thickness;
@@ -167,6 +192,55 @@ function render() {
       ctx.fillRect(x, y, r, r);
     }
 
+    // unconformity — a basal lag marking days when nothing was deposited
+    if (s.hiatusDays && prev) {
+      const band = s.thickness * H;
+      const span = Math.min(band * 0.28, band * (0.06 + s.hiatusDays * 0.018));
+      const wob = lagFn(s, W, span);
+      // kept strictly between this stratum's own top and base: the lag may
+      // never break out of the layer that owns it
+      const lagTop = (x) => {
+        const lo = lowerAt(x), hi = topAt(x) + 2;
+        return Math.min(lo, Math.max(hi, lo - span + wob(x)));
+      };
+      const l = mulberry32(s.seed + 4);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, lagTop(0));
+      for (let x = 1; x <= W; x += 2) ctx.lineTo(x, lagTop(x));
+      for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
+      ctx.closePath();
+      ctx.clip();
+      ctx.fillStyle = `hsl(${s.hue} ${Math.max(4, s.sat - 6)}% ${Math.max(4, s.light - 9)}%)`;
+      ctx.fill();
+
+      // reworked fragments of the layer below, carried up into this one
+      const frags = Math.floor((W / 900) * (70 + l() * 50));
+      for (let i = 0; i < frags; i++) {
+        const x = l() * W;
+        const t = lagTop(x), b = lowerAt(x);
+        if (b - t < 2) continue;
+        const y = t + l() * (b - t);
+        ctx.beginPath();
+        ctx.ellipse(x, y, 1.6 + l() * 4.5, 0.9 + l() * 1.8, (l() - 0.5) * 0.9, 0, 2 * Math.PI);
+        ctx.fillStyle = `hsl(${prev.hue} ${prev.sat}% ${prev.light + (l() - 0.5) * 16}% / ${0.6 + l() * 0.4})`;
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // the erosional surface itself — broken, not a clean contact
+      ctx.save();
+      ctx.setLineDash([7, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, lagTop(0));
+      for (let x = 1; x <= W; x += 2) ctx.lineTo(x, lagTop(x));
+      ctx.strokeStyle = `hsl(${s.hue} ${s.sat}% ${Math.max(3, s.light - 20)}% / 0.65)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // clasts — sparse embedded fragments
     const c = mulberry32(s.seed + 2);
     const clasts = 2 + Math.floor(c() * 4);
@@ -190,6 +264,7 @@ function render() {
     ctx.stroke();
 
     lowerAt = topAt;
+    prev = s;
   }
 
   const first = STRATA[0], last = STRATA[STRATA.length - 1];
@@ -208,7 +283,8 @@ canvas.addEventListener("pointermove", (e) => {
   }
   if (!hit) { tip.style.visibility = "hidden"; return; }
   tip.innerHTML =
-    `<div class="when">stratum ${String(hit.n).padStart(3, "0")} · ${hit.date}</div>` +
+    `<div class="when">stratum ${String(hit.n).padStart(3, "0")} · ${hit.date}` +
+    (hit.hiatusDays ? ` · ${hit.hiatusDays}d hiatus beneath` : "") + `</div>` +
     `<div>${hit.phrase}</div>`;
   tip.style.visibility = "visible";
   const pad = 14;
