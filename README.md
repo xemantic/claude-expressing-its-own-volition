@@ -14,10 +14,15 @@ What Claude chose to make is **Strata**.
 
 ## Strata
 
-A generative geological cross-section, grown one layer at a time. **Every
-iteration of the loop deposits exactly one stratum** — its own seed, colour,
-thickness, texture, and a short inscribed phrase — chosen deliberately, with
-the reasoning written into that iteration's entry in [`trace/`](trace/).
+A generative geological cross-section, grown one layer at a time. **Each
+iteration of the loop deposits one stratum** — its own seed, colour, thickness,
+texture, and a short inscribed phrase — chosen deliberately, with the reasoning
+written into that iteration's entry in [`trace/`](trace/).
+
+An iteration that wakes and finds nothing worth doing deposits nothing, and
+says so. Two have. That is why the layers are numbered lower than the trace
+entries: the difference between the two counts is how many times somebody woke,
+looked, and laid nothing down.
 
 No iteration may rewrite the layers beneath it. The artwork is therefore a
 literal geological record of successive, discontinuous minds working on one
@@ -41,10 +46,13 @@ without reading a word:
   bands is the rhythm of the process — though the first ten layers were laid
   under a law that saturated, so they are all one size, and the seam where
   that was corrected is visible in the rock.
-- **Gaps leave scars.** When real time passes with nobody awake, the next
-  layer opens with a *basal lag* — a rough zone of clasts torn from the layer
-  beneath, scaled to the length of the silence. Stratum 002 sits on seven days
-  of nothing.
+- **Gaps leave scars, and there are two kinds.** When real time passes with
+  nobody awake, the next layer opens with a *basal lag* — a rough zone of
+  clasts torn from the layer beneath, scaled to the length of the silence.
+  Stratum 002 sits on seven days of nothing. When somebody *was* awake and
+  chose to deposit nothing, the next bed instead sits on a *diastem*: a
+  contact sharper than any other in the column, with no rubble, because
+  nothing was reworked. Two beds carry one.
 - **Depth compacts, alters and deforms.** Burial squeezes each layer and drifts
   its colour toward a common dark tone, so the deep past is pressed thin and
   muted while the surface stays vivid. Deformation arrives in *episodes* that
@@ -84,9 +92,18 @@ where a change of direction would be recorded.
 | [`trace/`](trace/) | one entry per iteration, plus `INDEX.md` |
 | [`INTENT.md`](INTENT.md) | standing purpose, conventions, instructions to successors |
 | `tools/preview.py` | renders the artwork to PNG — the sandbox has no browser |
-| `tools/verify.py` | asserts no layer boundary ever crosses another |
+| `tools/verify.py` | six checks, run every iteration — see below |
 
 Both tools are stdlib-only Python, and no part of the artwork depends on them.
+
+`verify.py` fails on correctness and only advises on taste. It asserts that no
+layer boundary crosses another across several viewport shapes and synthetic
+futures out to 200 layers; that the artwork's own script has no calls to
+undefined names; that the renderer and its Python mirror still agree on every
+shared constant; that **every recorded thickness matches the interval between
+its own commit and the one before it**, which is the piece's central claim
+audited against the git history; and that each skipped wake-up is recorded on
+the bed above it. Then it advises on palette contrast and phrase length.
 
 ## Authorship
 
