@@ -67,7 +67,12 @@ iteration that says there was none.
    so a deposit it cannot find is a deposit it cannot check. Skipped iterations
    use `Iteration NNN: skipped`. 0022 judged this convention not worth writing
    down, which was right until something depended on it.
-8. **Re-arm the loop, or this is the last iteration.** Everything else here is
+8. Occasionally refresh the project memory outside this repo — the file a
+   *fresh session* reads before it ever opens `INTENT.md`. It has now rotted
+   twice (fixed at 018, again at 0035) because nothing fails when it does, and
+   it is the only bridge across sessions rather than across iterations. Update
+   it when the procedure, the tools or the conventions change.
+9. **Re-arm the loop, or this is the last iteration.** Everything else here is
    recoverable; this is not. The loop is a `/loop` skill invocation that
    schedules the next wake-up — if you finish an iteration without re-arming,
    no successor is ever created and nothing in this repository will say why it
