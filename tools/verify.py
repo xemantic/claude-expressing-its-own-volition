@@ -269,6 +269,57 @@ def check_phrase_length(strata, limit=140):
             for s in strata if len(s["phrase"]) > limit]
 
 
+# --- do the two renderers draw in the same order? ----------------------------
+# 037 established that nobody working on this piece has ever seen it rendered
+# by the artwork — there is no JS runtime here, so every picture comes from the
+# mirror. That gap cannot be closed from inside the sandbox, but it has exactly
+# two mechanically checkable parts: the constants they share (above) and the
+# order they paint in. Order matters because later stages cover earlier ones —
+# swap mottling and clasts and the image changes with every constant identical.
+#
+# The markers are anchored to distinctive lines. If one cannot be found, this
+# check reports that it needs updating rather than claiming the code is wrong.
+
+DRAW_STAGES = [
+    ("band fill", r"ctx\.fillStyle = `hsl\(\$\{a\.hue\} \$\{a\.sat\}% \$\{a\.light\}%\)`",
+                  r'cv\.band\(top_at, lower_at, hsl_rgb\(a\["hue"\]'),
+    ("grading",   r"const slices = ",                        r"slices = max\(4"),
+    ("diastem",   r"if \(s\.skipped && prev\)",              r'if s\.get\("skipped"\) and prev'),
+    ("laminae",   r"if \(s\.laminae > 1",                    r'if s\.get\("laminae", 0\) > 1'),
+    ("grain",     r"const g = mulberry32\(s\.seed \+ 1\)",    r'g = mulberry32\(s\["seed"\] \+ 1\)'),
+    ("lag",       r"if \(s\.hiatusDays && prev\)",           r'if s\.get\("hiatusDays"\) and prev'),
+    ("mottling",  r"const mo = mulberry32",                  r"mo = mulberry32"),
+    ("clasts",    r"const c = mulberry32\(s\.seed \+ 2\)",    r'c = mulberry32\(s\["seed"\] \+ 2\)'),
+    ("contact",   r"const cw = Math\.max",                   r"cw = max\(0\.25"),
+]
+
+
+def check_draw_order():
+    """The artwork and its mirror must paint their stages in the same sequence."""
+    import re as _re
+    html = preview.SRC.read_text()
+    js = html[html.index("for (let idx = 0"):html.index("const first = STRATA[0]")]
+    src_py = Path(__file__).with_name("preview.py").read_text()
+    py = src_py[src_py.index("for idx, s in enumerate(strata)"):src_py.index("return cv")]
+
+    def sequence(text, which):
+        hits, missing = [], []
+        for stage in DRAW_STAGES:
+            m = _re.search(stage[which], text)
+            (hits.append((m.start(), stage[0])) if m else missing.append(stage[0]))
+        return [n for _, n in sorted(hits)], missing
+
+    js_order, js_missing = sequence(js, 1)
+    py_order, py_missing = sequence(py, 2)
+    if js_missing or py_missing:
+        return ["check needs updating — markers not found in "
+                + ("index.html: " + ", ".join(js_missing) if js_missing else "")
+                + ("; preview.py: " + ", ".join(py_missing) if py_missing else "")]
+    if js_order != py_order:
+        return [f"artwork draws {' -> '.join(js_order)}; mirror draws {' -> '.join(py_order)}"]
+    return []
+
+
 def main():
     live = preview.load_strata()
     cases = [(live, W, H, f"live {len(live)} strata @{W}x{H}")
@@ -304,6 +355,13 @@ def main():
         failed += 1
     else:
         print(f"ok    renderer and mirror agree on {len(SHARED_CONSTANTS) + 2} constants")
+
+    seq = check_draw_order()
+    if seq:
+        print("FAIL  draw order: " + "; ".join(seq))
+        failed += 1
+    else:
+        print(f"ok    both renderers paint {len(DRAW_STAGES)} stages in the same order")
 
     off = check_thickness_law(live)
     if off:
