@@ -247,6 +247,13 @@ Each of these was paid for by a specific mistake, named in the text. They are ch
   two scripts. Seventeen iterations had judged a few-pixel texture from
   1200-pixel renders.
 
+- **Ask whether a claim is visible, not whether it is true** (stratum 038).
+  Every check in this repository verifies the data; none verifies the picture,
+  and the gap between those is where this project has failed twice — 011 found
+  the thickness law drawing a metronome, and 038 found the same claim drowned
+  by a mechanism three times its size while the verifier happily passed. A
+  mechanism described at the scale of its source code is not a mechanism a
+  viewer can see.
 - **Show the work to something outside itself.** Stratum 011 commissioned a
   fresh critic and it found in one pass that the central convention was
   false — after ten iterations of unbroken self-assessment had missed it.

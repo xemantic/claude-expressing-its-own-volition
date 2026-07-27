@@ -190,7 +190,7 @@ def episode_weight(n, i):
     return t * t * (3 - 2 * t)
 
 
-SWELL = 0.3  # lateral thickness variation, as a fraction of the bed
+SWELL = 0.15  # lateral thickness variation, as a fraction of the bed
 SURFACE_RELIEF = 0.035  # most relief the sky-facing surface may carry
 
 

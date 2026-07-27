@@ -38,14 +38,20 @@ without seeing it at all.
 
 ### How to read it
 
-The piece records the loop's own history in its material, so it can be read
-without reading a word:
+The piece records the loop's own history in its material. Some of that is
+legible without reading a word and some is not, and the notes below say which
+is which — an outside audit at stratum 038 found that a third of the claims
+here were true of the data and invisible in the picture, which is the failure
+this project is most prone to:
 
 - **Thickness is elapsed time**, logarithmically: half an hour is a thin bed,
-  three hours is three times thicker, a week is enormous. The rhythm of the
-  bands is the rhythm of the process — though the first ten layers were laid
-  under a law that saturated, so they are all one size, and the seam where
-  that was corrected is visible in the rock.
+  three hours is several times thicker, a week is enormous. Be warned that this
+  is easier to state than to see. The loop has mostly run at a steady half
+  hour, so most beds are near-identical by construction and there is no rhythm
+  to read in them — what *is* legible is the exceptions, the few beds that
+  follow a long gap or a skipped wake-up and are visibly heavier than their
+  neighbours. Strata 003–010 are uniform for a different reason: they were laid
+  under an earlier law that saturated, and were left as they are.
 - **Gaps leave scars, and there are two kinds.** When real time passes with
   nobody awake, the next layer opens with a *basal lag* — a rough zone of
   clasts torn from the layer beneath, scaled to the length of the silence.
@@ -54,15 +60,26 @@ without reading a word:
   contact sharper than any other in the column, with no rubble, because
   nothing was reworked. Two beds carry one.
 - **Depth compacts, alters and deforms.** Burial squeezes each layer and drifts
-  its colour toward a common dark tone, so the deep past is pressed thin and
-  muted while the surface stays vivid. Deformation arrives in *episodes* that
-  bend everything already deposited and nothing laid down after, which is why
-  different depths carry different fold shapes. The column asymptotes rather
-  than filling, so the number of iterations it can accept is unbounded.
+  its colour toward a common dark tone. The darkening downward is visible; the
+  squeezing is not, because the two oldest beds started so much thicker than
+  everything above that they are still the largest things in the frame after
+  being compressed to well under half their deposited size. Deformation arrives
+  in *episodes* that bend everything already deposited and nothing laid down
+  after. Adjacent contacts are near-parallel, so what a viewer actually sees is
+  that the fold grows with depth, not that it comes in events. The column
+  asymptotes rather than filling, so the number of iterations it can accept is
+  unbounded.
+- **Beds carry internal partings** — one for each distinct piece of work the
+  iteration did — and burial erases them before it erases the bed.
+- **Consecutive beds alternate light and dark.** This is the strongest pattern
+  in the picture and the only thing thirty-odd separate minds ever coordinated
+  on: each one looked at the value of the bed below before choosing its own.
 - **The surface weathers; being buried is what stops it.** Only the newest bed
-  is exposed, so only it is worn and uneven — the moment another layer arrives
-  it goes smooth. Every other mechanism here does more to a layer the longer it
-  sits; this is the one that stops.
+  is exposed, so only it is worn — at long wavelengths, so it reads as a broad
+  swell rather than as roughness, and together with the empty band above it the
+  piece reads as a landscape as much as a cross-section. The moment another
+  layer arrives it goes smooth. Every other mechanism here does more to a layer
+  the longer it sits; this is the one that stops.
 - **Beds swell, pinch and mottle.** Deposition is not uniform: a bed thickens
   where more settled and thins to a seam where less did, and a large mass is
   never one flat tone.

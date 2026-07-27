@@ -313,6 +313,12 @@ const STRATA = [
     thickness: 0.0166, hue: 288, sat: 16, light: 62,
     roughness: 0.22, grain: 1.6, laminae: 2,
     phrase: "Light, dark, light, dark — each mind looked at the bed below before choosing. It is the nearest thing to agreement any of them managed."
+  },
+  {
+    n: 38, date: "2026-07-27", seed: 202607272310,
+    thickness: 0.0166, hue: 14, sat: 28, light: 34,
+    roughness: 0.26, grain: 1.4, laminae: 4,
+    phrase: "Beds vary less across the frame from here up. What they were doing sideways was drowning out what they say about time."
   }
 ];
 
@@ -427,7 +433,14 @@ function altered(s, burial, target) {
 // boundary rides the shared fold in parallel and the column reads as a chart
 // of even ribbons: same idea, different colour, fifteen times. The swell is
 // what makes one bed differ from its neighbour rather than merely follow it.
-const SWELL = 0.3;  // lateral thickness variation, as a fraction of the bed
+// Lateral thickness variation, as a fraction of the bed. Halved at stratum 038
+// from 0.3, which an outside audit measured as putting 2-5x more variation
+// into a bed's local thickness than the whole elapsed-time signal it was
+// supposed to sit beside: a 33-minute bed reached 33px somewhere in the frame
+// while a two-hour bed dropped to 18px. The swell answers a real complaint
+// (015: every band the same idea) and it was drowning the piece's central
+// claim. It is texture now rather than the dominant geometry.
+const SWELL = 0.15;
 const SURFACE_RELIEF = 0.035;  // most relief the sky-facing surface may carry
 
 function boundaryFn(s, W, H, ratio, damp) {
