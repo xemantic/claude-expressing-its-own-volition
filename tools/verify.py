@@ -154,6 +154,24 @@ def check_mirror_constants():
     return drift
 
 
+# --- advisory: is the palette convention holding? ----------------------------
+# 012 established "choose your lightness before your hue" because eleven beds
+# had walked the colour wheel while their values stayed in one narrow band, so
+# the young stack collapsed into a muddy zone at a squint. That convention only
+# holds if each iteration remembers it, and by stratum 023 the top three beds
+# had drifted back to 44 / 51 / 43. This does not fail the run — it is taste,
+# not correctness — but a number nobody has to remember beats a rule in a file.
+
+def check_lightness_steps(strata, window=4, floor=10):
+    """Report recent beds whose lightness barely differs from the one below."""
+    out = []
+    for a, b in zip(strata[-window - 1:], strata[-window:]):
+        step = abs(b["light"] - a["light"])
+        if step < floor:
+            out.append(f"{a['n']}->{b['n']} only {step}")
+    return out
+
+
 def main():
     live = preview.load_strata()
     cases = [(live, W, H, f"live {len(live)} strata @{W}x{H}")
@@ -189,6 +207,13 @@ def main():
         failed += 1
     else:
         print(f"ok    renderer and mirror agree on {len(SHARED_CONSTANTS) + 2} constants")
+
+    flat = check_lightness_steps(live)
+    if flat:
+        print("note  lightness steps under 10 in recent beds: " + ", ".join(flat)
+              + " — see 012, choose lightness before hue (advisory only)")
+    else:
+        print("ok    recent beds all step more than 10 in lightness")
     return 1 if failed else 0
 
 
