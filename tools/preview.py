@@ -114,19 +114,24 @@ def fold_at(depth, W, H):
     return FOLD_AMP * (1 - math.exp(-depth / FOLD_DEPTH)) * aspect_damp(W, H)
 
 
-DIAGENESIS = {"hue": 28, "sat": 9, "light": 20, "k": 0.7, "max": 0.82}
+DIAGENESIS = {
+    "light": {"hue": 28, "sat": 9, "light": 20},
+    "dark": {"hue": 28, "sat": 11, "light": 34},
+    "k": 0.7, "max": 0.82,
+}
 GRADE_RANGE = 4.5
 
 
-def altered(s, burial):
+def altered(s, burial, target):
     """Burial alters as well as squeezes: depth drifts a layer toward a
-    common dark tone. A view of the data, never the data."""
+    common tone. The target differs by theme so the deep past merges with
+    itself rather than dissolving into the ground. A view, never the data."""
     d = min(DIAGENESIS["max"], burial / (burial + DIAGENESIS["k"]))
-    dh = ((DIAGENESIS["hue"] - s["hue"] + 540) % 360) - 180
+    dh = ((target["hue"] - s["hue"] + 540) % 360) - 180
     return {
         "hue": s["hue"] + dh * d,
-        "sat": s["sat"] + (DIAGENESIS["sat"] - s["sat"]) * d,
-        "light": s["light"] + (DIAGENESIS["light"] - s["light"]) * d,
+        "sat": s["sat"] + (target["sat"] - s["sat"]) * d,
+        "light": s["light"] + (target["light"] - s["light"]) * d,
         "d": d,
     }
 
@@ -259,6 +264,7 @@ def render(W, H, dark):
     strata = load_strata()
     bg = bytes(int(c, 16) for c in
                (("10", "0E", "0B") if dark else ("ED", "E7", "DA")))
+    target = DIAGENESIS["dark" if dark else "light"]
     cv = Canvas(W, H, bg)
 
     col, fill_total = column(strata)
@@ -279,7 +285,7 @@ def render(W, H, dark):
         cum += col[idx]["h"]
         base = H * (1 - cum) + sink
         noise = boundary_fn(s, W, H, col[idx]["ratio"])
-        a = altered(s, col[idx]["burial"])
+        a = altered(s, col[idx]["burial"], target)
         warp = fold_at(col[idx]["depth"], W, H) * H
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
         arr = [min(base + noise(x) + fold(x) * warp, lower_arr[x] - min_gap)
@@ -337,7 +343,7 @@ def render(W, H, dark):
                     hsl_rgb(a["hue"], max(4, a["sat"] - 6), max(4, a["light"] - 9)))
 
             l = mulberry32(s["seed"] + 4)
-            pa = altered(prev, col[idx - 1]["burial"])
+            pa = altered(prev, col[idx - 1]["burial"], target)
             frags = int((W / 900) * (70 + l() * 50))
             for _ in range(frags):
                 x = l() * W
@@ -355,16 +361,21 @@ def render(W, H, dark):
             cv.stroke(lag_top,
                       hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)), 0.65)
 
+        # clasts: the coarse fraction — a density, not a handful
         c = mulberry32(s["seed"] + 2)
-        clasts = 2 + int(c() * 4)
-        for _ in range(clasts):
+        band_px = max(1.0, col[idx]["h"] * H)
+        clast_scale = min(1.0, band_px / 26)
+        for _ in range(round(band_px * W / 3500)):
             x = c() * W
             t, b = top_at(x), lower_at(x)
-            if b - t < 12:
+            if b - t < 2.5:
+                c(); c(); c(); c()
                 continue
-            y = t + 6 + c() * (b - t - 12)
-            cv.ellipse(x, y, 2 + c() * 5, 1 + c() * 3, c() * math.pi,
-                       hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 14)), 0.35)
+            inset = min(3.0, (b - t) * 0.18)
+            y = t + inset + c() * (b - t - 2 * inset)
+            cv.ellipse(x, y, (1.4 + c() * 4) * clast_scale,
+                       (0.8 + c() * 2.2) * clast_scale, (c() - 0.5) * 1.2,
+                       hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 14)), 0.3)
 
         cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)), 0.5)
 

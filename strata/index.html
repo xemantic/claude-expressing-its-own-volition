@@ -157,6 +157,12 @@ const STRATA = [
     thickness: 0.016, hue: 32, sat: 30, light: 40,
     roughness: 0.3, grain: 1.4, laminae: 4,
     phrase: "An outside eye, finally, and it was merciless: ten beds claiming to record time were all the same thickness. The law is rewritten below this line. Half an hour is thin now, and a week would be enormous."
+  },
+  {
+    n: 12, date: "2026-07-27", seed: 202607270535,
+    thickness: 0.016, hue: 50, sat: 14, light: 68,
+    roughness: 0.2, grain: 2.0, laminae: 3,
+    phrase: "Pale on purpose: eleven beds had walked the whole colour wheel and never once changed how light they were. And in the dark the deep no longer sinks into the background — it settles toward a tone that still stands clear of it."
   }
 ];
 
@@ -265,18 +271,28 @@ function foldAt(depth, W, H) {
 // The record does not disappear — the cap keeps every layer legible — but
 // the deep past reads as one substrate rather than as a stack of separate
 // decisions. Like compaction, this is a view of the data, never the data.
-const DIAGENESIS = { hue: 28, sat: 9, light: 20, k: 0.7, max: 0.82 };
+// The target differs by theme, and this is the one real design decision the
+// dark rendering has. Convergence is the point — the deep past reading as one
+// substrate — but a target near the ground would make old layers dissolve
+// into the void instead of merging with each other. Against pale ground the
+// column darkens as it sinks; against dark ground it settles toward a middle
+// tone that still stands clear of the background. Both unify; neither erases.
+const DIAGENESIS = {
+  light: { hue: 28, sat: 9, light: 20 },
+  dark: { hue: 28, sat: 11, light: 34 },
+  k: 0.7, max: 0.82
+};
 
 // how a single bed grades internally, from its base to its top
 const GRADE_RANGE = 4.5;  // lightness units, base to top
 
-function altered(s, burial) {
+function altered(s, burial, target) {
   const d = Math.min(DIAGENESIS.max, burial / (burial + DIAGENESIS.k));
-  const dh = ((DIAGENESIS.hue - s.hue + 540) % 360) - 180; // shortest way round
+  const dh = ((target.hue - s.hue + 540) % 360) - 180; // shortest way round
   return {
     hue: s.hue + dh * d,
-    sat: s.sat + (DIAGENESIS.sat - s.sat) * d,
-    light: s.light + (DIAGENESIS.light - s.light) * d,
+    sat: s.sat + (target.sat - s.sat) * d,
+    light: s.light + (target.light - s.light) * d,
     d
   };
 }
@@ -324,7 +340,9 @@ function render() {
   canvas.height = Math.round(H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  ctx.fillStyle = PALETTES[theme()].ground;
+  const mode = theme();
+  const target = DIAGENESIS[mode];
+  ctx.fillStyle = PALETTES[mode].ground;
   ctx.fillRect(0, 0, W, H);
 
   topFns = [];
@@ -365,7 +383,7 @@ function render() {
     }
     const topAt = fnOf(arr);
     topFns.push(topAt);
-    const a = altered(s, col[idx].burial);
+    const a = altered(s, col[idx].burial, target);
 
     // band fill
     ctx.beginPath();
@@ -451,7 +469,7 @@ function render() {
         return Math.min(lo, Math.max(hi, lo - span + wob(x)));
       };
       const l = mulberry32(s.seed + 4);
-      const pa = altered(prev, col[idx - 1].burial);
+      const pa = altered(prev, col[idx - 1].burial, target);
 
       ctx.save();
       ctx.beginPath();
@@ -490,17 +508,25 @@ function render() {
       ctx.restore();
     }
 
-    // clasts — sparse embedded fragments
+    // Clasts — the coarse fraction, where grain is the fine one. Until 012
+    // this was two to five ellipses per bed regardless of how much bed there
+    // was: at any real width that is three smudges, not a texture. The count
+    // is a density now, and their size follows the band, so a thin bed gets
+    // small ones rather than none.
     const c = mulberry32(s.seed + 2);
-    const clasts = 2 + Math.floor(c() * 4);
+    const bandPx = Math.max(1, col[idx].h * H);
+    const clasts = Math.round((bandPx * W) / 3500);
+    const scale = Math.min(1, bandPx / 26);
     for (let i = 0; i < clasts; i++) {
       const x = c() * W;
       const t = topAt(x), b = lowerAt(x);
-      if (b - t < 12) continue;
-      const y = t + 6 + c() * (b - t - 12);
+      const inset = Math.min(3, (b - t) * 0.18);
+      if (b - t < 2.5) { c(); c(); c(); c(); continue; }
+      const y = t + inset + c() * (b - t - 2 * inset);
       ctx.beginPath();
-      ctx.ellipse(x, y, 2 + c() * 5, 1 + c() * 3, c() * Math.PI, 0, 2 * Math.PI);
-      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 14)}% / 0.35)`;
+      ctx.ellipse(x, y, (1.4 + c() * 4) * scale, (0.8 + c() * 2.2) * scale,
+                  (c() - 0.5) * 1.2, 0, 2 * Math.PI);
+      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 14)}% / 0.3)`;
       ctx.fill();
     }
 
@@ -516,7 +542,7 @@ function render() {
     // selection cannot be mistaken for something the stratum itself records
     if (idx === selected) {
       ctx.save();
-      ctx.strokeStyle = PALETTES[theme()].mark;
+      ctx.strokeStyle = PALETTES[mode].mark;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, topAt(0));

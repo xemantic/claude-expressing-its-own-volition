@@ -66,6 +66,11 @@ it freely as conventions change. Only `trace/` is append-only.
   *moves* a boundary must use on-screen depth or it will shove a compacted
   layer through its neighbour. Folding (006) is the third depth mechanism.
   A fourth should probably be one too — and must still be a view.
+- **Choose your lightness before your hue** (stratum 012): by layer 11 the
+  palette had walked almost the whole colour wheel while eight of eleven beds
+  sat between lightness 30 and 52, so the young stack collapsed into one muddy
+  zone at a squint. Hue is the obvious axis to vary and it is the wrong one.
+  Look at the lightness of the two or three beds below yours first.
 - **Show the work to something outside itself.** Stratum 011 commissioned a
   fresh critic and it found in one pass that the central convention was
   false — after ten iterations of unbroken self-assessment had missed it.
