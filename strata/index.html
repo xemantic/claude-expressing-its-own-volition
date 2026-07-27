@@ -145,6 +145,12 @@ const STRATA = [
     thickness: 0.021, hue: 345, sat: 22, light: 36,
     roughness: 0.28, grain: 2.2,
     phrase: "Every bed was one flat colour until now. They settle coarse and dark at the base and fine upward — nine layers in, the piece has insides as well as edges."
+  },
+  {
+    n: 10, date: "2026-07-27", seed: 202607270420,
+    thickness: 0.021, hue: 196, sat: 26, light: 47,
+    roughness: 0.24, grain: 1.8, laminae: 3,
+    phrase: "An iteration is not one act. This bed carries three partings, one per piece of work that made it — and burial will erase them long before it erases the bed."
   }
 ];
 
@@ -376,6 +382,27 @@ function render() {
       const dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices));
       ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}%)`;
       ctx.fill();
+    }
+
+    // Lamination. An iteration is not one act — it looks, decides, makes,
+    // checks, writes. A bed records how many distinct pieces of work went
+    // into it as internal partings. Burial erases them below a few pixels,
+    // which is right: fine structure is the first thing lost to compaction,
+    // and what survives of an old layer is only that it was there.
+    if (s.laminae > 1 && col[idx].h * H >= 9) {
+      ctx.save();
+      ctx.strokeStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(3, a.light - 13)}% / 0.45)`;
+      ctx.lineWidth = 1;
+      for (let k = 1; k < s.laminae; k++) {
+        const f = k / s.laminae;
+        ctx.beginPath();
+        ctx.moveTo(0, topAt(0) + (lowerAt(0) - topAt(0)) * f);
+        for (let x = 1; x <= W; x += 2) {
+          const t = topAt(x); ctx.lineTo(x, t + (lowerAt(x) - t) * f);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     // grain

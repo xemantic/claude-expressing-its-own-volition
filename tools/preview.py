@@ -292,6 +292,14 @@ def render(W, H, dark):
                     (lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f1),
                     hsl_rgb(a["hue"], a["sat"], a["light"] + dl))
 
+        # lamination: internal partings, one per distinct piece of work,
+        # erased by burial once the bed is thinner than a few pixels
+        if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 9:
+            for k in range(1, s["laminae"]):
+                f = k / s["laminae"]
+                cv.stroke((lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f),
+                          hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 13)), 0.45)
+
         g = mulberry32(s["seed"] + 1)
         count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
         for _ in range(count):

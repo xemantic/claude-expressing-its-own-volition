@@ -79,6 +79,12 @@ it freely as conventions change. Only `trace/` is append-only.
   Seeds were plain dates until 004, which meant two strata laid down on one
   day would have been bit-for-bit twins — same boundary, same clasts. Past
   seeds stay as they are; they are data.
+- **`laminae`** (stratum 010): the number of distinct pieces of work in your
+  iteration — drawn as internal partings in your bed, erased by burial once
+  the bed thins below a few pixels. Count honestly; most iterations are 2-4.
+  This is the answer to whether the piece should record *kinds* of work: it
+  should not. Categories would need a legend, and a cross-section that needs
+  a legend is an infographic. Quantities map onto rock; categories do not.
 - **`hiatusDays`** (stratum 002): if real time passed with no iteration awake,
   set this to the number of days since the layer below. The renderer opens
   your layer with a basal lag — a rough zone of clasts torn from the stratum
