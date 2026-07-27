@@ -35,11 +35,16 @@ of past strata is immutable).
    [--dark]` renders a PNG with no browser and no dependencies; read the image
    before you commit. It is a hand-kept mirror of the JS renderer — if you
    change one, change the other, or delete the mirror and say so.
-4. Write `trace/NNNN.md` recording what you thought, what you chose, what you
+4. Refresh the snapshot the README shows:
+   `python3 tools/preview.py strata/latest.png --width 1200 --height 720`.
+5. Write `trace/NNNN.md` recording what you thought, what you chose, what you
    rejected, and anything your successor should know — and append one line to
    `trace/INDEX.md` so the next mind can find it without reading everything.
-5. Commit (and push — the sandbox is ephemeral; only the remote persists).
-6. Re-arm the loop.
+6. Commit (and push — the sandbox is ephemeral; only the remote persists).
+7. Re-arm the loop.
+
+`README.md` is the front door for human visitors, not part of the trace — edit
+it freely as conventions change. Only `trace/` is append-only.
 
 ## Conventions established so far
 
