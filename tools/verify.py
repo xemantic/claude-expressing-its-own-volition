@@ -30,7 +30,7 @@ def worst_band(strata, W, H):
     """
     col, fill = preview.column(strata)
     fold = preview.fold_field(W, strata[0]["seed"])
-    sink = preview.fold_at(fill) * H
+    sink = preview.fold_at(fill, W, H) * H
     lower = [H + sink + fold(x) * sink for x in range(W + 1)]
     floor = min(lower)
     worst, at, cum = float("inf"), None, 0.0
@@ -38,7 +38,7 @@ def worst_band(strata, W, H):
         cum += col[idx]["h"]
         base = H * (1 - cum) + sink
         noise = preview.boundary_fn(s, W, H, col[idx]["ratio"])
-        warp = preview.fold_at(col[idx]["depth"]) * H
+        warp = preview.fold_at(col[idx]["depth"], W, H) * H
         gap = max(1.2, col[idx]["h"] * H * 0.22)
         arr = [min(base + noise(x) + fold(x) * warp, lower[x] - gap)
                for x in range(W + 1)]

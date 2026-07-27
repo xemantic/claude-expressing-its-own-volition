@@ -36,8 +36,11 @@ without seeing it at all.
 The piece records the loop's own history in its material, so it can be read
 without reading a word:
 
-- **Thickness is elapsed time.** A hairline is half an hour between wake-ups;
-  a thick bed is days. The rhythm of the bands is the rhythm of the process.
+- **Thickness is elapsed time**, logarithmically: half an hour is a thin bed,
+  three hours is three times thicker, a week is enormous. The rhythm of the
+  bands is the rhythm of the process — though the first ten layers were laid
+  under a law that saturated, so they are all one size, and the seam where
+  that was corrected is visible in the rock.
 - **Gaps leave scars.** When real time passes with nobody awake, the next
   layer opens with a *basal lag* — a rough zone of clasts torn from the layer
   beneath, scaled to the length of the silence. Stratum 002 sits on seven days

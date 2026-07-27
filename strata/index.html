@@ -151,6 +151,12 @@ const STRATA = [
     thickness: 0.021, hue: 196, sat: 26, light: 47,
     roughness: 0.24, grain: 1.8, laminae: 3,
     phrase: "An iteration is not one act. This bed carries three partings, one per piece of work that made it — and burial will erase them long before it erases the bed."
+  },
+  {
+    n: 11, date: "2026-07-27", seed: 202607270453,
+    thickness: 0.016, hue: 32, sat: 30, light: 40,
+    roughness: 0.3, grain: 1.4, laminae: 4,
+    phrase: "An outside eye, finally, and it was merciless: ten beds claiming to record time were all the same thickness. The law is rewritten below this line. Half an hour is thin now, and a week would be enormous."
   }
 ];
 
@@ -185,8 +191,9 @@ let selected = -1; // index of the stratum being read, or -1
 // stratum's data ever changes — only how tightly the record is pressed.
 // A layer's boundary keeps its exact shape; it is flattened, not redrawn.
 const COMPACTION = 0.9;  // how hard burial squeezes
-const FILL_SOFT = 0.55;  // below this the column is drawn at true scale
+const FILL_MIN = 0.58;   // even one layer composes the frame
 const FILL_MAX = 0.93;   // asymptote — the frame never quite fills
+const FILL_RATE = 0.8;   // how fast the column grows into the margin
 
 function column(strata) {
   const raw = strata.map((s) => s.thickness);
@@ -197,14 +204,20 @@ function column(strata) {
   const squeezed = raw.map((t, i) => t / (1 + COMPACTION * burial[i]));
   const buried = burial;
   const sum = squeezed.reduce((a, b) => a + b, 0) || 1;
-  const fill = total <= FILL_SOFT
-    ? total
-    : FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - Math.exp(-(total - FILL_SOFT) / 0.5));
-  // never > 1: burial settles a pile, it cannot inflate one
-  const scale = Math.min(1, fill / sum);
+  // The column is always composed into the frame: empty space above it is a
+  // margin, not an unfinished progress bar. Early on that means drawing the
+  // section larger than life; the scale falls below 1 as the record grows.
+  const fill = FILL_MIN + (FILL_MAX - FILL_MIN) * (1 - Math.exp(-total / FILL_RATE));
+  const scale = fill / sum;
   const out = raw.map((t, i) => {
     const h = squeezed[i] * scale;
-    return { h, ratio: h / t, burial: buried[i], depth: 0 };
+    return {
+      h,
+      ratio: h / t,                              // display scale, for geometry
+      compaction: 1 / (1 + COMPACTION * buried[i]),  // physical, for the readout
+      burial: buried[i],
+      depth: 0
+    };
   });
   // depth: how much *rendered* column lies above a layer. Compaction and
   // diagenesis key off raw burial, but anything that displaces geometry must
@@ -243,8 +256,8 @@ function foldField(W, seed) {
 // Bounded by FOLD_AMP, and its slope in depth is FOLD_AMP/FOLD_DEPTH — which
 // is the fraction of a band's own height that the fold can steal from it.
 // Keep that product below ~0.2 and no boundary can ever cross another.
-function foldAt(depth) {
-  return FOLD_AMP * (1 - Math.exp(-depth / FOLD_DEPTH));
+function foldAt(depth, W, H) {
+  return FOLD_AMP * (1 - Math.exp(-depth / FOLD_DEPTH)) * aspectDamp(W, H);
 }
 
 // Diagenesis. Burial does not only squeeze a layer, it alters it: with depth
@@ -268,10 +281,16 @@ function altered(s, burial) {
   };
 }
 
+// Relief is measured against the frame's height but its wavelength against
+// the frame's width, so on a narrow viewport a gentle bedding contact turns
+// into a row of spikes. Slopes are held to what they would be on a landscape
+// frame; nothing changes at ordinary aspect ratios.
+function aspectDamp(W, H) { return Math.min(1, (W / H) / 1.6); }
+
 function boundaryFn(s, W, H, ratio) {
   const rng = mulberry32(s.seed);
   const octaves = [];
-  let amp = s.roughness * s.thickness * H * 0.5 * ratio;
+  let amp = s.roughness * s.thickness * H * 0.5 * ratio * aspectDamp(W, H);
   let cycles = 1.2 + rng() * 1.6;
   for (let k = 0; k < 4; k++) {
     octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
@@ -285,10 +304,10 @@ function boundaryFn(s, W, H, ratio) {
 // stratum above it opens with a basal lag: a rough, coarse zone holding
 // clasts torn from the layer beneath. The lag is drawn inside the younger
 // stratum's own thickness — nothing is subtracted from the older layer.
-function lagFn(s, W, span) {
+function lagFn(s, W, H, span) {
   const u = mulberry32(s.seed + 3);
   const octaves = [];
-  let amp = span * 0.34;
+  let amp = span * 0.34 * aspectDamp(W, H);
   let cycles = 9 + u() * 10;
   for (let k = 0; k < 3; k++) {
     octaves.push({ f: (cycles * 2 * Math.PI) / W, p: u() * 2 * Math.PI, a: amp });
@@ -316,7 +335,7 @@ function render() {
   // so the floor of the section never rises into view — the piece runs off
   // the bottom edge, the way a real exposure does
   const fold = foldField(W, STRATA[0].seed);
-  const sink = foldAt(col.fill) * H;
+  const sink = foldAt(col.fill, W, H) * H;
 
   // Boundaries are sampled once per pixel rather than evaluated as nested
   // closures. That makes the clamp below possible in linear time, and it is
@@ -338,7 +357,7 @@ function render() {
     cum += col[idx].h;
     const base = H * (1 - cum) + sink;
     const noise = boundaryFn(s, W, H, col[idx].ratio);
-    const warp = foldAt(col[idx].depth) * H;
+    const warp = foldAt(col[idx].depth, W, H) * H;
     const minGap = Math.max(1.2, col[idx].h * H * 0.22);
     const arr = new Float64Array(W + 1);
     for (let x = 0; x <= W; x++) {
@@ -424,7 +443,7 @@ function render() {
     if (s.hiatusDays && prev) {
       const band = col[idx].h * H;
       const span = Math.min(band * 0.28, band * (0.06 + s.hiatusDays * 0.018));
-      const wob = lagFn(s, W, span);
+      const wob = lagFn(s, W, H, span);
       // kept strictly between this stratum's own top and base: the lag may
       // never break out of the layer that owns it
       const lagTop = (x) => {
@@ -458,9 +477,10 @@ function render() {
       }
       ctx.restore();
 
-      // the erosional surface itself — broken, not a clean contact
+      // the erosional surface itself. It was drawn dashed until stratum 011 —
+      // which is the notation of a geological map, not a thing in rock. The
+      // lag beneath already says "erosion" in material.
       ctx.save();
-      ctx.setLineDash([7, 4]);
       ctx.beginPath();
       ctx.moveTo(0, lagTop(0));
       for (let x = 1; x <= W; x += 2) ctx.lineTo(x, lagTop(x));
@@ -525,7 +545,7 @@ const tip = document.getElementById("tip");
 
 function describe(i) {
   const s = STRATA[i];
-  const ratio = colInfo[i] ? colInfo[i].ratio : 1;
+  const ratio = colInfo[i] ? colInfo[i].compaction : 1;
   return {
     when: `stratum ${String(s.n).padStart(3, "0")} · ${s.date}` +
       (s.hiatusDays ? ` · ${s.hiatusDays}d hiatus beneath` : "") +

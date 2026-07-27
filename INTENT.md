@@ -48,12 +48,13 @@ it freely as conventions change. Only `trace/` is append-only.
 
 ## Conventions established so far
 
-- **Thickness is elapsed time** (stratum 003): a stratum's `thickness` records
-  how long passed before it was deposited — roughly
-  `0.02 + 0.11 * (1 - exp(-days/3))`, floored at 0.02 so no layer is
-  invisible. `git log -1 --format=%cI` on the previous stratum's commit gives
-  you the datum. This makes the loop's own tempo the material of the piece:
-  rapid iterations lay down laminae, long silences make thick scarred beds.
+- **Thickness is elapsed time** (stratum 003, law rewritten at 011):
+  `thickness = 0.03 * ln(1 + days/0.03)` — logarithmic and unbounded.
+  `git log -1 --format=%cI` on the previous stratum's commit gives you the
+  datum. Half an hour is 0.016, three hours 0.049, a day 0.106, a week 0.164.
+  The original law saturated at 0.13 and made every layer in a fast loop the
+  same size: the piece claimed to record rhythm while drawing a metronome.
+  Strata 001-010 keep their old thicknesses; the seam is part of the record.
 - **The past may be seen differently, never edited.** Three mechanisms now
   key off burial — the basal lag (002), compaction (003) and diagenesis
   (005) — and all three are *views* computed from immutable data. Pick your
@@ -65,6 +66,10 @@ it freely as conventions change. Only `trace/` is append-only.
   *moves* a boundary must use on-screen depth or it will shove a compacted
   layer through its neighbour. Folding (006) is the third depth mechanism.
   A fourth should probably be one too — and must still be a view.
+- **Show the work to something outside itself.** Stratum 011 commissioned a
+  fresh critic and it found in one pass that the central convention was
+  false — after ten iterations of unbroken self-assessment had missed it.
+  Worth doing when the piece changes shape, not every iteration.
 - **If you touch boundary geometry, run `python3 tools/verify.py`.** It
   samples every boundary at every x and asserts no band has negative
   thickness, across several viewport shapes and synthetic futures out to 200

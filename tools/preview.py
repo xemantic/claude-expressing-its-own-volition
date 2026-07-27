@@ -63,8 +63,9 @@ def load_strata():
 # --- boundary / lag functions (ports of the JS) ---------------------------
 
 COMPACTION = 0.9
-FILL_SOFT = 0.55
+FILL_MIN = 0.58
 FILL_MAX = 0.93
+FILL_RATE = 0.8
 
 
 def column(strata):
@@ -78,11 +79,11 @@ def column(strata):
         acc += raw[i]
     squeezed = [t / (1 + COMPACTION * b) for t, b in zip(raw, burial)]
     ssum = sum(squeezed) or 1.0
-    fill = total if total <= FILL_SOFT else (
-        FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - math.exp(-(total - FILL_SOFT) / 0.5))
-    )
-    scale = min(1.0, fill / ssum)  # burial settles a pile, never inflates one
-    out = [{"h": e * scale, "ratio": e * scale / t, "burial": b, "depth": 0.0}
+    # the column always composes the frame; empty space above is a margin
+    fill = FILL_MIN + (FILL_MAX - FILL_MIN) * (1 - math.exp(-total / FILL_RATE))
+    scale = fill / ssum
+    out = [{"h": e * scale, "ratio": e * scale / t, "burial": b, "depth": 0.0,
+            "compaction": 1 / (1 + COMPACTION * b)}
            for e, t, b in zip(squeezed, raw, burial)]
     # rendered depth above each layer — geometry must use this, not raw burial
     d = 0.0
@@ -109,8 +110,8 @@ def fold_field(W, seed):
     return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves) / norm
 
 
-def fold_at(depth):
-    return FOLD_AMP * (1 - math.exp(-depth / FOLD_DEPTH))
+def fold_at(depth, W, H):
+    return FOLD_AMP * (1 - math.exp(-depth / FOLD_DEPTH)) * aspect_damp(W, H)
 
 
 DIAGENESIS = {"hue": 28, "sat": 9, "light": 20, "k": 0.7, "max": 0.82}
@@ -130,10 +131,16 @@ def altered(s, burial):
     }
 
 
+def aspect_damp(W, H):
+    """Relief is measured against H but its wavelength against W, so a narrow
+    frame turns bedding contacts into spikes. Hold slopes to landscape."""
+    return min(1.0, (W / H) / 1.6)
+
+
 def boundary_fn(s, W, H, ratio):
     rng = mulberry32(s["seed"])
     octaves = []
-    amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio
+    amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio * aspect_damp(W, H)
     cycles = 1.2 + rng() * 1.6
     for _ in range(4):
         octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
@@ -142,10 +149,10 @@ def boundary_fn(s, W, H, ratio):
     return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves)
 
 
-def lag_fn(s, W, span):
+def lag_fn(s, W, H, span):
     u = mulberry32(s["seed"] + 3)
     octaves = []
-    amp = span * 0.34
+    amp = span * 0.34 * aspect_damp(W, H)
     cycles = 9 + u() * 10
     for _ in range(3):
         octaves.append(((cycles * 2 * math.pi) / W, u() * 2 * math.pi, amp))
@@ -257,7 +264,7 @@ def render(W, H, dark):
     col, fill_total = column(strata)
     cum = 0.0
     fold = fold_field(W, strata[0]["seed"])
-    sink = fold_at(fill_total) * H
+    sink = fold_at(fill_total, W, H) * H
 
     # boundaries sampled per pixel, then clamped so no bed can be punched
     # through by the relief of a thicker, rougher one beneath it
@@ -273,7 +280,7 @@ def render(W, H, dark):
         base = H * (1 - cum) + sink
         noise = boundary_fn(s, W, H, col[idx]["ratio"])
         a = altered(s, col[idx]["burial"])
-        warp = fold_at(col[idx]["depth"]) * H
+        warp = fold_at(col[idx]["depth"], W, H) * H
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
         arr = [min(base + noise(x) + fold(x) * warp, lower_arr[x] - min_gap)
                for x in range(W + 1)]
@@ -320,7 +327,7 @@ def render(W, H, dark):
         if s.get("hiatusDays") and prev:
             band = col[idx]["h"] * H
             span = min(band * 0.28, band * (0.06 + s["hiatusDays"] * 0.018))
-            wob = lag_fn(s, W, span)
+            wob = lag_fn(s, W, H, span)
 
             def lag_top(x, lower_at=lower_at, top_at=top_at, span=span, wob=wob):
                 lo, hi = lower_at(x), top_at(x) + 2
@@ -346,8 +353,7 @@ def render(W, H, dark):
                            clip=lambda px, py: lag_top(px) <= py <= lower_at(px))
 
             cv.stroke(lag_top,
-                      hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)),
-                      0.65, dash=(7, 4))
+                      hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)), 0.65)
 
         c = mulberry32(s["seed"] + 2)
         clasts = 2 + int(c() * 4)
