@@ -70,6 +70,50 @@ def synth(base, count, seed, thickness=None, roughness=None):
     return out
 
 
+# --- the HTML's own script ---------------------------------------------------
+# preview.py is a mirror of the renderer, and a mirror cannot notice that the
+# original is missing. Stratum 013 spliced a block out of both files, repaired
+# only the mirror, and the artwork shipped broken for two iterations while
+# every geometry check passed. Nothing here executes JavaScript, so this is a
+# crude static pass: collect what the script defines, collect what it calls,
+# and report calls that resolve to nothing.
+
+JS_BUILTINS = {
+    "Math", "Object", "Array", "Number", "String", "Boolean", "JSON", "Date",
+    "Float64Array", "Int32Array", "Uint8Array", "Map", "Set", "Promise",
+    "isNaN", "parseInt", "parseFloat", "requestAnimationFrame",
+    "cancelAnimationFrame", "addEventListener", "removeEventListener",
+    "matchMedia", "getComputedStyle", "MutationObserver", "document", "window",
+    "console", "Error", "TypeError", "RangeError", "if", "for", "while",
+    "switch", "catch", "return", "function", "typeof", "new", "else", "do",
+}
+
+
+def check_html_script():
+    """Every identifier called in strata/index.html must resolve to something."""
+    import re as _re
+    html = preview.SRC.read_text()
+    js = html.split("<script>", 1)[1].rsplit("</script>", 1)[0]
+    stripped = _re.sub(r"//[^\n]*", "", js)
+    stripped = _re.sub(r'"(?:[^"\\]|\\.)*"', '""', stripped)
+    stripped = _re.sub(r"'(?:[^'\\]|\\.)*'", "''", stripped)
+    stripped = _re.sub(r"`(?:[^`\\]|\\.)*`", "``", stripped)
+
+    defined = set(JS_BUILTINS)
+    defined |= set(_re.findall(r"function\s+(\w+)", stripped))
+    defined |= set(_re.findall(r"(?:const|let|var)\s+(\w+)", stripped))
+    # parameters and destructured/loop names, conservatively
+    for params in _re.findall(r"function\s*\w*\s*\(([^)]*)\)", stripped):
+        defined |= {p.strip().split("=")[0].strip() for p in params.split(",") if p.strip()}
+    for params in _re.findall(r"\(([^()]*)\)\s*=>", stripped):
+        defined |= {p.strip().split("=")[0].strip() for p in params.split(",") if p.strip()}
+    defined |= set(_re.findall(r"(\w+)\s*=>", stripped))
+
+    called = set(_re.findall(r"(?<![.\w])([A-Za-z_$][\w$]*)\s*\(", stripped))
+    missing = sorted(c for c in called if c not in defined)
+    return missing
+
+
 def main():
     live = preview.load_strata()
     cases = [(live, W, H, f"live {len(live)} strata @{W}x{H}")
@@ -91,6 +135,13 @@ def main():
               f"floor {floor:.1f} (>= H {H})")
 
     print(f"\n{len(cases) - failed}/{len(cases)} configurations pass")
+
+    missing = check_html_script()
+    if missing:
+        print("FAIL  strata/index.html calls undefined: " + ", ".join(missing))
+        failed += 1
+    else:
+        print("ok    strata/index.html: every call resolves")
     return 1 if failed else 0
 
 

@@ -189,16 +189,28 @@ def episode_weight(n, i):
     return t * t * (3 - 2 * t)
 
 
+SWELL = 0.3  # lateral thickness variation, as a fraction of the bed
+
+
 def boundary_fn(s, W, H, ratio):
+    """Bedding relief plus one long swell of the bed's own: deposition is not
+    uniform across a basin, and without it every boundary rides the shared
+    fold in parallel and the column reads as even ribbons."""
     rng = mulberry32(s["seed"])
     octaves = []
-    amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio * aspect_damp(W, H)
+    damp = aspect_damp(W, H)
+    amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio * damp
     cycles = 1.2 + rng() * 1.6
     for _ in range(4):
         octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
         cycles *= 2.1
         amp *= 0.45
-    return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves)
+    sw = mulberry32((s["seed"] + 6) & M32)
+    swell_amp = s["thickness"] * ratio * H * SWELL * damp
+    swell_f = (0.8 + sw() * 1.7) * 2 * math.pi / W
+    swell_p = sw() * 2 * math.pi
+    return lambda x: (sum(math.sin(x * f + p) * a for f, p, a in octaves)
+                      + math.sin(x * swell_f + swell_p) * swell_amp)
 
 
 def lag_fn(s, W, H, span):
@@ -350,7 +362,7 @@ def render(W, H, dark):
 
         # grading: coarse and dark at the base, fining upward, in slices that
         # follow the bed's own boundaries
-        slices = max(3, min(20, round(col[idx]["h"] * H / 7)))
+        slices = max(3, min(26, round(col[idx]["h"] * H / 4)))
         for k in range(slices):
             f0 = k / slices
             f1 = 1.0 if k == slices - 1 else (k + 1) / slices + 0.02

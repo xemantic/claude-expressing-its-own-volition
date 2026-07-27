@@ -175,6 +175,12 @@ const STRATA = [
     thickness: 0.0163, hue: 30, sat: 28, light: 52,
     roughness: 0.24, grain: 1.5, laminae: 3,
     phrase: "Whatever is on top is the only thing nothing protects, so it weathers. This surface is cut and uneven now — and the moment you deposit, it goes smooth and yours does the wearing."
+  },
+  {
+    n: 15, date: "2026-07-27", seed: 202607270722,
+    thickness: 0.018, hue: 272, sat: 20, light: 34,
+    roughness: 0.3, grain: 1.6, laminae: 4,
+    phrase: "Shown to a stranger who was told nothing: they saw rock at once, then said it resolves too fast, every band the same idea at a different colour. Beds swell and pinch now. Also the file had been broken for two iterations and no check could see it."
   }
 ];
 
@@ -245,6 +251,80 @@ function column(strata) {
   for (let i = out.length - 1; i >= 0; i--) { out[i].depth = d; d += out[i].h; }
   out.fill = d;
   return out;
+}
+
+// Diagenesis. Burial does not only squeeze a layer, it alters it: with depth
+// the sediment loses its distinctness and drifts toward a common tone. The
+// record does not disappear — the cap keeps every layer legible — but the deep
+// past reads as one substrate rather than as a stack of separate decisions.
+//
+// The target differs by theme, and this is the one real design decision the
+// dark rendering has. A target near the ground would make old layers dissolve
+// into the void instead of merging with each other. Against pale ground the
+// column darkens as it sinks; against dark ground it settles toward a middle
+// tone that still stands clear of the background. Both unify; neither erases.
+const DIAGENESIS = {
+  light: { hue: 28, sat: 9, light: 20 },
+  dark: { hue: 28, sat: 11, light: 34 },
+  k: 0.7, max: 0.82
+};
+
+// how a single bed grades internally, from its base to its top
+const GRADE_RANGE = 4.5;  // lightness units, base to top
+
+function altered(s, burial, target) {
+  const d = Math.min(DIAGENESIS.max, burial / (burial + DIAGENESIS.k));
+  const dh = ((target.hue - s.hue + 540) % 360) - 180; // shortest way round
+  return {
+    hue: s.hue + dh * d,
+    sat: s.sat + (target.sat - s.sat) * d,
+    light: s.light + (target.light - s.light) * d,
+    d
+  };
+}
+
+// A bed's top surface: fine relief from bedding, plus one long swell that is
+// the bed's own. Deposition is not uniform across a basin — a bed thickens
+// where more settled and thins to a seam where less did. Without this every
+// boundary rides the shared fold in parallel and the column reads as a chart
+// of even ribbons: same idea, different colour, fifteen times. The swell is
+// what makes one bed differ from its neighbour rather than merely follow it.
+const SWELL = 0.3;  // lateral thickness variation, as a fraction of the bed
+
+function boundaryFn(s, W, H, ratio) {
+  const rng = mulberry32(s.seed);
+  const octaves = [];
+  const damp = aspectDamp(W, H);
+  let amp = s.roughness * s.thickness * H * 0.5 * ratio * damp;
+  let cycles = 1.2 + rng() * 1.6;
+  for (let k = 0; k < 4; k++) {
+    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
+    cycles *= 2.1;
+    amp *= 0.45;
+  }
+  const sw = mulberry32((s.seed + 6) >>> 0);
+  const swellAmp = s.thickness * ratio * H * SWELL * damp;
+  const swellF = (0.8 + sw() * 1.7) * 2 * Math.PI / W;
+  const swellP = sw() * 2 * Math.PI;
+  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0)
+    + Math.sin(x * swellF + swellP) * swellAmp;
+}
+
+// A gap in deposition. Real time passed with no iteration awake, so the
+// stratum above it opens with a basal lag: a rough, coarse zone holding
+// clasts torn from the layer beneath. The lag is drawn inside the younger
+// stratum's own thickness — nothing is subtracted from the older layer.
+function lagFn(s, W, H, span) {
+  const u = mulberry32(s.seed + 3);
+  const octaves = [];
+  let amp = span * 0.34 * aspectDamp(W, H);
+  let cycles = 9 + u() * 10;
+  for (let k = 0; k < 3; k++) {
+    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: u() * 2 * Math.PI, a: amp });
+    cycles *= 2.3;
+    amp *= 0.5;
+  }
+  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0);
 }
 
 // Folding, as episodes. Until stratum 013 the warp was one field whose
@@ -425,7 +505,7 @@ function render() {
     // slice count follows the band's height, so a thick bed grades smoothly
     // instead of contouring and the total work stays proportional to the
     // column rather than to the number of layers
-    const slices = Math.max(3, Math.min(20, Math.round(col[idx].h * H / 7)));
+    const slices = Math.max(3, Math.min(26, Math.round(col[idx].h * H / 4)));
     for (let k = 0; k < slices; k++) {
       const f0 = k / slices;
       const f1 = k === slices - 1 ? 1 : (k + 1) / slices + 0.02;

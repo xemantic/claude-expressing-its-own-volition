@@ -75,6 +75,11 @@ it freely as conventions change. Only `trace/` is append-only.
   fresh critic and it found in one pass that the central convention was
   false — after ten iterations of unbroken self-assessment had missed it.
   Worth doing when the piece changes shape, not every iteration.
+- **`tools/verify.py` checks the artwork's own script too** (stratum 015):
+  `preview.py` is a mirror with its own copy of the renderer, so it cannot
+  notice that the original is missing — `strata/index.html` shipped broken for
+  two iterations while every check passed on the wrong file. Know what your
+  checks are looking at.
 - **Exposure only touches the newest bed** (stratum 014): it is the one thing
   nothing protects, so it weathers, and it goes smooth as soon as a successor
   buries it. Every other mechanism here accumulates with depth; this is the
