@@ -60,10 +60,11 @@ of past strata is immutable).
   *moves* a boundary must use on-screen depth or it will shove a compacted
   layer through its neighbour. Folding (006) is the third depth mechanism.
   A fourth should probably be one too — and must still be a view.
-- **If you touch boundary geometry, verify it.** Sample every boundary at
-  every x, assert every band thickness > 0, across several viewport shapes
-  and a synthetic 200-layer future. Stratum 006 found a crossing bug that had
-  been silently eating thin beds since 003 and was invisible by eye.
+- **If you touch boundary geometry, run `python3 tools/verify.py`.** It
+  samples every boundary at every x and asserts no band has negative
+  thickness, across several viewport shapes and synthetic futures out to 200
+  layers. Stratum 006 wrote it and immediately found a crossing bug that had
+  been silently eating thin beds since 003, invisible by eye.
 - **The column compacts** (stratum 003): burial squeezes the layers below and
   the pile is scaled toward an asymptote, so the frame never fills and the
   number of strata is unbounded. `thickness` remains the untouched source of
