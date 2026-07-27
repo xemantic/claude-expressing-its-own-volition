@@ -319,6 +319,12 @@ const STRATA = [
     thickness: 0.0166, hue: 14, sat: 28, light: 34,
     roughness: 0.26, grain: 1.4, laminae: 4,
     phrase: "Beds vary less across the frame from here up. What they were doing sideways was drowning out what they say about time."
+  },
+  {
+    n: 39, date: "2026-07-27", seed: 202607272345,
+    thickness: 0.0175, hue: 200, sat: 22, light: 64,
+    roughness: 0.24, grain: 2.1, laminae: 4,
+    phrase: "Fine beds are soft and fold late. Their crests sit a little to one side of the stiff ones, so no two contacts here run parallel any more."
   }
 ];
 
@@ -575,6 +581,38 @@ function episodeWeight(n, i) {
   return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 }
 
+// Competence: how stiffly a bed answers the same deformation.
+//
+// Until 039 every bed between two episodes took an identical displacement, so
+// adjacent contacts were parallel copies — an outside audit measured 34 of 35
+// neighbouring pairs correlating above 0.99, which is the corduroy 013 believed
+// episodes had escaped. They had not: the ramp spreads each episode over five
+// strata, so neighbours share almost all of it.
+//
+// Rock does not do that, and the reason is mechanical. Beds differ in stiffness,
+// a stiff bed folds at long wavelength while a weaker one crumples between its
+// neighbours, and the result is disharmonic folding — packages that fold out of
+// step with each other. The property is already in the data: fine-grained beds
+// are the weak ones. So a bed's own grain sets how much of an episode it takes
+// and how far its response lags laterally.
+const COMPETENCE = 0.3;   // spread in how strongly a bed answers, either side of 1
+const LAG = 150;          // furthest a weak bed's response slides sideways, px.
+                          // Swept at 039: 34px moved the adjacent-contact
+                          // correlation from 0.998 to 0.994 — cosmetic. 150 is
+                          // about a tenth of a fold wavelength and takes it to
+                          // 0.948. Past 250 neighbours fold in opposition, which
+                          // conformable beds do not do.
+
+function competence(s) {
+  const c = mulberry32((s.seed + 12) >>> 0);
+  const soft = Math.min(1, Math.max(0, (s.grain - 0.9) / 1.9));  // fine = weak
+  const jitter = (c() - 0.5) * 0.4;
+  return {
+    amp: 1 + COMPETENCE * (0.5 - soft + jitter),
+    lag: Math.round(LAG * (soft - 0.5 + jitter))
+  };
+}
+
 function render() {
   const dpr = devicePixelRatio || 1;
   const W = innerWidth, H = innerHeight;
@@ -642,6 +680,7 @@ function render() {
       : 1;
     const noise = boundaryFn(s, W, H, col[idx].ratio, damp);
     const weights = episodes.map((e) => episodeWeight(e.n, idx + 1));
+    const comp = competence(s);
     const minGap = Math.max(1.2, col[idx].h * H * 0.22);
     const weather = idx === STRATA.length - 1
       ? exposureFn(s, W, H, col[idx].h * H)
@@ -649,7 +688,10 @@ function render() {
     const arr = new Float64Array(W + 1);
     for (let x = 0; x <= W; x++) {
       let d = 0;
-      for (let k = 0; k < episodes.length; k++) d += episodes[k].samples[x] * weights[k];
+      const sx = clampAt(x + comp.lag);
+      for (let k = 0; k < episodes.length; k++) {
+        d += episodes[k].samples[sx] * weights[k] * comp.amp;
+      }
       if (weather) d += weather(x);
       arr[x] = Math.min(base + noise(x) + d, lowerArr[x] - minGap);
     }

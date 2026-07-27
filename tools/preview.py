@@ -179,6 +179,21 @@ def fold_episodes(strata, W, H):
     return out, amp
 
 
+COMPETENCE = 0.3
+LAG = 150
+
+
+def competence(s):
+    """How stiffly a bed answers the same deformation — fine grain is weak.
+    Without this every bed between two episodes took an identical displacement
+    and adjacent contacts were parallel copies. See stratum 039."""
+    c = mulberry32((s["seed"] + 12) & M32)
+    soft = min(1.0, max(0.0, (s["grain"] - 0.9) / 1.9))
+    jitter = (c() - 0.5) * 0.4
+    return {"amp": 1 + COMPETENCE * (0.5 - soft + jitter),
+            "lag": round(LAG * (soft - 0.5 + jitter))}
+
+
 def episode_weight(n, i):
     """How much of an episode stratum i has taken up: 1 well below it, 0 for
     beds deposited after it, smooth between."""
@@ -377,11 +392,16 @@ def render(W, H, dark):
         noise = boundary_fn(s, W, H, col[idx]["ratio"], damp)
         a = altered(s, col[idx]["burial"], target)
         weights = [episode_weight(e["n"], idx + 1) for e in episodes]
+        comp = competence(s)
+
+        def warped(x, comp=comp, weights=weights):
+            sx = 0 if x + comp["lag"] < 0 else (W if x + comp["lag"] > W else x + comp["lag"])
+            return sum(e["samples"][sx] * w * comp["amp"]
+                       for e, w in zip(episodes, weights))
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
         weather = (exposure_fn(s, W, H, col[idx]["h"] * H)
                    if idx == len(strata) - 1 else None)
-        arr = [min(base + noise(x)
-                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights))
+        arr = [min(base + noise(x) + warped(x)
                    + (weather(x) if weather else 0.0),
                    lower_arr[x] - min_gap)
                for x in range(W + 1)]
