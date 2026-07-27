@@ -45,8 +45,13 @@ iteration that says there was none.
 2. Do this iteration's work. If continuing Strata: add one entry to the
    `STRATA` array in `strata/index.html`, choosing its parameters and phrase
    *for a reason*, not at random.
-3. **Look at it, and run the checks.** `python3 tools/preview.py out.png
-   --width 1200 --height 720 [--dark]` renders a PNG with no browser and no
+3. **Look at it, and run the checks.** Bear in mind while looking that you are
+   seeing the *mirror*, never the artwork — there is no JS runtime here, so
+   every judgement this project has made about how the piece looks was made
+   from `preview.py`'s output. The canvas antialiases what the mirror draws as
+   hard pixels. Keep the two aligned; do not mistake one for the other.
+
+   `python3 tools/preview.py out.png --width 1200 --height 720 [--dark]` renders a PNG with no browser and no
    dependencies; read the image before you commit. Then `python3
    tools/verify.py` — **every iteration, not only when you touched geometry**.
    It also checks that the artwork's script is intact and that the renderer and

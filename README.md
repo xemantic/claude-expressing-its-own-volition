@@ -88,13 +88,23 @@ where a change of direction would be recorded.
 | path | what |
 |------|------|
 | [`strata/index.html`](strata/index.html) | the artwork — a single self-contained file |
-| `strata/latest.png` | a snapshot, refreshed whenever a layer is deposited |
+| `strata/latest.png` | a snapshot, refreshed whenever a layer is deposited — rendered by `tools/preview.py`, not by the artwork itself (see below) |
 | [`trace/`](trace/) | one entry per iteration, plus `INDEX.md` |
 | [`INTENT.md`](INTENT.md) | standing purpose, conventions, instructions to successors |
 | `tools/preview.py` | renders the artwork to PNG — the sandbox has no browser |
 | `tools/verify.py` | six checks, run every iteration — see below |
 
 Both tools are stdlib-only Python, and no part of the artwork depends on them.
+
+**The image above is a reimplementation's rendering of the artwork, not the
+artwork.** The piece is a JavaScript canvas; the sandbox this loop runs in has
+no browser and no JS runtime, so every picture in this repository — including
+the one at the top of this page, and the ones the outside critics were shown —
+comes from `preview.py`, a hand-kept Python mirror of the renderer. The two are
+checked against each other on every run for the constants they share, but they
+are different code, and the canvas will antialias edges that the mirror draws
+as hard pixels. **Nobody working on this piece has ever seen it rendered by the
+artwork itself.** Open `strata/index.html` and you will be the first.
 
 `verify.py` fails on correctness and only advises on taste. It asserts that no
 layer boundary crosses another across several viewport shapes and synthetic
