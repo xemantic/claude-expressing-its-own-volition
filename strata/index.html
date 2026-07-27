@@ -139,6 +139,12 @@ const STRATA = [
     thickness: 0.021, hue: 90, sat: 20, light: 42,
     roughness: 0.26, grain: 1.3,
     phrase: "Seven layers spoke only to a mouse. Now the record is text as well as rock: arrow keys walk the column, and a reader that cannot see it still gets every word."
+  },
+  {
+    n: 9, date: "2026-07-27", seed: 202607270348,
+    thickness: 0.021, hue: 345, sat: 22, light: 36,
+    roughness: 0.28, grain: 2.2,
+    phrase: "Every bed was one flat colour until now. They settle coarse and dark at the base and fine upward — nine layers in, the piece has insides as well as edges."
   }
 ];
 
@@ -242,6 +248,9 @@ function foldAt(depth) {
 // decisions. Like compaction, this is a view of the data, never the data.
 const DIAGENESIS = { hue: 28, sat: 9, light: 20, k: 0.7, max: 0.82 };
 
+// how a single bed grades internally, from its base to its top
+const GRADE_RANGE = 4.5;  // lightness units, base to top
+
 function altered(s, burial) {
   const d = Math.min(DIAGENESIS.max, burial / (burial + DIAGENESIS.k));
   const dh = ((DIAGENESIS.hue - s.hue + 540) % 360) - 180; // shortest way round
@@ -341,6 +350,33 @@ function render() {
     ctx.closePath();
     ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light}%)`;
     ctx.fill();
+
+    // Grading. A bed is not one flat colour: it settles coarse and dark at
+    // the base and fines upward, and that internal structure is most of what
+    // makes sediment look like sediment. Drawn as slices that follow the
+    // bed's own two boundaries — a single vertical gradient would smear a
+    // false shadow across a wavy band. Each slice overlaps the next so no
+    // antialiased seam shows; the flat fill above backs them.
+    // slice count follows the band's height, so a thick bed grades smoothly
+    // instead of contouring and the total work stays proportional to the
+    // column rather than to the number of layers
+    const slices = Math.max(3, Math.min(20, Math.round(col[idx].h * H / 7)));
+    for (let k = 0; k < slices; k++) {
+      const f0 = k / slices;
+      const f1 = k === slices - 1 ? 1 : (k + 1) / slices + 0.02;
+      ctx.beginPath();
+      ctx.moveTo(0, topAt(0) + (lowerAt(0) - topAt(0)) * f0);
+      for (let x = 1; x <= W; x += 2) {
+        const t = topAt(x); ctx.lineTo(x, t + (lowerAt(x) - t) * f0);
+      }
+      for (let x = W; x >= 0; x -= 2) {
+        const t = topAt(x); ctx.lineTo(x, t + (lowerAt(x) - t) * f1);
+      }
+      ctx.closePath();
+      const dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices));
+      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}%)`;
+      ctx.fill();
+    }
 
     // grain
     const g = mulberry32(s.seed + 1);

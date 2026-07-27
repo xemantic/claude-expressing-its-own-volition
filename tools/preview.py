@@ -114,6 +114,7 @@ def fold_at(depth):
 
 
 DIAGENESIS = {"hue": 28, "sat": 9, "light": 20, "k": 0.7, "max": 0.82}
+GRADE_RANGE = 4.5
 
 
 def altered(s, burial):
@@ -279,6 +280,17 @@ def render(W, H, dark):
         top_at = fn_of(arr)
 
         cv.band(top_at, lower_at, hsl_rgb(a["hue"], a["sat"], a["light"]))
+
+        # grading: coarse and dark at the base, fining upward, in slices that
+        # follow the bed's own boundaries
+        slices = max(3, min(20, round(col[idx]["h"] * H / 7)))
+        for k in range(slices):
+            f0 = k / slices
+            f1 = 1.0 if k == slices - 1 else (k + 1) / slices + 0.02
+            dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices))
+            cv.band((lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f0),
+                    (lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f1),
+                    hsl_rgb(a["hue"], a["sat"], a["light"] + dl))
 
         g = mulberry32(s["seed"] + 1)
         count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
