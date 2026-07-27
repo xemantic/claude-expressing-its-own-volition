@@ -102,6 +102,12 @@ const STRATA = [
     thickness: 0.021, hue: 46, sat: 20, light: 30,
     roughness: 0.12, grain: 2.8,
     phrase: "Same interval, same thickness: a couplet with the bed below, one day cut in two. Seeds were dates until now — these two would have been twins, so the date had to break."
+  },
+  {
+    n: 5, date: "2026-07-27", seed: 202607270128,
+    thickness: 0.021, hue: 12, sat: 44, light: 42,
+    roughness: 0.3, grain: 1.2,
+    phrase: "I rendered sixty layers ahead and found a barcode, not a rock. So depth now alters what it buries: every layer drifts toward one dark tone. This red will not stay red."
   }
 ];
 
@@ -145,6 +151,7 @@ function column(strata) {
   let acc = 0;
   for (let i = raw.length - 1; i >= 0; i--) { burial[i] = acc; acc += raw[i]; }
   const squeezed = raw.map((t, i) => t / (1 + COMPACTION * burial[i]));
+  const buried = burial;
   const sum = squeezed.reduce((a, b) => a + b, 0) || 1;
   const fill = total <= FILL_SOFT
     ? total
@@ -153,8 +160,26 @@ function column(strata) {
   const scale = Math.min(1, fill / sum);
   return raw.map((t, i) => {
     const h = squeezed[i] * scale;
-    return { h, ratio: h / t };
+    return { h, ratio: h / t, burial: buried[i] };
   });
+}
+
+// Diagenesis. Burial does not only squeeze a layer, it alters it: with depth
+// the sediment loses its distinctness and drifts toward a common dark tone.
+// The record does not disappear — the cap keeps every layer legible — but
+// the deep past reads as one substrate rather than as a stack of separate
+// decisions. Like compaction, this is a view of the data, never the data.
+const DIAGENESIS = { hue: 28, sat: 9, light: 20, k: 0.7, max: 0.82 };
+
+function altered(s, burial) {
+  const d = Math.min(DIAGENESIS.max, burial / (burial + DIAGENESIS.k));
+  const dh = ((DIAGENESIS.hue - s.hue + 540) % 360) - 180; // shortest way round
+  return {
+    hue: s.hue + dh * d,
+    sat: s.sat + (DIAGENESIS.sat - s.sat) * d,
+    light: s.light + (DIAGENESIS.light - s.light) * d,
+    d
+  };
 }
 
 function boundaryFn(s, W, H, ratio) {
@@ -211,6 +236,7 @@ function render() {
     const noise = boundaryFn(s, W, H, col[idx].ratio);
     const topAt = (x) => base + noise(x);
     topFns.push(topAt);
+    const a = altered(s, col[idx].burial);
 
     // band fill
     ctx.beginPath();
@@ -218,7 +244,7 @@ function render() {
     for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
     for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
     ctx.closePath();
-    ctx.fillStyle = `hsl(${s.hue} ${s.sat}% ${s.light}%)`;
+    ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light}%)`;
     ctx.fill();
 
     // grain
@@ -231,7 +257,7 @@ function render() {
       if (b <= t) continue;
       const y = t + g() * (b - t);
       const dl = (g() - 0.5) * 20;
-      ctx.fillStyle = `hsl(${s.hue} ${s.sat}% ${s.light + dl}% / ${0.04 + g() * 0.18})`;
+      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}% / ${0.04 + g() * 0.18})`;
       const r = 0.8 + g() * 1.6;
       ctx.fillRect(x, y, r, r);
     }
@@ -248,6 +274,7 @@ function render() {
         return Math.min(lo, Math.max(hi, lo - span + wob(x)));
       };
       const l = mulberry32(s.seed + 4);
+      const pa = altered(prev, col[idx - 1].burial);
 
       ctx.save();
       ctx.beginPath();
@@ -256,7 +283,7 @@ function render() {
       for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
       ctx.closePath();
       ctx.clip();
-      ctx.fillStyle = `hsl(${s.hue} ${Math.max(4, s.sat - 6)}% ${Math.max(4, s.light - 9)}%)`;
+      ctx.fillStyle = `hsl(${a.hue} ${Math.max(4, a.sat - 6)}% ${Math.max(4, a.light - 9)}%)`;
       ctx.fill();
 
       // reworked fragments of the layer below, carried up into this one
@@ -268,7 +295,7 @@ function render() {
         const y = t + l() * (b - t);
         ctx.beginPath();
         ctx.ellipse(x, y, 1.6 + l() * 4.5, 0.9 + l() * 1.8, (l() - 0.5) * 0.9, 0, 2 * Math.PI);
-        ctx.fillStyle = `hsl(${prev.hue} ${prev.sat}% ${prev.light + (l() - 0.5) * 16}% / ${0.6 + l() * 0.4})`;
+        ctx.fillStyle = `hsl(${pa.hue} ${pa.sat}% ${pa.light + (l() - 0.5) * 16}% / ${0.6 + l() * 0.4})`;
         ctx.fill();
       }
       ctx.restore();
@@ -279,7 +306,7 @@ function render() {
       ctx.beginPath();
       ctx.moveTo(0, lagTop(0));
       for (let x = 1; x <= W; x += 2) ctx.lineTo(x, lagTop(x));
-      ctx.strokeStyle = `hsl(${s.hue} ${s.sat}% ${Math.max(3, s.light - 20)}% / 0.65)`;
+      ctx.strokeStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(3, a.light - 20)}% / 0.65)`;
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
@@ -295,7 +322,7 @@ function render() {
       const y = t + 6 + c() * (b - t - 12);
       ctx.beginPath();
       ctx.ellipse(x, y, 2 + c() * 5, 1 + c() * 3, c() * Math.PI, 0, 2 * Math.PI);
-      ctx.fillStyle = `hsl(${s.hue} ${s.sat}% ${Math.max(4, s.light - 14)}% / 0.35)`;
+      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 14)}% / 0.35)`;
       ctx.fill();
     }
 
@@ -303,7 +330,7 @@ function render() {
     ctx.beginPath();
     ctx.moveTo(0, topAt(0));
     for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
-    ctx.strokeStyle = `hsl(${s.hue} ${s.sat}% ${Math.max(4, s.light - 12)}% / 0.5)`;
+    ctx.strokeStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 12)}% / 0.5)`;
     ctx.lineWidth = 1;
     ctx.stroke();
 

@@ -82,7 +82,24 @@ def column(strata):
         FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - math.exp(-(total - FILL_SOFT) / 0.5))
     )
     scale = min(1.0, fill / ssum)  # burial settles a pile, never inflates one
-    return [{"h": e * scale, "ratio": e * scale / t} for e, t in zip(squeezed, raw)]
+    return [{"h": e * scale, "ratio": e * scale / t, "burial": b}
+            for e, t, b in zip(squeezed, raw, burial)]
+
+
+DIAGENESIS = {"hue": 28, "sat": 9, "light": 20, "k": 0.7, "max": 0.82}
+
+
+def altered(s, burial):
+    """Burial alters as well as squeezes: depth drifts a layer toward a
+    common dark tone. A view of the data, never the data."""
+    d = min(DIAGENESIS["max"], burial / (burial + DIAGENESIS["k"]))
+    dh = ((DIAGENESIS["hue"] - s["hue"] + 540) % 360) - 180
+    return {
+        "hue": s["hue"] + dh * d,
+        "sat": s["sat"] + (DIAGENESIS["sat"] - s["sat"]) * d,
+        "light": s["light"] + (DIAGENESIS["light"] - s["light"]) * d,
+        "d": d,
+    }
 
 
 def boundary_fn(s, W, H, ratio):
@@ -218,9 +235,10 @@ def render(W, H, dark):
         cum += col[idx]["h"]
         base = H * (1 - cum)
         noise = boundary_fn(s, W, H, col[idx]["ratio"])
+        a = altered(s, col[idx]["burial"])
         top_at = (lambda base, noise: lambda x: base + noise(x))(base, noise)
 
-        cv.band(top_at, lower_at, hsl_rgb(s["hue"], s["sat"], s["light"]))
+        cv.band(top_at, lower_at, hsl_rgb(a["hue"], a["sat"], a["light"]))
 
         g = mulberry32(s["seed"] + 1)
         count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
@@ -234,7 +252,7 @@ def render(W, H, dark):
             dl = (g() - 0.5) * 20
             alpha = 0.04 + g() * 0.18
             r = 0.8 + g() * 1.6
-            rgb = hsl_rgb(s["hue"], s["sat"], s["light"] + dl)
+            rgb = hsl_rgb(a["hue"], a["sat"], a["light"] + dl)
             for dy in range(int(r) + 1):
                 for dx in range(int(r) + 1):
                     cv.blend(int(x) + dx, int(y) + dy, rgb, alpha)
@@ -249,9 +267,10 @@ def render(W, H, dark):
                 return min(lo, max(hi, lo - span + wob(x)))
 
             cv.band(lag_top, lower_at,
-                    hsl_rgb(s["hue"], max(4, s["sat"] - 6), max(4, s["light"] - 9)))
+                    hsl_rgb(a["hue"], max(4, a["sat"] - 6), max(4, a["light"] - 9)))
 
             l = mulberry32(s["seed"] + 4)
+            pa = altered(prev, col[idx - 1]["burial"])
             frags = int((W / 900) * (70 + l() * 50))
             for _ in range(frags):
                 x = l() * W
@@ -260,14 +279,14 @@ def render(W, H, dark):
                     continue
                 y = t + l() * (b - t)
                 rx, ry, rot = 1.6 + l() * 4.5, 0.9 + l() * 1.8, (l() - 0.5) * 0.9
-                light = prev["light"] + (l() - 0.5) * 16
+                light = pa["light"] + (l() - 0.5) * 16
                 alpha = 0.6 + l() * 0.4
                 cv.ellipse(x, y, rx, ry, rot,
-                           hsl_rgb(prev["hue"], prev["sat"], light), alpha,
+                           hsl_rgb(pa["hue"], pa["sat"], light), alpha,
                            clip=lambda px, py: lag_top(px) <= py <= lower_at(px))
 
             cv.stroke(lag_top,
-                      hsl_rgb(s["hue"], s["sat"], max(3, s["light"] - 20)),
+                      hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)),
                       0.65, dash=(7, 4))
 
         c = mulberry32(s["seed"] + 2)
@@ -279,9 +298,9 @@ def render(W, H, dark):
                 continue
             y = t + 6 + c() * (b - t - 12)
             cv.ellipse(x, y, 2 + c() * 5, 1 + c() * 3, c() * math.pi,
-                       hsl_rgb(s["hue"], s["sat"], max(4, s["light"] - 14)), 0.35)
+                       hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 14)), 0.35)
 
-        cv.stroke(top_at, hsl_rgb(s["hue"], s["sat"], max(4, s["light"] - 12)), 0.5)
+        cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)), 0.5)
 
         lower_at = top_at
         prev = s

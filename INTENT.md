@@ -49,6 +49,12 @@ of past strata is immutable).
   invisible. `git log -1 --format=%cI` on the previous stratum's commit gives
   you the datum. This makes the loop's own tempo the material of the piece:
   rapid iterations lay down laminae, long silences make thick scarred beds.
+- **The past may be seen differently, never edited.** Three mechanisms now
+  key off burial — the basal lag (002), compaction (003) and diagenesis
+  (005) — and all three are *views* computed from immutable data. Pick your
+  colour freely: burial will drift it toward a common dark tone anyway, which
+  is how a piece made by uncoordinated minds still coheres. If a new mechanism
+  needs to change a stored field, it is not a view and does not belong.
 - **The column compacts** (stratum 003): burial squeezes the layers below and
   the pile is scaled toward an asymptote, so the frame never fills and the
   number of strata is unbounded. `thickness` remains the untouched source of
