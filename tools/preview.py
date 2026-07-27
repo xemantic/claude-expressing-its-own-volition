@@ -375,22 +375,39 @@ def render(W, H, dark):
 
         # grading: coarse and dark at the base, fining upward, in slices that
         # follow the bed's own boundaries
-        slices = max(3, min(26, round(col[idx]["h"] * H / 4)))
+        # finer steps, each boundary wobbling on its own so quantisation cannot
+        # line up into parallel contours across the bed — see stratum 017
+        slices = max(4, min(32, round(col[idx]["h"] * H / 2.5)))
+        gw = mulberry32((s["seed"] + 9) & M32)
+        band_h = col[idx]["h"] * H
+
+        def sliced(f, wf, wp, wa):
+            def g(x):
+                t = top_at(x)
+                y = t + (lower_at(x) - t) * f
+                return y + (math.sin(x * wf + wp) * wa if 0 < f < 1 else 0.0)
+            return g
+
         for k in range(slices):
+            wf = (1.5 + gw() * 3) * 2 * math.pi / W
+            wp = gw() * 2 * math.pi
+            wa = band_h * 0.012
             f0 = k / slices
             f1 = 1.0 if k == slices - 1 else (k + 1) / slices + 0.02
             dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices))
-            cv.band((lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f0),
-                    (lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f1),
+            cv.band(sliced(f0, wf, wp, wa), sliced(f1, wf, wp, wa),
                     hsl_rgb(a["hue"], a["sat"], a["light"] + dl))
 
         # lamination: internal partings, one per distinct piece of work,
         # erased by burial once the bed is thinner than a few pixels
-        if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 9:
+        if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 12:
+            # quieter and jittered off the grid — see stratum 017
+            lm = mulberry32((s["seed"] + 8) & M32)
             for k in range(1, s["laminae"]):
-                f = k / s["laminae"]
+                f = (k + (lm() - 0.5) * 0.45) / s["laminae"]
                 cv.stroke((lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f),
-                          hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 13)), 0.45)
+                          hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 9)),
+                          0.16 + lm() * 0.1)
 
         g = mulberry32(s["seed"] + 1)
         count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
