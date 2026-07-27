@@ -120,10 +120,11 @@ FOLD_EPISODE = 0.02  # displacement per episode, fraction of frame height
 FOLD_RAMP = 5        # strata over which an episode's effect ramps in
 
 
-def aspect_damp(W, H):
-    """Relief is measured against H but its wavelength against W, so a narrow
-    frame turns bedding contacts into spikes. Hold slopes to landscape."""
-    return min(1.0, (W / H) / 1.6)
+def wave_span(H):
+    """Horizontal wavelengths are measured against the vertical scale, not the
+    window width, so slope is invariant and resizing crops the section rather
+    than stretching it. 1.6 is the reference aspect."""
+    return H * 1.6
 
 
 EXPOSURE = 0.3
@@ -134,14 +135,14 @@ def exposure_fn(s, W, H, band):
     Biased downward by its own mean: weathering removes material."""
     rng = mulberry32((s["seed"] + 5) & M32)
     octaves = []
-    amp = min(band * EXPOSURE, H * 0.022) * aspect_damp(W, H)
+    amp = min(band * EXPOSURE, H * 0.022)
     cycles = 2.5 + rng() * 3.5
     for _ in range(3):
-        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
+        octaves.append(((cycles * 2 * math.pi) / wave_span(H), rng() * 2 * math.pi, amp))
         cycles *= 2.2
         amp *= 0.45
     total = sum(o[2] for o in octaves)
-    ef = (0.7 + rng() * 0.9) * 2 * math.pi / W
+    ef = (0.7 + rng() * 0.9) * 2 * math.pi / wave_span(H)
     ep = rng() * 2 * math.pi
     # an envelope: weathering cuts some stretches deeply and barely touches
     # others, and without it the relief reads as ornament rather than wear
@@ -152,13 +153,13 @@ def exposure_fn(s, W, H, band):
     return f
 
 
-def fold_field(W, seed):
+def fold_field(W, H, seed):
     """One deformation episode's shape."""
     rng = mulberry32((seed ^ 0x5A17F0) & M32)
     octaves = []
     amp, cycles = 1.0, 0.55 + rng() * 0.75
     for _ in range(3):
-        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
+        octaves.append(((cycles * 2 * math.pi) / wave_span(H), rng() * 2 * math.pi, amp))
         cycles *= 1.9
         amp *= 0.38
     norm = sum(o[2] for o in octaves)
@@ -170,10 +171,10 @@ def fold_episodes(strata, W, H):
     bends everything that existed then and nothing deposited after, and is
     keyed to n rather than to a depth so it keeps its grip as the record
     grows beneath it."""
-    amp = FOLD_EPISODE * H * aspect_damp(W, H)
+    amp = FOLD_EPISODE * H
     out = []
     for n in range(FOLD_EVERY, len(strata) + 1, FOLD_EVERY):
-        field = fold_field(W, (strata[0]["seed"] ^ (n * 0x9E37)) & M32)
+        field = fold_field(W, H, (strata[0]["seed"] ^ (n * 0x9E37)) & M32)
         out.append({"n": n, "samples": [field(x) * amp for x in range(W + 1)]})
     return out, amp
 
@@ -198,16 +199,16 @@ def boundary_fn(s, W, H, ratio):
     fold in parallel and the column reads as even ribbons."""
     rng = mulberry32(s["seed"])
     octaves = []
-    damp = aspect_damp(W, H)
+    damp = 1.0
     amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio * damp
     cycles = 1.2 + rng() * 1.6
     for _ in range(4):
-        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
+        octaves.append(((cycles * 2 * math.pi) / wave_span(H), rng() * 2 * math.pi, amp))
         cycles *= 2.1
         amp *= 0.45
     sw = mulberry32((s["seed"] + 6) & M32)
     swell_amp = s["thickness"] * ratio * H * SWELL * damp
-    swell_f = (0.8 + sw() * 1.7) * 2 * math.pi / W
+    swell_f = (0.8 + sw() * 1.7) * 2 * math.pi / wave_span(H)
     swell_p = sw() * 2 * math.pi
     return lambda x: (sum(math.sin(x * f + p) * a for f, p, a in octaves)
                       + math.sin(x * swell_f + swell_p) * swell_amp)
@@ -216,10 +217,10 @@ def boundary_fn(s, W, H, ratio):
 def lag_fn(s, W, H, span):
     u = mulberry32(s["seed"] + 3)
     octaves = []
-    amp = span * 0.34 * aspect_damp(W, H)
+    amp = span * 0.34
     cycles = 9 + u() * 10
     for _ in range(3):
-        octaves.append(((cycles * 2 * math.pi) / W, u() * 2 * math.pi, amp))
+        octaves.append(((cycles * 2 * math.pi) / wave_span(H), u() * 2 * math.pi, amp))
         cycles *= 2.3
         amp *= 0.5
     return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves)
@@ -389,7 +390,7 @@ def render(W, H, dark):
             return g
 
         for k in range(slices):
-            wf = (1.5 + gw() * 3) * 2 * math.pi / W
+            wf = (1.5 + gw() * 3) * 2 * math.pi / wave_span(H)
             wp = gw() * 2 * math.pi
             wa = band_h * 0.012
             f0 = k / slices

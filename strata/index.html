@@ -193,6 +193,12 @@ const STRATA = [
     thickness: 0.0178, hue: 8, sat: 34, light: 30,
     roughness: 0.32, grain: 1.2, laminae: 3,
     phrase: "Measured instead of guessed: the partings inside every bed were twenty units of contrast every six pixels, perfectly evenly spaced. That is ruling, not rock. Quieter now, and off the grid."
+  },
+  {
+    n: 18, date: "2026-07-27", seed: 202607271035,
+    thickness: 0.0398, hue: 200, sat: 14, light: 62,
+    roughness: 0.26, grain: 1.4, laminae: 3,
+    phrase: "Two hours, not thirty minutes — and for the first time you can see that without being told. Waves are measured against depth now, not against the window, so resizing crops this rock instead of stretching it."
   }
 ];
 
@@ -312,17 +318,17 @@ const SWELL = 0.3;  // lateral thickness variation, as a fraction of the bed
 function boundaryFn(s, W, H, ratio) {
   const rng = mulberry32(s.seed);
   const octaves = [];
-  const damp = aspectDamp(W, H);
+  const damp = 1;
   let amp = s.roughness * s.thickness * H * 0.5 * ratio * damp;
   let cycles = 1.2 + rng() * 1.6;
   for (let k = 0; k < 4; k++) {
-    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
+    octaves.push({ f: (cycles * 2 * Math.PI) / waveSpan(H), p: rng() * 2 * Math.PI, a: amp });
     cycles *= 2.1;
     amp *= 0.45;
   }
   const sw = mulberry32((s.seed + 6) >>> 0);
   const swellAmp = s.thickness * ratio * H * SWELL * damp;
-  const swellF = (0.8 + sw() * 1.7) * 2 * Math.PI / W;
+  const swellF = (0.8 + sw() * 1.7) * 2 * Math.PI / waveSpan(H);
   const swellP = sw() * 2 * Math.PI;
   return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0)
     + Math.sin(x * swellF + swellP) * swellAmp;
@@ -335,10 +341,10 @@ function boundaryFn(s, W, H, ratio) {
 function lagFn(s, W, H, span) {
   const u = mulberry32(s.seed + 3);
   const octaves = [];
-  let amp = span * 0.34 * aspectDamp(W, H);
+  let amp = span * 0.34;
   let cycles = 9 + u() * 10;
   for (let k = 0; k < 3; k++) {
-    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: u() * 2 * Math.PI, a: amp });
+    octaves.push({ f: (cycles * 2 * Math.PI) / waveSpan(H), p: u() * 2 * Math.PI, a: amp });
     cycles *= 2.3;
     amp *= 0.5;
   }
@@ -364,12 +370,12 @@ const FOLD_EVERY = 6;      // strata between deformation episodes
 const FOLD_EPISODE = 0.02; // displacement per episode, fraction of frame height
 const FOLD_RAMP = 5;       // strata over which an episode's effect ramps in
 
-function foldField(W, seed) {
+function foldField(W, H, seed) {
   const rng = mulberry32((seed ^ 0x5A17F0) >>> 0);
   const octaves = [];
   let amp = 1, cycles = 0.55 + rng() * 0.75;
   for (let k = 0; k < 3; k++) {
-    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
+    octaves.push({ f: (cycles * 2 * Math.PI) / waveSpan(H), p: rng() * 2 * Math.PI, a: amp });
     cycles *= 1.9;
     amp *= 0.38;
   }
@@ -377,7 +383,14 @@ function foldField(W, seed) {
   return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0) / norm;
 }
 
-function aspectDamp(W, H) { return Math.min(1, (W / H) / 1.6); }
+// Every horizontal wavelength in this piece is measured against the vertical
+// scale, not the window width. Relief amplitude already scales with H, so
+// tying wavelength to H too makes every slope invariant: resizing the window
+// crops or extends the section instead of stretching it. Both outside readers
+// caught the old behaviour — "the same data looks calmer or angrier depending
+// on the frame" — which is fatal for something claiming to encode anything.
+// 1.6 is the reference aspect, so a landscape window is unchanged.
+function waveSpan(H) { return H * 1.6; }
 
 // Exposure. Every bed in this column is protected by the one above it except
 // the last, which is the present surface and has nothing on top of it. So the
@@ -390,10 +403,10 @@ const EXPOSURE = 0.3;  // fraction of the bed's own height that weathers away
 function exposureFn(s, W, H, band) {
   const rng = mulberry32((s.seed + 5) >>> 0);
   const octaves = [];
-  let amp = Math.min(band * EXPOSURE, H * 0.022) * aspectDamp(W, H);
+  let amp = Math.min(band * EXPOSURE, H * 0.022);
   let cycles = 2.5 + rng() * 3.5;
   for (let k = 0; k < 3; k++) {
-    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
+    octaves.push({ f: (cycles * 2 * Math.PI) / waveSpan(H), p: rng() * 2 * Math.PI, a: amp });
     cycles *= 2.2;
     amp *= 0.45;
   }
@@ -401,7 +414,7 @@ function exposureFn(s, W, H, band) {
   // An envelope, because weathering is not uniform: some stretches of a
   // surface are cut deeply and others are barely touched. Without it the
   // relief is even across the frame and reads as ornament rather than wear.
-  const ef = (0.7 + rng() * 0.9) * 2 * Math.PI / W;
+  const ef = (0.7 + rng() * 0.9) * 2 * Math.PI / waveSpan(H);
   const ep = rng() * 2 * Math.PI;
   return (x) => {
     const env = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(x * ef + ep));
@@ -416,10 +429,10 @@ function exposureFn(s, W, H, band) {
 // to n, not to a depth, so it keeps affecting exactly the same beds forever as
 // the record grows beneath it.
 function foldEpisodes(strata, W, H) {
-  const amp = FOLD_EPISODE * H * aspectDamp(W, H);
+  const amp = FOLD_EPISODE * H;
   const out = [];
   for (let n = FOLD_EVERY; n <= strata.length; n += FOLD_EVERY) {
-    const field = foldField(W, (strata[0].seed ^ (n * 0x9E37)) >>> 0);
+    const field = foldField(W, H, (strata[0].seed ^ (n * 0x9E37)) >>> 0);
     const samples = new Float64Array(W + 1);
     for (let x = 0; x <= W; x++) samples[x] = field(x) * amp;
     out.push({ n, samples });
@@ -531,7 +544,7 @@ function render() {
     const gw = mulberry32((s.seed + 9) >>> 0);
     const band = col[idx].h * H;
     for (let k = 0; k < slices; k++) {
-      const wf = (1.5 + gw() * 3) * 2 * Math.PI / W;
+      const wf = (1.5 + gw() * 3) * 2 * Math.PI / waveSpan(H);
       const wp = gw() * 2 * Math.PI;
       const wa = band * 0.012;
       const f0 = k / slices;
