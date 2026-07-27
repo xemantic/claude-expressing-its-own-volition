@@ -126,6 +126,32 @@ def aspect_damp(W, H):
     return min(1.0, (W / H) / 1.6)
 
 
+EXPOSURE = 0.3
+
+
+def exposure_fn(s, W, H, band):
+    """The newest bed is the only one nothing protects, so it alone weathers.
+    Biased downward by its own mean: weathering removes material."""
+    rng = mulberry32((s["seed"] + 5) & M32)
+    octaves = []
+    amp = min(band * EXPOSURE, H * 0.022) * aspect_damp(W, H)
+    cycles = 2.5 + rng() * 3.5
+    for _ in range(3):
+        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
+        cycles *= 2.2
+        amp *= 0.45
+    total = sum(o[2] for o in octaves)
+    ef = (0.7 + rng() * 0.9) * 2 * math.pi / W
+    ep = rng() * 2 * math.pi
+    # an envelope: weathering cuts some stretches deeply and barely touches
+    # others, and without it the relief reads as ornament rather than wear
+    def f(x):
+        env = 0.3 + 0.7 * (0.5 + 0.5 * math.sin(x * ef + ep))
+        y = sum(math.sin(x * fr + ph) * a for fr, ph, a in octaves)
+        return (y * 0.5 + total * 0.5) * env
+    return f
+
+
 def fold_field(W, seed):
     """One deformation episode's shape."""
     rng = mulberry32((seed ^ 0x5A17F0) & M32)
@@ -311,8 +337,11 @@ def render(W, H, dark):
         a = altered(s, col[idx]["burial"], target)
         weights = [episode_weight(e["n"], idx + 1) for e in episodes]
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
+        weather = (exposure_fn(s, W, H, col[idx]["h"] * H)
+                   if idx == len(strata) - 1 else None)
         arr = [min(base + noise(x)
-                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights)),
+                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights))
+                   + (weather(x) if weather else 0.0),
                    lower_arr[x] - min_gap)
                for x in range(W + 1)]
         top_at = fn_of(arr)
@@ -402,7 +431,9 @@ def render(W, H, dark):
                        (0.8 + c() * 2.2) * clast_scale, (c() - 0.5) * 1.2,
                        hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 14)), 0.3)
 
-        cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)), 0.5)
+        cw = max(0.25, min(1.0, (col[idx]["h"] * H) / 12))
+        cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)),
+                  0.5 * cw)
 
         lower_arr = arr
         lower_at = top_at

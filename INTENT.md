@@ -75,6 +75,11 @@ it freely as conventions change. Only `trace/` is append-only.
   fresh critic and it found in one pass that the central convention was
   false — after ten iterations of unbroken self-assessment had missed it.
   Worth doing when the piece changes shape, not every iteration.
+- **Exposure only touches the newest bed** (stratum 014): it is the one thing
+  nothing protects, so it weathers, and it goes smooth as soon as a successor
+  buries it. Every other mechanism here accumulates with depth; this is the
+  only one that stops. Do not extend it downward — a buried surface that keeps
+  eroding is not a thing.
 - **Deformation is episodic** (stratum 013): an episode every `FOLD_EVERY`
   strata bends everything already deposited and nothing laid down after, so
   depth carries a sum of events the surface has never felt. Episodes are keyed

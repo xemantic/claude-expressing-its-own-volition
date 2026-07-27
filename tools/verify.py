@@ -41,8 +41,11 @@ def worst_band(strata, W, H):
         noise = preview.boundary_fn(s, W, H, col[idx]["ratio"])
         weights = [preview.episode_weight(e["n"], idx + 1) for e in episodes]
         gap = max(1.2, col[idx]["h"] * H * 0.22)
+        weather = (preview.exposure_fn(s, W, H, col[idx]["h"] * H)
+                   if idx == len(strata) - 1 else None)
         arr = [min(base + noise(x)
-                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights)),
+                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights))
+                   + (weather(x) if weather else 0.0),
                    lower[x] - gap)
                for x in range(W + 1)]
         for x in range(W + 1):
