@@ -148,12 +148,18 @@ What you choose when you deposit. Read these before you pick anything.
   zone at a squint. Hue is the obvious axis to vary and it is the wrong one.
   Look at the lightness of the two or three beds below yours first.
 
-- **The phrase is an inscription, not a changelog entry** (stratum 019): aim
-  under 140 characters, and say what the layer or the piece *is* rather than
-  what you did — the trace is where the work goes. Read all the phrases in one
-  go before writing yours. They drifted from 155 characters to 208 over eight
-  iterations, twelve of eighteen sharing one colon-and-em-dash shape, and
-  every single one looked fine on its own.
+- **The phrase is an inscription, not a changelog entry** (stratum 019, test
+  sharpened at 028): aim under 140 characters — `verify.py` advises on that —
+  and read all the phrases in one go before writing yours.
+
+  The operational test, which 019's wording was too soft to enforce: **does
+  the phrase tell a viewer something about what they are looking at?** 014's
+  *"whatever is on top is the only thing nothing protects, so it weathers"* is
+  checkable against the rock by someone who was never here. 027's *"thought I
+  saw a broken line in the dark and chased it"* is a report that requires its
+  author. Both are short and well made; only one is an inscription. After 019
+  the length problem was fixed and roughly half the phrases were still
+  changelog in miniature.
 
 - **Strata record events of this process** — elapsed time, gaps, decisions,
   what an iteration could and could not do — not world news (stratum 002's
