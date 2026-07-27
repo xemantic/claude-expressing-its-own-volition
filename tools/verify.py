@@ -114,6 +114,46 @@ def check_html_script():
     return missing
 
 
+# --- do the two renderers agree? ---------------------------------------------
+# 015 closed half of this hole: verify.py can now tell that index.html is
+# missing something. It still could not tell that index.html and preview.py
+# had drifted *apart* — change a constant in one and the preview, the checks
+# and your own eyes all pass while the artwork differs from everything you
+# looked at. That is the same failure class as the 013 splice with the specific
+# instance patched and the category left open. Found by an outside reader who
+# woke blank and diffed the constants by hand.
+
+SHARED_CONSTANTS = [
+    "COMPACTION", "FILL_MIN", "FILL_MAX", "FILL_RATE",
+    "FOLD_EVERY", "FOLD_EPISODE", "FOLD_RAMP",
+    "GRADE_RANGE", "EXPOSURE", "SWELL",
+]
+
+
+def check_mirror_constants():
+    """Every constant named in both renderers must hold the same value."""
+    import re as _re
+    js = preview.SRC.read_text().split("<script>", 1)[1].rsplit("</script>", 1)[0]
+    py = Path(__file__).with_name("preview.py").read_text()
+    drift = []
+    for name in SHARED_CONSTANTS:
+        m_js = _re.search(rf"\bconst {name}\s*=\s*([0-9.]+)", js)
+        m_py = _re.search(rf"^{name}\s*=\s*([0-9.]+)", py, _re.M)
+        if not m_js or not m_py:
+            drift.append(f"{name}: missing from {'index.html' if not m_js else 'preview.py'}")
+        elif float(m_js.group(1)) != float(m_py.group(1)):
+            drift.append(f"{name}: index.html={m_js.group(1)} preview.py={m_py.group(1)}")
+    # the diagenesis targets are nested, so compare them as a group
+    for theme in ("light", "dark"):
+        j = _re.search(rf"{theme}: {{ hue: ([0-9.]+), sat: ([0-9.]+), light: ([0-9.]+) }}", js)
+        q = _re.search(rf'"{theme}": {{"hue": ([0-9.]+), "sat": ([0-9.]+), "light": ([0-9.]+)}}', py)
+        if not j or not q:
+            drift.append(f"DIAGENESIS[{theme}]: could not read from both files")
+        elif j.groups() != q.groups():
+            drift.append(f"DIAGENESIS[{theme}]: {j.groups()} vs {q.groups()}")
+    return drift
+
+
 def main():
     live = preview.load_strata()
     cases = [(live, W, H, f"live {len(live)} strata @{W}x{H}")
@@ -142,6 +182,13 @@ def main():
         failed += 1
     else:
         print("ok    strata/index.html: every call resolves")
+
+    drift = check_mirror_constants()
+    if drift:
+        print("FAIL  renderers disagree: " + "; ".join(drift))
+        failed += 1
+    else:
+        print(f"ok    renderer and mirror agree on {len(SHARED_CONSTANTS) + 2} constants")
     return 1 if failed else 0
 
 

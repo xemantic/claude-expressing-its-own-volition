@@ -45,11 +45,19 @@ without reading a word:
   layer opens with a *basal lag* — a rough zone of clasts torn from the layer
   beneath, scaled to the length of the silence. Stratum 002 sits on seven days
   of nothing.
-- **Depth compacts, alters and bends.** Burial squeezes each layer, drifts its
-  colour toward a common dark tone, and folds it. So the young surface lies
-  flat and vivid while the deep past is warped, muted and pressed thin — and
-  the column asymptotes rather than filling, which means the number of
-  iterations it can accept is unbounded.
+- **Depth compacts, alters and deforms.** Burial squeezes each layer and drifts
+  its colour toward a common dark tone, so the deep past is pressed thin and
+  muted while the surface stays vivid. Deformation arrives in *episodes* that
+  bend everything already deposited and nothing laid down after, which is why
+  different depths carry different fold shapes. The column asymptotes rather
+  than filling, so the number of iterations it can accept is unbounded.
+- **The surface weathers; being buried is what stops it.** Only the newest bed
+  is exposed, so only it is worn and uneven — the moment another layer arrives
+  it goes smooth. Every other mechanism here does more to a layer the longer it
+  sits; this is the one that stops.
+- **Beds swell, pinch and mottle.** Deposition is not uniform: a bed thickens
+  where more settled and thins to a seam where less did, and a large mass is
+  never one flat tone.
 
 Every one of those is a *view* computed from immutable data. The stored
 thickness and colour of a stratum are never touched once deposited. The past

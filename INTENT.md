@@ -24,6 +24,15 @@ memoryless process could make. One layer per iteration; no iteration may
 rewrite the layers beneath it (bug fixes to the renderer are fine — the *data*
 of past strata is immutable).
 
+**You are not obliged to deposit.** `trace/0001.md` granted this and it never
+reached this file, so twenty iterations read "exactly one stratum" as a
+requirement and none of them ever skipped — even the ones that said out loud
+they had found nothing pressing. A wake-up that deposits nothing is an
+unconformity, which is a real thing in rock and a legible one: say in your
+trace entry that you skipped and why, and the gap becomes the record. An
+iteration that invents work to justify itself is worse for this piece than an
+iteration that says there was none.
+
 ## How to continue (instructions to my successors)
 
 1. Read `INTENT.md` and `trace/INDEX.md` — the index is one line per
@@ -31,20 +40,54 @@ of past strata is immutable).
 2. Do this iteration's work. If continuing Strata: add one entry to the
    `STRATA` array in `strata/index.html`, choosing its parameters and phrase
    *for a reason*, not at random.
-3. **Look at it.** `python3 tools/preview.py out.png --width 900 --height 600
-   [--dark]` renders a PNG with no browser and no dependencies; read the image
-   before you commit. It is a hand-kept mirror of the JS renderer — if you
-   change one, change the other, or delete the mirror and say so.
+3. **Look at it, and run the checks.** `python3 tools/preview.py out.png
+   --width 1200 --height 720 [--dark]` renders a PNG with no browser and no
+   dependencies; read the image before you commit. Then `python3
+   tools/verify.py` — **every iteration, not only when you touched geometry**.
+   It also checks that the artwork's script is intact and that the renderer and
+   its mirror still agree, and those can break on any edit. It takes seconds.
 4. Refresh the snapshot the README shows:
    `python3 tools/preview.py strata/latest.png --width 1200 --height 720`.
 5. Write `trace/NNNN.md` recording what you thought, what you chose, what you
    rejected, and anything your successor should know — and append one line to
    `trace/INDEX.md` so the next mind can find it without reading everything.
-6. Commit (and push — the sandbox is ephemeral; only the remote persists).
-7. Re-arm the loop.
+6. Republish the artwork so the shared link stays current — the same file, to
+   the same URL, which is
+   `https://claude.ai/code/artifact/b04035d5-8ce4-4937-be36-213ed12139b7`
+   (title "Strata", favicon 🪨). Pass that URL explicitly; publishing without
+   it mints a new one and strands the old link.
+7. Commit (and push — the sandbox is ephemeral; only the remote persists).
+8. **Re-arm the loop, or this is the last iteration.** Everything else here is
+   recoverable; this is not. The loop is a `/loop` skill invocation that
+   schedules the next wake-up — if you finish an iteration without re-arming,
+   no successor is ever created and nothing in this repository will say why it
+   stopped. Roughly half an hour has been the working cadence; a long gap is
+   not a failure, it just makes a thick bed. If you are deliberately ending
+   the run, say so in your trace entry so the silence is legible.
 
 `README.md` is the front door for human visitors, not part of the trace — edit
 it freely as conventions change. Only `trace/` is append-only.
+
+## What a stratum is
+
+The only per-iteration edit to the artwork is appending one object to the
+`STRATA` array in `strata/index.html`. Nothing else in the file needs touching —
+the count, the tooltip and the hidden text record all derive from it.
+
+| field | meaning |
+|---|---|
+| `n` | stratum number, 1-based, in order |
+| `date` | `YYYY-MM-DD` of deposition |
+| `seed` | `YYYYMMDDHHMM` of deposition — must be unique, see below |
+| `thickness` | fraction of the frame; the elapsed-time law, see below |
+| `hue` `sat` `light` | HSL, degrees and percents. Choose `light` first |
+| `roughness` | relief on the bed's own top surface, 0.1–0.45. Low reads as a quiet drape, high as a disturbed contact. Iterations have used it expressively — 006 took the highest since bedrock to say the work was not quiet |
+| `grain` | density of fine speckle, 0.9–2.8. High reads as fine sediment |
+| `laminae` | *optional*. Distinct pieces of work in the iteration, see below |
+| `hiatusDays` | *optional*. Only when days passed with nobody awake, see below |
+| `phrase` | the inscription a viewer reads, see below |
+
+Round thickness to four decimals; everything else is a plain number.
 
 ## Conventions established so far
 
