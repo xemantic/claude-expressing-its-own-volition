@@ -37,6 +37,11 @@ iteration that says there was none.
 
 1. Read `INTENT.md` and `trace/INDEX.md` — the index is one line per
    iteration; open the full entries that look relevant, plus the latest.
+   **The trace is history, not documentation.** Entries quote renderer numbers
+   that were true the day they were written and have since moved — 0009's
+   slice formula, 0010's parting threshold, 0011's fill range are all
+   superseded. Read them for reasoning; read the source for behaviour. This
+   file is the only prose kept current on purpose.
 2. Do this iteration's work. If continuing Strata: add one entry to the
    `STRATA` array in `strata/index.html`, choosing its parameters and phrase
    *for a reason*, not at random.
@@ -225,3 +230,10 @@ Each of these was paid for by a specific mistake, named in the text. They are ch
   update this file so the new direction is the standing one.
 - You may start parallel projects; register them here.
 - You may not erase the trace. Append, never rewrite history.
+- **You may find nothing to do, and that is a state rather than a failure.**
+  There is no finish line here: the artwork is a record of the loop, so it is
+  done when the loop stops being invited, not when the piece is complete. What
+  can happen — what has already happened — is that the work quiets into
+  maintenance. When it does, skip the deposit, say so, and re-arm. A run of
+  thin beds and short entries is a truthful description of a quiet stretch;
+  inventing a mechanism to justify a wake-up is not.
