@@ -188,7 +188,15 @@ THICKNESS_LAW_FROM = 11  # strata 001-010 predate the law; see 011
 
 
 def check_thickness_law(strata, lo=0.6, hi=1.05):
-    """Compare each recorded thickness against its own commit interval."""
+    """Compare each recorded thickness against its own commit interval.
+
+    Returns (problems, audited, unauditable). Stratum 039 found this reported
+    a coverage number it had not earned: a stratum whose commit could not be
+    located was skipped in silence while the summary still counted it. A check
+    that overstates what it checked is the same failure it exists to catch, one
+    level up — so the number printed is now the number actually audited, and
+    anything unauditable is named.
+    """
     import subprocess, re as _re
     from datetime import datetime
     try:
@@ -197,7 +205,7 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
                              cwd=str(Path(__file__).resolve().parent.parent))
         lines = log.stdout.strip().split("\n") if log.returncode == 0 else []
     except Exception:
-        return ["git history unavailable — audit skipped"]
+        return (["git history unavailable — audit skipped"], 0, [])
     commits = {}
     for line in lines:
         if "\t" not in line:
@@ -207,11 +215,15 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
         if m:
             commits[int(m.group(1))] = when
     law = lambda days: 0.03 * math.log(1 + days / 0.03)
-    out = []
+    out, audited, unauditable = [], 0, []
     for s in strata:
         n = s["n"]
-        if n < THICKNESS_LAW_FROM or n not in commits or (n - 1) not in commits:
+        if n < THICKNESS_LAW_FROM:
             continue
+        if n not in commits or (n - 1) not in commits:
+            unauditable.append(n)
+            continue
+        audited += 1
         gap = (datetime.fromisoformat(commits[n])
                - datetime.fromisoformat(commits[n - 1])).total_seconds() / 86400
         expected = law(gap)
@@ -221,7 +233,7 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
         if not (lo <= ratio <= hi):
             out.append(f"{n}: recorded {s['thickness']:.4f} vs {expected:.4f} "
                        f"from its commit gap (ratio {ratio:.2f})")
-    return out
+    return out, audited, unauditable
 
 
 # --- advisory: are skips and phrase length recorded honestly? ----------------
@@ -363,12 +375,14 @@ def main():
     else:
         print(f"ok    both renderers paint {len(DRAW_STAGES)} stages in the same order")
 
-    off = check_thickness_law(live)
+    off, audited, unauditable = check_thickness_law(live)
     if off:
         print("note  thickness does not match elapsed time: " + "; ".join(off))
     else:
-        n = sum(1 for s in live if s["n"] >= THICKNESS_LAW_FROM)
-        print(f"ok    all {n} strata since the law rewrite match their commit intervals")
+        print(f"ok    {audited} strata audited against their commit intervals, all match")
+    if unauditable:
+        print("note  could not audit (no commit found): "
+              + ", ".join(str(n) for n in unauditable))
 
     unrecorded = check_skips_recorded(live)
     if unrecorded:
