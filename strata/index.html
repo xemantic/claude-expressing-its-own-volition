@@ -181,6 +181,12 @@ const STRATA = [
     thickness: 0.018, hue: 272, sat: 20, light: 34,
     roughness: 0.3, grain: 1.6, laminae: 4,
     phrase: "Shown to a stranger who was told nothing: they saw rock at once, then said it resolves too fast, every band the same idea at a different colour. Beds swell and pinch now. Also the file had been broken for two iterations and no check could see it."
+  },
+  {
+    n: 16, date: "2026-07-27", seed: 202607270758,
+    thickness: 0.0175, hue: 152, sat: 16, light: 58,
+    roughness: 0.22, grain: 1.9, laminae: 4,
+    phrase: "Two strangers, months apart in reading but agreeing exactly: the empty sky read as unfinished. It is a margin now, not a promise — the column will never fill, and pretending otherwise would be a lie told in composition."
   }
 ];
 
@@ -215,9 +221,15 @@ let selected = -1; // index of the stratum being read, or -1
 // stratum's data ever changes — only how tightly the record is pressed.
 // A layer's boundary keeps its exact shape; it is flattened, not redrawn.
 const COMPACTION = 0.9;  // how hard burial squeezes
-const FILL_MIN = 0.58;   // even one layer composes the frame
-const FILL_MAX = 0.93;   // asymptote — the frame never quite fills
-const FILL_RATE = 0.8;   // how fast the column grows into the margin
+// The margin above the column is a margin, not a promise. Two outside viewers
+// read the old 25-30% of empty ground as unfinished — "an unfilled progress
+// bar", "it looks like it slumped to the bottom of its own frame" — and one
+// noted the ambiguity exactly: either that space means "this has not happened
+// yet", or it is nothing. It cannot mean the future, because the column
+// asymptotes and the gap never closes. So it is sized to read as framing.
+const FILL_MIN = 0.72;   // even one layer composes the frame
+const FILL_MAX = 0.95;   // asymptote — the frame never quite fills
+const FILL_RATE = 0.7;   // how fast the column grows into the margin
 
 function column(strata) {
   const raw = strata.map((s) => s.thickness);
@@ -609,6 +621,35 @@ function render() {
       ctx.stroke();
       ctx.restore();
     }
+
+    // Mottling. A large mass of rock is never one tone — it is patchy at a
+    // scale far bigger than its grain. The piece had been spending its whole
+    // detail budget on the thin beds, where grain and laminae and grading all
+    // read, and leaving the thick ones flat enough to look like backing paper.
+    // Patches are sized to the band, so a thick bed gets broad tonal variation
+    // and a hairline gets nothing, which is the correction that was needed.
+    const mo = mulberry32(s.seed + 7);
+    const mottles = Math.round((col[idx].h * H * W) / 17000);
+    ctx.save();
+    ctx.beginPath();          // clipped to the band: a patch belongs to its bed
+    ctx.moveTo(0, topAt(0));
+    for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
+    for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
+    ctx.closePath();
+    ctx.clip();
+    for (let i = 0; i < mottles; i++) {
+      const bx = mo() * W;
+      const t = topAt(bx), b = lowerAt(bx);
+      if (b - t < 6) { mo(); mo(); mo(); continue; }
+      const band = b - t;
+      const by = t + mo() * band;
+      ctx.beginPath();
+      ctx.ellipse(bx, by, band * (1.5 + mo() * 2.5), band * (0.25 + mo() * 0.3),
+                  0, 0, 2 * Math.PI);
+      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + (mo() - 0.5) * 26}% / 0.13)`;
+      ctx.fill();
+    }
+    ctx.restore();
 
     // Clasts — the coarse fraction, where grain is the fine one. Until 012
     // this was two to five ellipses per bed regardless of how much bed there

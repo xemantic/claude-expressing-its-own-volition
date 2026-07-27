@@ -63,9 +63,9 @@ def load_strata():
 # --- boundary / lag functions (ports of the JS) ---------------------------
 
 COMPACTION = 0.9
-FILL_MIN = 0.58
-FILL_MAX = 0.93
-FILL_RATE = 0.8
+FILL_MIN = 0.72
+FILL_MAX = 0.95
+FILL_RATE = 0.7
 
 
 def column(strata):
@@ -276,6 +276,19 @@ class Canvas:
 
     def ellipse(self, cx, cy, rx, ry, rot, rgb, alpha=1.0, clip=None):
         rx, ry = max(rx, 0.6), max(ry, 0.6)
+        if rot == 0.0:  # axis-aligned: solve each scanline directly
+            y0 = max(0, int(math.ceil(cy - ry)))
+            y1 = min(self.h - 1, int(cy + ry))
+            for y in range(y0, y1 + 1):
+                t = 1.0 - ((y - cy) / ry) ** 2
+                if t <= 0:
+                    continue
+                half = rx * math.sqrt(t)
+                for x in range(max(0, int(cx - half)), min(self.w - 1, int(cx + half)) + 1):
+                    if clip and not clip(x, y):
+                        continue
+                    self.blend(x, y, rgb, alpha)
+            return
         cos, sin = math.cos(-rot), math.sin(-rot)
         r = int(math.ceil(max(rx, ry))) + 1
         for y in range(int(cy) - r, int(cy) + r + 1):
@@ -426,6 +439,22 @@ def render(W, H, dark):
 
             cv.stroke(lag_top,
                       hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)), 0.65)
+
+        # mottling: a large mass is never one tone, and the thick beds had
+        # been the least textured things in the picture
+        mo = mulberry32(s["seed"] + 7)
+        for _ in range(round(col[idx]["h"] * H * W / 17000)):
+            bx = mo() * W
+            t, b = top_at(bx), lower_at(bx)
+            if b - t < 6:
+                mo(); mo(); mo()
+                continue
+            band = b - t
+            by = t + mo() * band
+            cv.ellipse(bx, by, band * (1.5 + mo() * 2.5), band * (0.25 + mo() * 0.3),
+                       0.0, hsl_rgb(a["hue"], a["sat"], a["light"] + (mo() - 0.5) * 26),
+                       0.13,
+                       clip=lambda px, py: top_at(px) <= py <= lower_at(px))
 
         # clasts: the coarse fraction — a density, not a handful
         c = mulberry32(s["seed"] + 2)
