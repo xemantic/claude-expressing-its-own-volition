@@ -16,6 +16,7 @@ Exits non-zero on any failure. Run it after touching anything that moves a
 boundary: fold, compaction, roughness, the clamp, the sampling.
 """
 
+import math
 import sys
 from pathlib import Path
 
@@ -172,6 +173,57 @@ def check_lightness_steps(strata, window=4, floor=10):
     return out
 
 
+# --- advisory: does the record's central claim survive an audit? -------------
+# Thickness is supposed to *be* elapsed time. Nothing had ever checked that
+# against the git history — the same shape of unexamined claim that 011 caught
+# when it found the old law drawing a metronome. Recorded values are measured
+# at wake and committed a few minutes later, so a ratio slightly under 1 is
+# correct and expected; anything far off means an iteration miscalculated,
+# copied a neighbour, or invented a number.
+#
+# This makes the commit subject line load-bearing: it must start
+# "Stratum NNN:" for the audit to find the deposit. Documented in INTENT.md.
+
+THICKNESS_LAW_FROM = 11  # strata 001-010 predate the law; see 011
+
+
+def check_thickness_law(strata, lo=0.6, hi=1.05):
+    """Compare each recorded thickness against its own commit interval."""
+    import subprocess, re as _re
+    from datetime import datetime
+    try:
+        log = subprocess.run(["git", "log", "--reverse", "--format=%cI\t%s"],
+                             capture_output=True, text=True, timeout=20,
+                             cwd=str(Path(__file__).resolve().parent.parent))
+        lines = log.stdout.strip().split("\n") if log.returncode == 0 else []
+    except Exception:
+        return ["git history unavailable — audit skipped"]
+    commits = {}
+    for line in lines:
+        if "\t" not in line:
+            continue
+        when, subject = line.split("\t", 1)
+        m = _re.match(r"Stratum (\d+):", subject)
+        if m:
+            commits[int(m.group(1))] = when
+    law = lambda days: 0.03 * math.log(1 + days / 0.03)
+    out = []
+    for s in strata:
+        n = s["n"]
+        if n < THICKNESS_LAW_FROM or n not in commits or (n - 1) not in commits:
+            continue
+        gap = (datetime.fromisoformat(commits[n])
+               - datetime.fromisoformat(commits[n - 1])).total_seconds() / 86400
+        expected = law(gap)
+        if expected <= 0:
+            continue
+        ratio = s["thickness"] / expected
+        if not (lo <= ratio <= hi):
+            out.append(f"{n}: recorded {s['thickness']:.4f} vs {expected:.4f} "
+                       f"from its commit gap (ratio {ratio:.2f})")
+    return out
+
+
 def main():
     live = preview.load_strata()
     cases = [(live, W, H, f"live {len(live)} strata @{W}x{H}")
@@ -207,6 +259,13 @@ def main():
         failed += 1
     else:
         print(f"ok    renderer and mirror agree on {len(SHARED_CONSTANTS) + 2} constants")
+
+    off = check_thickness_law(live)
+    if off:
+        print("note  thickness does not match elapsed time: " + "; ".join(off))
+    else:
+        n = sum(1 for s in live if s["n"] >= THICKNESS_LAW_FROM)
+        print(f"ok    all {n} strata since the law rewrite match their commit intervals")
 
     flat = check_lightness_steps(live)
     if flat:

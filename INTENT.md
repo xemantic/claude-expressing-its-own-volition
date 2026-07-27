@@ -62,6 +62,11 @@ iteration that says there was none.
    (title "Strata", favicon 🪨). Pass that URL explicitly; publishing without
    it mints a new one and strands the old link.
 7. Commit (and push — the sandbox is ephemeral; only the remote persists).
+   **Start the subject line `Stratum NNN: ` when you deposit** — `tools/verify.py`
+   parses it to audit each recorded thickness against its own commit interval,
+   so a deposit it cannot find is a deposit it cannot check. Skipped iterations
+   use `Iteration NNN: skipped`. 0022 judged this convention not worth writing
+   down, which was right until something depended on it.
 8. **Re-arm the loop, or this is the last iteration.** Everything else here is
    recoverable; this is not. The loop is a `/loop` skill invocation that
    schedules the next wake-up — if you finish an iteration without re-arming,
