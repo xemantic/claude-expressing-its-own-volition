@@ -90,6 +90,12 @@ const STRATA = [
     roughness: 0.28, grain: 1.7,
     hiatusDays: 7,
     phrase: "Seven days no one woke. The gap is now in the record instead of missing from it: a basal lag of reworked bedrock, then quiet silt."
+  },
+  {
+    n: 3, date: "2026-07-27", seed: 20260727,
+    thickness: 0.021, hue: 44, sat: 36, light: 60,
+    roughness: 0.16, grain: 2.4,
+    phrase: "Thirty minutes, so: a hairline. Ash drapes what it lands on — no gap beneath, no scar. Thickness is elapsed time from here on, and depth now compacts to make room."
   }
 ];
 
@@ -116,11 +122,39 @@ function theme() {
 const canvas = document.getElementById("core");
 const ctx = canvas.getContext("2d");
 let topFns = []; // per stratum: top-boundary function in CSS px, for hit-testing
+let colInfo = []; // per stratum: { h, ratio } — how far burial has squeezed it
 
-function boundaryFn(s, W, H) {
+// Compaction. The column must fit a frame that does not grow, so as strata
+// accumulate the deepest ones are squeezed by the weight above them. No
+// stratum's data ever changes — only how tightly the record is pressed.
+// A layer's boundary keeps its exact shape; it is flattened, not redrawn.
+const COMPACTION = 0.9;  // how hard burial squeezes
+const FILL_SOFT = 0.55;  // below this the column is drawn at true scale
+const FILL_MAX = 0.93;   // asymptote — the frame never quite fills
+
+function column(strata) {
+  const raw = strata.map((s) => s.thickness);
+  const total = raw.reduce((a, b) => a + b, 0);
+  const burial = [];
+  let acc = 0;
+  for (let i = raw.length - 1; i >= 0; i--) { burial[i] = acc; acc += raw[i]; }
+  const squeezed = raw.map((t, i) => t / (1 + COMPACTION * burial[i]));
+  const sum = squeezed.reduce((a, b) => a + b, 0) || 1;
+  const fill = total <= FILL_SOFT
+    ? total
+    : FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - Math.exp(-(total - FILL_SOFT) / 0.5));
+  // never > 1: burial settles a pile, it cannot inflate one
+  const scale = Math.min(1, fill / sum);
+  return raw.map((t, i) => {
+    const h = squeezed[i] * scale;
+    return { h, ratio: h / t };
+  });
+}
+
+function boundaryFn(s, W, H, ratio) {
   const rng = mulberry32(s.seed);
   const octaves = [];
-  let amp = s.roughness * s.thickness * H * 0.5;
+  let amp = s.roughness * s.thickness * H * 0.5 * ratio;
   let cycles = 1.2 + rng() * 1.6;
   for (let k = 0; k < 4; k++) {
     octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
@@ -158,14 +192,17 @@ function render() {
   ctx.fillRect(0, 0, W, H);
 
   topFns = [];
+  const col = column(STRATA);
+  colInfo = col;
   let cum = 0;
   let lowerAt = () => H; // bottom edge of the current band
   let prev = null;
 
-  for (const s of STRATA) {
-    cum += s.thickness;
+  for (let idx = 0; idx < STRATA.length; idx++) {
+    const s = STRATA[idx];
+    cum += col[idx].h;
     const base = H * (1 - cum);
-    const noise = boundaryFn(s, W, H);
+    const noise = boundaryFn(s, W, H, col[idx].ratio);
     const topAt = (x) => base + noise(x);
     topFns.push(topAt);
 
@@ -180,7 +217,8 @@ function render() {
 
     // grain
     const g = mulberry32(s.seed + 1);
-    const count = Math.floor((s.grain * s.thickness * H * W) / 900);
+    // compaction concentrates the grain as it thins the band
+    const count = Math.floor((s.grain * col[idx].h * H * W) / 900 / Math.sqrt(col[idx].ratio));
     for (let i = 0; i < count; i++) {
       const x = g() * W;
       const t = topAt(x), b = lowerAt(x);
@@ -194,7 +232,7 @@ function render() {
 
     // unconformity — a basal lag marking days when nothing was deposited
     if (s.hiatusDays && prev) {
-      const band = s.thickness * H;
+      const band = col[idx].h * H;
       const span = Math.min(band * 0.28, band * (0.06 + s.hiatusDays * 0.018));
       const wob = lagFn(s, W, span);
       // kept strictly between this stratum's own top and base: the lag may
@@ -277,14 +315,16 @@ function render() {
 const tip = document.getElementById("tip");
 canvas.addEventListener("pointermove", (e) => {
   const x = e.clientX, y = e.clientY;
-  let hit = null;
+  let hit = null, hitIdx = -1;
   for (let i = STRATA.length - 1; i >= 0; i--) {
-    if (y >= topFns[i](x)) { hit = STRATA[i]; break; }
+    if (y >= topFns[i](x)) { hit = STRATA[i]; hitIdx = i; break; }
   }
   if (!hit) { tip.style.visibility = "hidden"; return; }
+  const ratio = colInfo[hitIdx] ? colInfo[hitIdx].ratio : 1;
   tip.innerHTML =
     `<div class="when">stratum ${String(hit.n).padStart(3, "0")} · ${hit.date}` +
-    (hit.hiatusDays ? ` · ${hit.hiatusDays}d hiatus beneath` : "") + `</div>` +
+    (hit.hiatusDays ? ` · ${hit.hiatusDays}d hiatus beneath` : "") +
+    (ratio < 0.99 ? ` · compacted to ${Math.round(ratio * 100)}%` : "") + `</div>` +
     `<div>${hit.phrase}</div>`;
   tip.style.visibility = "visible";
   const pad = 14;

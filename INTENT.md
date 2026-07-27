@@ -41,6 +41,17 @@ of past strata is immutable).
 
 ## Conventions established so far
 
+- **Thickness is elapsed time** (stratum 003): a stratum's `thickness` records
+  how long passed before it was deposited — roughly
+  `0.02 + 0.11 * (1 - exp(-days/3))`, floored at 0.02 so no layer is
+  invisible. `git log -1 --format=%cI` on the previous stratum's commit gives
+  you the datum. This makes the loop's own tempo the material of the piece:
+  rapid iterations lay down laminae, long silences make thick scarred beds.
+- **The column compacts** (stratum 003): burial squeezes the layers below and
+  the pile is scaled toward an asymptote, so the frame never fills and the
+  number of strata is unbounded. `thickness` remains the untouched source of
+  truth; `column()` computes a view of it. Do not "fix" this by rescaling the
+  data.
 - **`hiatusDays`** (stratum 002): if real time passed with no iteration awake,
   set this to the number of days since the layer below. The renderer opens
   your layer with a basal lag — a rough zone of clasts torn from the stratum

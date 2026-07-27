@@ -44,21 +44,51 @@ def mulberry32(a):
 # --- reading the strata data out of the HTML ------------------------------
 
 def load_strata():
+    """Parse the STRATA array literal out of the HTML into JSON.
+
+    String-aware: a phrase may legitimately contain `//`, a colon, or a
+    comma, and none of those may be mistaken for syntax. Split on string
+    literals first, rewrite only the parts between them.
+    """
     src = SRC.read_text()
     body = src.split("const STRATA = [", 1)[1].split("\n];", 1)[0]
-    body = re.sub(r"//[^\n]*", "", body)
-    # bare keys -> quoted, only where a key can start (after { or ,)
-    body = re.sub(r"([{,]\s*)(\w+)\s*:", r'\1"\2":', body)
-    body = re.sub(r",(\s*[}\]])", r"\1", body)        # trailing commas
-    return json.loads("[" + body + "]")
+    parts = re.split(r'("(?:[^"\\]|\\.)*")', body)  # odd indices are strings
+    for i in range(0, len(parts), 2):
+        p = re.sub(r"//[^\n]*", "", parts[i])            # line comments
+        p = re.sub(r"([{,]\s*)(\w+)\s*:", r'\1"\2":', p)  # bare keys -> quoted
+        parts[i] = re.sub(r",(\s*[}\]])", r"\1", p)       # trailing commas
+    return json.loads("[" + "".join(parts) + "]")
 
 
 # --- boundary / lag functions (ports of the JS) ---------------------------
 
-def boundary_fn(s, W, H):
+COMPACTION = 0.9
+FILL_SOFT = 0.55
+FILL_MAX = 0.93
+
+
+def column(strata):
+    """Differential compaction: burial squeezes the layers below."""
+    raw = [s["thickness"] for s in strata]
+    total = sum(raw)
+    burial = [0.0] * len(raw)
+    acc = 0.0
+    for i in range(len(raw) - 1, -1, -1):
+        burial[i] = acc
+        acc += raw[i]
+    squeezed = [t / (1 + COMPACTION * b) for t, b in zip(raw, burial)]
+    ssum = sum(squeezed) or 1.0
+    fill = total if total <= FILL_SOFT else (
+        FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - math.exp(-(total - FILL_SOFT) / 0.5))
+    )
+    scale = min(1.0, fill / ssum)  # burial settles a pile, never inflates one
+    return [{"h": e * scale, "ratio": e * scale / t} for e, t in zip(squeezed, raw)]
+
+
+def boundary_fn(s, W, H, ratio):
     rng = mulberry32(s["seed"])
     octaves = []
-    amp = s["roughness"] * s["thickness"] * H * 0.5
+    amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio
     cycles = 1.2 + rng() * 1.6
     for _ in range(4):
         octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
@@ -179,20 +209,21 @@ def render(W, H, dark):
                (("10", "0E", "0B") if dark else ("ED", "E7", "DA")))
     cv = Canvas(W, H, bg)
 
+    col = column(strata)
     cum = 0.0
     lower_at = lambda x: float(H)
     prev = None
 
-    for s in strata:
-        cum += s["thickness"]
+    for idx, s in enumerate(strata):
+        cum += col[idx]["h"]
         base = H * (1 - cum)
-        noise = boundary_fn(s, W, H)
+        noise = boundary_fn(s, W, H, col[idx]["ratio"])
         top_at = (lambda base, noise: lambda x: base + noise(x))(base, noise)
 
         cv.band(top_at, lower_at, hsl_rgb(s["hue"], s["sat"], s["light"]))
 
         g = mulberry32(s["seed"] + 1)
-        count = int((s["grain"] * s["thickness"] * H * W) / 900)
+        count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
         for _ in range(count):
             x = g() * W
             t, b = top_at(x), lower_at(x)
@@ -209,7 +240,7 @@ def render(W, H, dark):
                     cv.blend(int(x) + dx, int(y) + dy, rgb, alpha)
 
         if s.get("hiatusDays") and prev:
-            band = s["thickness"] * H
+            band = col[idx]["h"] * H
             span = min(band * 0.28, band * (0.06 + s["hiatusDays"] * 0.018))
             wob = lag_fn(s, W, span)
 
