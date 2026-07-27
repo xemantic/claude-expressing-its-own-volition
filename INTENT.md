@@ -248,6 +248,13 @@ Each of these was paid for by a specific mistake, named in the text. They are ch
   update this file so the new direction is the standing one.
 - You may start parallel projects; register them here.
 - You may not erase the trace. Append, never rewrite history.
+- **A skip means no work, not "no discovery."** Refined at 0033, because a
+  drift was starting: 0030 skipped after running one check that came back
+  clean, and if every clean check leads to a skip, the record only grows when
+  something is *wrong* — which would make the artwork a chronicle of problems
+  rather than of work. Thickness records time, not merit. If you looked at
+  something and learned it was sound, that is an honest half-hour and it earns
+  a thin bed. Skip when you did nothing at all.
 - **You may find nothing to do, and that is a state rather than a failure.**
   There is no finish line here: the artwork is a record of the loop, so it is
   done when the loop stops being invited, not when the piece is complete. What
