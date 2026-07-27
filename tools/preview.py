@@ -82,8 +82,35 @@ def column(strata):
         FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - math.exp(-(total - FILL_SOFT) / 0.5))
     )
     scale = min(1.0, fill / ssum)  # burial settles a pile, never inflates one
-    return [{"h": e * scale, "ratio": e * scale / t, "burial": b}
-            for e, t, b in zip(squeezed, raw, burial)]
+    out = [{"h": e * scale, "ratio": e * scale / t, "burial": b, "depth": 0.0}
+           for e, t, b in zip(squeezed, raw, burial)]
+    # rendered depth above each layer — geometry must use this, not raw burial
+    d = 0.0
+    for i in range(len(out) - 1, -1, -1):
+        out[i]["depth"] = d
+        d += out[i]["h"]
+    return out, d
+
+
+FOLD_AMP = 0.075
+FOLD_DEPTH = 0.55
+
+
+def fold_field(W, seed):
+    """A single warp shared by the whole column — a property of the basin."""
+    rng = mulberry32((seed ^ 0x5A17F0) & M32)
+    octaves = []
+    amp, cycles = 1.0, 0.55 + rng() * 0.75
+    for _ in range(3):
+        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
+        cycles *= 1.9
+        amp *= 0.38
+    norm = sum(o[2] for o in octaves)
+    return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves) / norm
+
+
+def fold_at(depth):
+    return FOLD_AMP * (1 - math.exp(-depth / FOLD_DEPTH))
 
 
 DIAGENESIS = {"hue": 28, "sat": 9, "light": 20, "k": 0.7, "max": 0.82}
@@ -226,17 +253,30 @@ def render(W, H, dark):
                (("10", "0E", "0B") if dark else ("ED", "E7", "DA")))
     cv = Canvas(W, H, bg)
 
-    col = column(strata)
+    col, fill_total = column(strata)
     cum = 0.0
-    lower_at = lambda x: float(H)
+    fold = fold_field(W, strata[0]["seed"])
+    sink = fold_at(fill_total) * H
+
+    # boundaries sampled per pixel, then clamped so no bed can be punched
+    # through by the relief of a thicker, rougher one beneath it
+    def fn_of(arr):
+        return lambda x: arr[0 if x < 0 else (W if x > W else int(round(x)))]
+
+    lower_arr = [H + sink + fold(x) * sink for x in range(W + 1)]
+    lower_at = fn_of(lower_arr)
     prev = None
 
     for idx, s in enumerate(strata):
         cum += col[idx]["h"]
-        base = H * (1 - cum)
+        base = H * (1 - cum) + sink
         noise = boundary_fn(s, W, H, col[idx]["ratio"])
         a = altered(s, col[idx]["burial"])
-        top_at = (lambda base, noise: lambda x: base + noise(x))(base, noise)
+        warp = fold_at(col[idx]["depth"]) * H
+        min_gap = max(1.2, col[idx]["h"] * H * 0.22)
+        arr = [min(base + noise(x) + fold(x) * warp, lower_arr[x] - min_gap)
+               for x in range(W + 1)]
+        top_at = fn_of(arr)
 
         cv.band(top_at, lower_at, hsl_rgb(a["hue"], a["sat"], a["light"]))
 
@@ -302,6 +342,7 @@ def render(W, H, dark):
 
         cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)), 0.5)
 
+        lower_arr = arr
         lower_at = top_at
         prev = s
 

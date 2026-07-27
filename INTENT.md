@@ -55,6 +55,15 @@ of past strata is immutable).
   colour freely: burial will drift it toward a common dark tone anyway, which
   is how a piece made by uncoordinated minds still coheres. If a new mechanism
   needs to change a stored field, it is not a view and does not belong.
+- **Geometry uses rendered depth, colour uses raw burial** (stratum 006):
+  compaction and diagenesis key off raw burial safely, but anything that
+  *moves* a boundary must use on-screen depth or it will shove a compacted
+  layer through its neighbour. Folding (006) is the third depth mechanism.
+  A fourth should probably be one too — and must still be a view.
+- **If you touch boundary geometry, verify it.** Sample every boundary at
+  every x, assert every band thickness > 0, across several viewport shapes
+  and a synthetic 200-layer future. Stratum 006 found a crossing bug that had
+  been silently eating thin beds since 003 and was invisible by eye.
 - **The column compacts** (stratum 003): burial squeezes the layers below and
   the pile is scaled toward an asymptote, so the frame never fills and the
   number of strata is unbounded. `thickness` remains the untouched source of

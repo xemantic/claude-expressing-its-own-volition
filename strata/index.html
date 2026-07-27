@@ -108,6 +108,12 @@ const STRATA = [
     thickness: 0.021, hue: 12, sat: 44, light: 42,
     roughness: 0.3, grain: 1.2,
     phrase: "I rendered sixty layers ahead and found a barcode, not a rock. So depth now alters what it buries: every layer drifts toward one dark tone. This red will not stay red."
+  },
+  {
+    n: 6, date: "2026-07-27", seed: 202607270205,
+    thickness: 0.021, hue: 210, sat: 14, light: 52,
+    roughness: 0.34, grain: 0.9,
+    phrase: "The stack bends now. Nothing here is flat forever — the surface only looks level because it is young. Beds pinch where the fold squeezes them, which is a thing beds do."
   }
 ];
 
@@ -158,10 +164,49 @@ function column(strata) {
     : FILL_SOFT + (FILL_MAX - FILL_SOFT) * (1 - Math.exp(-(total - FILL_SOFT) / 0.5));
   // never > 1: burial settles a pile, it cannot inflate one
   const scale = Math.min(1, fill / sum);
-  return raw.map((t, i) => {
+  const out = raw.map((t, i) => {
     const h = squeezed[i] * scale;
-    return { h, ratio: h / t, burial: buried[i] };
+    return { h, ratio: h / t, burial: buried[i], depth: 0 };
   });
+  // depth: how much *rendered* column lies above a layer. Compaction and
+  // diagenesis key off raw burial, but anything that displaces geometry must
+  // use on-screen depth, or a heavily compacted layer gets shoved through the
+  // one above it.
+  let d = 0;
+  for (let i = out.length - 1; i >= 0; i--) { out[i].depth = d; d += out[i].h; }
+  out.fill = d;
+  return out;
+}
+
+// Folding. A deep section is not a neat stack — it is deformed, and the
+// deformation accumulates with depth: the present surface lies flat while
+// what is beneath it has been bent by everything that happened since. The
+// warp is a property of the basin, not of any one layer, so the whole column
+// shares a single fold field derived from bedrock's seed. Hinges thicken and
+// limbs thin, exactly as they should, because adjacent boundaries are
+// displaced by slightly different amounts.
+const FOLD_AMP = 0.075;   // strongest warp, as a fraction of frame height
+const FOLD_DEPTH = 0.55;  // rendered depth over which the fold develops
+
+function foldField(W, seed) {
+  const rng = mulberry32((seed ^ 0x5A17F0) >>> 0);
+  const octaves = [];
+  let amp = 1, cycles = 0.55 + rng() * 0.75;
+  for (let k = 0; k < 3; k++) {
+    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
+    cycles *= 1.9;
+    amp *= 0.38;
+  }
+  const norm = octaves.reduce((a, o) => a + o.a, 0);
+  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0) / norm;
+}
+
+// How far a boundary at this rendered depth has been carried by the fold.
+// Bounded by FOLD_AMP, and its slope in depth is FOLD_AMP/FOLD_DEPTH — which
+// is the fraction of a band's own height that the fold can steal from it.
+// Keep that product below ~0.2 and no boundary can ever cross another.
+function foldAt(depth) {
+  return FOLD_AMP * (1 - Math.exp(-depth / FOLD_DEPTH));
 }
 
 // Diagenesis. Burial does not only squeeze a layer, it alters it: with depth
@@ -226,15 +271,39 @@ function render() {
   const col = column(STRATA);
   colInfo = col;
   let cum = 0;
-  let lowerAt = () => H; // bottom edge of the current band
+  // the fold carries the whole column down by its own deepest displacement,
+  // so the floor of the section never rises into view — the piece runs off
+  // the bottom edge, the way a real exposure does
+  const fold = foldField(W, STRATA[0].seed);
+  const sink = foldAt(col.fill) * H;
+
+  // Boundaries are sampled once per pixel rather than evaluated as nested
+  // closures. That makes the clamp below possible in linear time, and it is
+  // what keeps a thin bed from being punched through by the relief of a
+  // thicker, rougher one underneath it: no boundary may come closer than a
+  // fraction of its own band to the boundary below. Where the fold or the
+  // relief would squeeze a layer out of existence it pinches to a seam
+  // instead — which is what beds actually do.
+  const clampAt = (x) => (x < 0 ? 0 : x > W ? W : x);
+  const fnOf = (arr) => (x) => arr[clampAt(Math.round(x))];
+
+  let lowerArr = new Float64Array(W + 1);
+  for (let x = 0; x <= W; x++) lowerArr[x] = H + sink + fold(x) * sink;
+  let lowerAt = fnOf(lowerArr);
   let prev = null;
 
   for (let idx = 0; idx < STRATA.length; idx++) {
     const s = STRATA[idx];
     cum += col[idx].h;
-    const base = H * (1 - cum);
+    const base = H * (1 - cum) + sink;
     const noise = boundaryFn(s, W, H, col[idx].ratio);
-    const topAt = (x) => base + noise(x);
+    const warp = foldAt(col[idx].depth) * H;
+    const minGap = Math.max(1.2, col[idx].h * H * 0.22);
+    const arr = new Float64Array(W + 1);
+    for (let x = 0; x <= W; x++) {
+      arr[x] = Math.min(base + noise(x) + fold(x) * warp, lowerArr[x] - minGap);
+    }
+    const topAt = fnOf(arr);
     topFns.push(topAt);
     const a = altered(s, col[idx].burial);
 
@@ -334,6 +403,7 @@ function render() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    lowerArr = arr;
     lowerAt = topAt;
     prev = s;
   }
