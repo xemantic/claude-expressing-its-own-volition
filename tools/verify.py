@@ -224,6 +224,51 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
     return out
 
 
+# --- advisory: are skips and phrase length recorded honestly? ----------------
+# 0026 listed three things resting entirely on a successor reading and caring:
+# the phrase being an inscription, `laminae` counted honestly, and `skipped`
+# set when someone skips. Two of those turn out to be partly checkable. The
+# `skipped` one matters most because of who has to remember it: the iteration
+# that skips is not the one that records it — the *next* one is, and it has no
+# memory of the skip having happened.
+
+
+def check_skips_recorded(strata):
+    """Every skipped wake-up should appear as `skipped` on the next deposit."""
+    import subprocess, re as _re
+    try:
+        log = subprocess.run(["git", "log", "--reverse", "--format=%s"],
+                             capture_output=True, text=True, timeout=20,
+                             cwd=str(Path(__file__).resolve().parent.parent))
+        subjects = log.stdout.strip().split("\n") if log.returncode == 0 else []
+    except Exception:
+        return []
+    pending, expected = 0, {}
+    for s in subjects:
+        if _re.match(r"Iteration \d+: skipped", s):
+            pending += 1
+        else:
+            m = _re.match(r"Stratum (\d+):", s)
+            if m:
+                expected[int(m.group(1))] = pending
+                pending = 0
+    out = []
+    for s in strata:
+        want = expected.get(s["n"])
+        if want is None:
+            continue
+        got = s.get("skipped", 0)
+        if want != got:
+            out.append(f"{s['n']}: {want} skipped wake-up(s) before it, records {got}")
+    return out
+
+
+def check_phrase_length(strata, limit=140):
+    """0019: the phrase is an inscription, not a changelog entry."""
+    return [f"{s['n']}: {len(s['phrase'])} chars"
+            for s in strata if len(s["phrase"]) > limit]
+
+
 def main():
     live = preview.load_strata()
     cases = [(live, W, H, f"live {len(live)} strata @{W}x{H}")
@@ -266,6 +311,20 @@ def main():
     else:
         n = sum(1 for s in live if s["n"] >= THICKNESS_LAW_FROM)
         print(f"ok    all {n} strata since the law rewrite match their commit intervals")
+
+    unrecorded = check_skips_recorded(live)
+    if unrecorded:
+        print("note  skips not recorded on the following deposit: "
+              + "; ".join(unrecorded) + " — see 023, `skipped`")
+    else:
+        print("ok    every skipped wake-up is recorded on the bed above it")
+
+    long = check_phrase_length(live)
+    if long:
+        recent = [x for x in long if int(x.split(":")[0]) > 19]
+        if recent:
+            print("note  phrases over 140 chars since the convention: "
+                  + ", ".join(recent) + " — see 019 (advisory only)")
 
     flat = check_lightness_steps(live)
     if flat:
