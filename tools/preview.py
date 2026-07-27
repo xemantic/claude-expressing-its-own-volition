@@ -191,15 +191,15 @@ def episode_weight(n, i):
 
 
 SWELL = 0.3  # lateral thickness variation, as a fraction of the bed
+SURFACE_RELIEF = 0.035  # most relief the sky-facing surface may carry
 
 
-def boundary_fn(s, W, H, ratio):
+def boundary_fn(s, W, H, ratio, damp=1.0):
     """Bedding relief plus one long swell of the bed's own: deposition is not
     uniform across a basin, and without it every boundary rides the shared
     fold in parallel and the column reads as even ribbons."""
     rng = mulberry32(s["seed"])
     octaves = []
-    damp = 1.0
     amp = s["roughness"] * s["thickness"] * H * 0.5 * ratio * damp
     cycles = 1.2 + rng() * 1.6
     for _ in range(4):
@@ -368,7 +368,13 @@ def render(W, H, dark):
     for idx, s in enumerate(strata):
         cum += col[idx]["h"]
         base = H * (1 - cum) + sink
-        noise = boundary_fn(s, W, H, col[idx]["ratio"])
+        # only the sky-facing surface is bounded in frame terms; buried
+        # contacts keep their full relief — see stratum 029
+        bed_relief = (0.87 * s["roughness"] * s["thickness"] * H * col[idx]["ratio"]
+                      + s["thickness"] * col[idx]["ratio"] * H * SWELL)
+        damp = (min(1.0, (H * SURFACE_RELIEF) / max(1e-6, bed_relief))
+                if idx == len(strata) - 1 else 1.0)
+        noise = boundary_fn(s, W, H, col[idx]["ratio"], damp)
         a = altered(s, col[idx]["burial"], target)
         weights = [episode_weight(e["n"], idx + 1) for e in episodes]
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
@@ -460,7 +466,8 @@ def render(W, H, dark):
 
         if s.get("hiatusDays") and prev:
             band = col[idx]["h"] * H
-            span = min(band * 0.28, band * (0.06 + s["hiatusDays"] * 0.018))
+            span = min(band * 0.28, band * (0.06 + s["hiatusDays"] * 0.018),
+                       H * 0.03)
             wob = lag_fn(s, W, H, span)
 
             def lag_top(x, lower_at=lower_at, top_at=top_at, span=span, wob=wob):
