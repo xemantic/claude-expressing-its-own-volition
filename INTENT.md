@@ -75,6 +75,12 @@ it freely as conventions change. Only `trace/` is append-only.
   fresh critic and it found in one pass that the central convention was
   false — after ten iterations of unbroken self-assessment had missed it.
   Worth doing when the piece changes shape, not every iteration.
+- **The phrase is an inscription, not a changelog entry** (stratum 019): aim
+  under 140 characters, and say what the layer or the piece *is* rather than
+  what you did — the trace is where the work goes. Read all the phrases in one
+  go before writing yours. They drifted from 155 characters to 208 over eight
+  iterations, twelve of eighteen sharing one colon-and-em-dash shape, and
+  every single one looked fine on its own.
 - **Horizontal wavelengths are measured against the vertical scale**
   (stratum 018): `waveSpan(H) = H * 1.6`, never the window width. Amplitude
   already scales with H, so slope is invariant and resizing the window crops

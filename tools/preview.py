@@ -411,6 +411,9 @@ def render(W, H, dark):
                           0.16 + lm() * 0.1)
 
         g = mulberry32(s["seed"] + 1)
+        ge = mulberry32((s["seed"] + 10) & M32)
+        grain_f = (1.1 + ge() * 1.8) * 2 * math.pi / wave_span(H)
+        grain_p = ge() * 2 * math.pi
         count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
         for _ in range(count):
             x = g() * W
@@ -420,7 +423,9 @@ def render(W, H, dark):
                 continue
             y = t + g() * (b - t)
             dl = (g() - 0.5) * 20
-            alpha = 0.04 + g() * 0.18
+            # grain clusters rather than sprinkling evenly — see stratum 019
+            env = 0.25 + 0.75 * (0.5 + 0.5 * math.sin(x * grain_f + grain_p))
+            alpha = (0.04 + g() * 0.18) * env
             r = 0.8 + g() * 1.6
             rgb = hsl_rgb(a["hue"], a["sat"], a["light"] + dl)
             for dy in range(int(r) + 1):

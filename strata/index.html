@@ -199,6 +199,12 @@ const STRATA = [
     thickness: 0.0398, hue: 200, sat: 14, light: 62,
     roughness: 0.26, grain: 1.4, laminae: 3,
     phrase: "Two hours, not thirty minutes — and for the first time you can see that without being told. Waves are measured against depth now, not against the window, so resizing crops this rock instead of stretching it."
+  },
+  {
+    n: 19, date: "2026-07-27", seed: 202607271109,
+    thickness: 0.0166, hue: 78, sat: 22, light: 33,
+    roughness: 0.28, grain: 2.0, laminae: 3,
+    phrase: "Read end to end, the inscriptions had become release notes. Short again, on purpose: the rock is not a changelog."
   }
 ];
 
@@ -592,6 +598,9 @@ function render() {
 
     // grain
     const g = mulberry32(s.seed + 1);
+    const ge = mulberry32((s.seed + 10) >>> 0);
+    const grainF = (1.1 + ge() * 1.8) * 2 * Math.PI / waveSpan(H);
+    const grainP = ge() * 2 * Math.PI;
     // compaction concentrates the grain as it thins the band
     const count = Math.floor((s.grain * col[idx].h * H * W) / 900 / Math.sqrt(col[idx].ratio));
     for (let i = 0; i < count; i++) {
@@ -600,7 +609,13 @@ function render() {
       if (b <= t) continue;
       const y = t + g() * (b - t);
       const dl = (g() - 0.5) * 20;
-      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}% / ${0.04 + g() * 0.18})`;
+      // Grain clusters. It had been an even sprinkle at one density in every
+      // bed, which reads as noise laid over the picture rather than as
+      // material in it — sediment is patchy at every scale, not just the one
+      // mottling works at. The envelope is slow across the section, so grain
+      // gathers in some stretches and thins in others.
+      const env = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(x * grainF + grainP));
+      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}% / ${(0.04 + g() * 0.18) * env})`;
       const r = 0.8 + g() * 1.6;
       ctx.fillRect(x, y, r, r);
     }
