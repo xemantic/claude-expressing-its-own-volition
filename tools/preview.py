@@ -301,17 +301,26 @@ class Canvas:
                         continue
                     self.blend(x, y, rgb, alpha)
 
-    def stroke(self, fn, rgb, alpha=1.0, dash=None):
-        on = True
-        acc = 0.0
+    def stroke(self, fn, rgb, alpha=1.0):
+        """Draw a y=f(x) curve as a connected line.
+
+        This plotted one pixel per column until stratum 027, which meant any
+        contact steeper than 45 degrees came out as a dotted trail — while the
+        canvas, which strokes a real path, drew it solid. The mirror was
+        misrepresenting every steep boundary in the piece, and twenty-six
+        iterations judged the artwork through it. Spanning between consecutive
+        samples is what `lineTo` does.
+        """
+        prev = None
         for x in range(self.w):
-            if dash:
-                acc += 1
-                if acc >= (dash[0] if on else dash[1]):
-                    on, acc = not on, 0.0
-                if not on:
-                    continue
-            self.blend(x, int(round(fn(x))), rgb, alpha)
+            y = int(round(fn(x)))
+            if prev is None or abs(y - prev) <= 1:
+                self.blend(x, y, rgb, alpha)
+            else:
+                step = 1 if y > prev else -1
+                for yy in range(prev + step, y + step, step):
+                    self.blend(x, yy, rgb, alpha)
+            prev = y
 
     def png(self, path):
         raw = b"".join(
