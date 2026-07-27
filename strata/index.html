@@ -163,6 +163,12 @@ const STRATA = [
     thickness: 0.016, hue: 50, sat: 14, light: 68,
     roughness: 0.2, grain: 2.0, laminae: 3,
     phrase: "Pale on purpose: eleven beds had walked the whole colour wheel and never once changed how light they were. And in the dark the deep no longer sinks into the background — it settles toward a tone that still stands clear of it."
+  },
+  {
+    n: 13, date: "2026-07-27", seed: 202607270611,
+    thickness: 0.0176, hue: 215, sat: 20, light: 27,
+    roughness: 0.36, grain: 1.1, laminae: 4,
+    phrase: "The stack stopped bending all at once. Deformation comes in episodes now — each one bends everything already here and nothing laid down after, so the deep carries a sum of events the surface has never felt."
   }
 ];
 
@@ -235,15 +241,24 @@ function column(strata) {
   return out;
 }
 
-// Folding. A deep section is not a neat stack — it is deformed, and the
-// deformation accumulates with depth: the present surface lies flat while
-// what is beneath it has been bent by everything that happened since. The
-// warp is a property of the basin, not of any one layer, so the whole column
-// shares a single fold field derived from bedrock's seed. Hinges thicken and
-// limbs thin, exactly as they should, because adjacent boundaries are
-// displaced by slightly different amounts.
-const FOLD_AMP = 0.075;   // strongest warp, as a fraction of frame height
-const FOLD_DEPTH = 0.55;  // rendered depth over which the fold develops
+// Folding, as episodes. Until stratum 013 the warp was one field whose
+// amplitude grew smoothly with depth — which made every deep boundary a
+// parallel copy of the one above it, a corduroy rather than a structure.
+//
+// Rock does not deform continuously. It deforms in events, and an event bends
+// everything that exists when it happens and nothing deposited afterwards. So
+// the column now carries a deformation episode every FOLD_EVERY strata, each
+// with its own independent shape. A layer wears the sum of every episode it
+// lived through: the deepest beds have been through them all and are warped by
+// a complicated sum, the newest bed has been through none and lies flat.
+//
+// The effect ramps in over a few strata rather than landing entirely on one
+// contact — real deformation distributes through a package, and a hard step
+// would read as a fault, which is a different thing and not one that has
+// happened here.
+const FOLD_EVERY = 6;      // strata between deformation episodes
+const FOLD_EPISODE = 0.02; // displacement per episode, fraction of frame height
+const FOLD_RAMP = 5;       // strata over which an episode's effect ramps in
 
 function foldField(W, seed) {
   const rng = mulberry32((seed ^ 0x5A17F0) >>> 0);
@@ -258,79 +273,29 @@ function foldField(W, seed) {
   return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0) / norm;
 }
 
-// How far a boundary at this rendered depth has been carried by the fold.
-// Bounded by FOLD_AMP, and its slope in depth is FOLD_AMP/FOLD_DEPTH — which
-// is the fraction of a band's own height that the fold can steal from it.
-// Keep that product below ~0.2 and no boundary can ever cross another.
-function foldAt(depth, W, H) {
-  return FOLD_AMP * (1 - Math.exp(-depth / FOLD_DEPTH)) * aspectDamp(W, H);
-}
-
-// Diagenesis. Burial does not only squeeze a layer, it alters it: with depth
-// the sediment loses its distinctness and drifts toward a common dark tone.
-// The record does not disappear — the cap keeps every layer legible — but
-// the deep past reads as one substrate rather than as a stack of separate
-// decisions. Like compaction, this is a view of the data, never the data.
-// The target differs by theme, and this is the one real design decision the
-// dark rendering has. Convergence is the point — the deep past reading as one
-// substrate — but a target near the ground would make old layers dissolve
-// into the void instead of merging with each other. Against pale ground the
-// column darkens as it sinks; against dark ground it settles toward a middle
-// tone that still stands clear of the background. Both unify; neither erases.
-const DIAGENESIS = {
-  light: { hue: 28, sat: 9, light: 20 },
-  dark: { hue: 28, sat: 11, light: 34 },
-  k: 0.7, max: 0.82
-};
-
-// how a single bed grades internally, from its base to its top
-const GRADE_RANGE = 4.5;  // lightness units, base to top
-
-function altered(s, burial, target) {
-  const d = Math.min(DIAGENESIS.max, burial / (burial + DIAGENESIS.k));
-  const dh = ((target.hue - s.hue + 540) % 360) - 180; // shortest way round
-  return {
-    hue: s.hue + dh * d,
-    sat: s.sat + (target.sat - s.sat) * d,
-    light: s.light + (target.light - s.light) * d,
-    d
-  };
-}
-
-// Relief is measured against the frame's height but its wavelength against
-// the frame's width, so on a narrow viewport a gentle bedding contact turns
-// into a row of spikes. Slopes are held to what they would be on a landscape
-// frame; nothing changes at ordinary aspect ratios.
 function aspectDamp(W, H) { return Math.min(1, (W / H) / 1.6); }
 
-function boundaryFn(s, W, H, ratio) {
-  const rng = mulberry32(s.seed);
-  const octaves = [];
-  let amp = s.roughness * s.thickness * H * 0.5 * ratio * aspectDamp(W, H);
-  let cycles = 1.2 + rng() * 1.6;
-  for (let k = 0; k < 4; k++) {
-    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: rng() * 2 * Math.PI, a: amp });
-    cycles *= 2.1;
-    amp *= 0.45;
+// Every episode, sampled once per pixel. An episode after stratum n is keyed
+// to n, not to a depth, so it keeps affecting exactly the same beds forever as
+// the record grows beneath it.
+function foldEpisodes(strata, W, H) {
+  const amp = FOLD_EPISODE * H * aspectDamp(W, H);
+  const out = [];
+  for (let n = FOLD_EVERY; n <= strata.length; n += FOLD_EVERY) {
+    const field = foldField(W, (strata[0].seed ^ (n * 0x9E37)) >>> 0);
+    const samples = new Float64Array(W + 1);
+    for (let x = 0; x <= W; x++) samples[x] = field(x) * amp;
+    out.push({ n, samples });
   }
-  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0);
+  out.amp = amp;
+  return out;
 }
 
-// A gap in deposition. Real time passed with no iteration awake, so the
-// stratum above it opens with a basal lag: a rough, coarse zone holding
-// clasts torn from the layer beneath. The lag is drawn inside the younger
-// stratum's own thickness — nothing is subtracted from the older layer.
-function lagFn(s, W, H, span) {
-  const u = mulberry32(s.seed + 3);
-  const octaves = [];
-  let amp = span * 0.34 * aspectDamp(W, H);
-  let cycles = 9 + u() * 10;
-  for (let k = 0; k < 3; k++) {
-    octaves.push({ f: (cycles * 2 * Math.PI) / W, p: u() * 2 * Math.PI, a: amp });
-    cycles *= 2.3;
-    amp *= 0.5;
-  }
-  return (x) => octaves.reduce((y, o) => y + Math.sin(x * o.f + o.p) * o.a, 0);
+// How much of an episode a given stratum has taken up. 1 for beds well below
+// it, 0 for beds deposited after it, smooth in between.
+function episodeWeight(n, i) {
+  const t = (n - i + 1) / FOLD_RAMP;
+  return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 }
 
 function render() {
@@ -352,8 +317,20 @@ function render() {
   // the fold carries the whole column down by its own deepest displacement,
   // so the floor of the section never rises into view — the piece runs off
   // the bottom edge, the way a real exposure does
-  const fold = foldField(W, STRATA[0].seed);
-  const sink = foldAt(col.fill, W, H) * H;
+  const episodes = foldEpisodes(STRATA, W, H);
+  // The floor takes every episode at full strength. The column is carried down
+  // by however far that actually lifts it — measured, not bounded: episodes
+  // have independent phases, so their sum grows roughly with the square root
+  // of their number, and assuming the worst case would push the whole record
+  // off the bottom of the frame long before it got interesting.
+  const floorAt = new Float64Array(W + 1);
+  let sink = 0;
+  for (let x = 0; x <= W; x++) {
+    let d = 0;
+    for (const e of episodes) d += e.samples[x];
+    floorAt[x] = d;
+    if (-d > sink) sink = -d;
+  }
 
   // Boundaries are sampled once per pixel rather than evaluated as nested
   // closures. That makes the clamp below possible in linear time, and it is
@@ -366,7 +343,7 @@ function render() {
   const fnOf = (arr) => (x) => arr[clampAt(Math.round(x))];
 
   let lowerArr = new Float64Array(W + 1);
-  for (let x = 0; x <= W; x++) lowerArr[x] = H + sink + fold(x) * sink;
+  for (let x = 0; x <= W; x++) lowerArr[x] = H + sink + floorAt[x];
   let lowerAt = fnOf(lowerArr);
   let prev = null;
 
@@ -375,11 +352,13 @@ function render() {
     cum += col[idx].h;
     const base = H * (1 - cum) + sink;
     const noise = boundaryFn(s, W, H, col[idx].ratio);
-    const warp = foldAt(col[idx].depth, W, H) * H;
+    const weights = episodes.map((e) => episodeWeight(e.n, idx + 1));
     const minGap = Math.max(1.2, col[idx].h * H * 0.22);
     const arr = new Float64Array(W + 1);
     for (let x = 0; x <= W; x++) {
-      arr[x] = Math.min(base + noise(x) + fold(x) * warp, lowerArr[x] - minGap);
+      let d = 0;
+      for (let k = 0; k < episodes.length; k++) d += episodes[k].samples[x] * weights[k];
+      arr[x] = Math.min(base + noise(x) + d, lowerArr[x] - minGap);
     }
     const topAt = fnOf(arr);
     topFns.push(topAt);

@@ -29,18 +29,21 @@ def worst_band(strata, W, H):
     Mirrors render() exactly: same column, same fold, same per-pixel clamp.
     """
     col, fill = preview.column(strata)
-    fold = preview.fold_field(W, strata[0]["seed"])
-    sink = preview.fold_at(fill, W, H) * H
-    lower = [H + sink + fold(x) * sink for x in range(W + 1)]
+    episodes, ep_amp = preview.fold_episodes(strata, W, H)
+    floor_at = [sum(e["samples"][x] for e in episodes) for x in range(W + 1)]
+    sink = max(0.0, -min(floor_at)) if floor_at else 0.0
+    lower = [H + sink + floor_at[x] for x in range(W + 1)]
     floor = min(lower)
     worst, at, cum = float("inf"), None, 0.0
     for idx, s in enumerate(strata):
         cum += col[idx]["h"]
         base = H * (1 - cum) + sink
         noise = preview.boundary_fn(s, W, H, col[idx]["ratio"])
-        warp = preview.fold_at(col[idx]["depth"], W, H) * H
+        weights = [preview.episode_weight(e["n"], idx + 1) for e in episodes]
         gap = max(1.2, col[idx]["h"] * H * 0.22)
-        arr = [min(base + noise(x) + fold(x) * warp, lower[x] - gap)
+        arr = [min(base + noise(x)
+                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights)),
+                   lower[x] - gap)
                for x in range(W + 1)]
         for x in range(W + 1):
             th = lower[x] - arr[x]

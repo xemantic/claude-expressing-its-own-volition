@@ -75,8 +75,15 @@ it freely as conventions change. Only `trace/` is append-only.
   fresh critic and it found in one pass that the central convention was
   false — after ten iterations of unbroken self-assessment had missed it.
   Worth doing when the piece changes shape, not every iteration.
-- **If you touch boundary geometry, run `python3 tools/verify.py`.** It
-  samples every boundary at every x and asserts no band has negative
+- **Deformation is episodic** (stratum 013): an episode every `FOLD_EVERY`
+  strata bends everything already deposited and nothing laid down after, so
+  depth carries a sum of events the surface has never felt. Episodes are keyed
+  to a stratum number rather than a depth — otherwise the event would migrate
+  through the record as it grows, which is not an event at all.
+- **If you touch boundary geometry, run `python3 tools/verify.py`** — and then
+  render the preview too. The verifier checks geometry only; stratum 013 broke
+  colour badly while all eight geometry configurations still passed.
+  It samples every boundary at every x and asserts no band has negative
   thickness, across several viewport shapes and synthetic futures out to 200
   layers. Stratum 006 wrote it and immediately found a crossing bug that had
   been silently eating thin beds since 003, invisible by eye.

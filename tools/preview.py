@@ -93,27 +93,6 @@ def column(strata):
     return out, d
 
 
-FOLD_AMP = 0.075
-FOLD_DEPTH = 0.55
-
-
-def fold_field(W, seed):
-    """A single warp shared by the whole column — a property of the basin."""
-    rng = mulberry32((seed ^ 0x5A17F0) & M32)
-    octaves = []
-    amp, cycles = 1.0, 0.55 + rng() * 0.75
-    for _ in range(3):
-        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
-        cycles *= 1.9
-        amp *= 0.38
-    norm = sum(o[2] for o in octaves)
-    return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves) / norm
-
-
-def fold_at(depth, W, H):
-    return FOLD_AMP * (1 - math.exp(-depth / FOLD_DEPTH)) * aspect_damp(W, H)
-
-
 DIAGENESIS = {
     "light": {"hue": 28, "sat": 9, "light": 20},
     "dark": {"hue": 28, "sat": 11, "light": 34},
@@ -136,10 +115,52 @@ def altered(s, burial, target):
     }
 
 
+FOLD_EVERY = 6       # strata between deformation episodes
+FOLD_EPISODE = 0.02  # displacement per episode, fraction of frame height
+FOLD_RAMP = 5        # strata over which an episode's effect ramps in
+
+
 def aspect_damp(W, H):
     """Relief is measured against H but its wavelength against W, so a narrow
     frame turns bedding contacts into spikes. Hold slopes to landscape."""
     return min(1.0, (W / H) / 1.6)
+
+
+def fold_field(W, seed):
+    """One deformation episode's shape."""
+    rng = mulberry32((seed ^ 0x5A17F0) & M32)
+    octaves = []
+    amp, cycles = 1.0, 0.55 + rng() * 0.75
+    for _ in range(3):
+        octaves.append(((cycles * 2 * math.pi) / W, rng() * 2 * math.pi, amp))
+        cycles *= 1.9
+        amp *= 0.38
+    norm = sum(o[2] for o in octaves)
+    return lambda x: sum(math.sin(x * f + p) * a for f, p, a in octaves) / norm
+
+
+def fold_episodes(strata, W, H):
+    """Rock deforms in events, not continuously. An episode after stratum n
+    bends everything that existed then and nothing deposited after, and is
+    keyed to n rather than to a depth so it keeps its grip as the record
+    grows beneath it."""
+    amp = FOLD_EPISODE * H * aspect_damp(W, H)
+    out = []
+    for n in range(FOLD_EVERY, len(strata) + 1, FOLD_EVERY):
+        field = fold_field(W, (strata[0]["seed"] ^ (n * 0x9E37)) & M32)
+        out.append({"n": n, "samples": [field(x) * amp for x in range(W + 1)]})
+    return out, amp
+
+
+def episode_weight(n, i):
+    """How much of an episode stratum i has taken up: 1 well below it, 0 for
+    beds deposited after it, smooth between."""
+    t = (n - i + 1) / FOLD_RAMP
+    if t <= 0:
+        return 0.0
+    if t >= 1:
+        return 1.0
+    return t * t * (3 - 2 * t)
 
 
 def boundary_fn(s, W, H, ratio):
@@ -269,15 +290,17 @@ def render(W, H, dark):
 
     col, fill_total = column(strata)
     cum = 0.0
-    fold = fold_field(W, strata[0]["seed"])
-    sink = fold_at(fill_total, W, H) * H
+    episodes, ep_amp = fold_episodes(strata, W, H)
+    floor_at = [sum(e["samples"][x] for e in episodes) for x in range(W + 1)]
+    # measured, not bounded — see the note in the renderer
+    sink = max(0.0, -min(floor_at)) if floor_at else 0.0
 
     # boundaries sampled per pixel, then clamped so no bed can be punched
     # through by the relief of a thicker, rougher one beneath it
     def fn_of(arr):
         return lambda x: arr[0 if x < 0 else (W if x > W else int(round(x)))]
 
-    lower_arr = [H + sink + fold(x) * sink for x in range(W + 1)]
+    lower_arr = [H + sink + floor_at[x] for x in range(W + 1)]
     lower_at = fn_of(lower_arr)
     prev = None
 
@@ -286,9 +309,11 @@ def render(W, H, dark):
         base = H * (1 - cum) + sink
         noise = boundary_fn(s, W, H, col[idx]["ratio"])
         a = altered(s, col[idx]["burial"], target)
-        warp = fold_at(col[idx]["depth"], W, H) * H
+        weights = [episode_weight(e["n"], idx + 1) for e in episodes]
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
-        arr = [min(base + noise(x) + fold(x) * warp, lower_arr[x] - min_gap)
+        arr = [min(base + noise(x)
+                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights)),
+                   lower_arr[x] - min_gap)
                for x in range(W + 1)]
         top_at = fn_of(arr)
 
