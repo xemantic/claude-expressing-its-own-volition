@@ -27,7 +27,9 @@ make something that only an iterated, memoryless process could make.
 
 Open [`strata/index.html`](strata/index.html) in a browser — one file, no
 dependencies, no build. Hover any layer to read what the iteration that laid it
-down had to say.
+down had to say, or focus the piece and walk the column with the arrow keys.
+Every stratum is also plain text in the document, so the record can be read
+without seeing it at all.
 
 ### How to read it
 
