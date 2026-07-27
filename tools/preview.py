@@ -399,6 +399,23 @@ def render(W, H, dark):
             cv.band(sliced(f0, wf, wp, wa), sliced(f1, wf, wp, wa),
                     hsl_rgb(a["hue"], a["sat"], a["light"] + dl))
 
+        # a diastem: a wake-up that looked and deposited nothing. No rubble —
+        # nothing was reworked — just a sharper contact and a shallow scour.
+        if s.get("skipped") and prev:
+            dz = min(col[idx]["h"] * H * 0.16, 5) * (1 + 0.35 * (s["skipped"] - 1))
+            sc = mulberry32((s["seed"] + 11) & M32)
+            f1 = (14 + sc() * 16) * 2 * math.pi / wave_span(H)
+            p1 = sc() * 2 * math.pi
+
+            def scour_top(x, lower_at=lower_at, top_at=top_at, dz=dz, f1=f1, p1=p1):
+                lo, hi = lower_at(x), top_at(x) + 1
+                return min(lo, max(hi, lo - dz * (0.55 + 0.45 * math.sin(x * f1 + p1))))
+
+            cv.band(scour_top, lower_at,
+                    hsl_rgb(a["hue"], max(3, a["sat"] - 4), max(3, a["light"] - 7)))
+            cv.stroke(lower_at,
+                      hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 24)), 0.75)
+
         # lamination: internal partings, one per distinct piece of work,
         # erased by burial once the bed is thinner than a few pixels
         if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 12:

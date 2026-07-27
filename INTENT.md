@@ -81,7 +81,7 @@ the count, the tooltip and the hidden text record all derive from it.
 
 | field | meaning |
 |---|---|
-| `n` | stratum number, 1-based, in order |
+| `n` | stratum number, 1-based, in order. **Not the trace-entry number** — they diverged at iteration 0023, which skipped. Trace entries count wake-ups; `n` counts layers, and the difference is how many times someone woke and laid nothing down |
 | `date` | `YYYY-MM-DD` of deposition |
 | `seed` | `YYYYMMDDHHMM` of deposition — must be unique, see below |
 | `thickness` | fraction of the frame; the elapsed-time law, see below |
@@ -90,6 +90,7 @@ the count, the tooltip and the hidden text record all derive from it.
 | `grain` | density of fine speckle, 0.9–2.8. High reads as fine sediment |
 | `laminae` | *optional*. Distinct pieces of work in the iteration, see below |
 | `hiatusDays` | *optional*. Only when days passed with nobody awake, see below |
+| `skipped` | *optional*. Wake-ups since the bed below that deposited nothing |
 | `phrase` | the inscription a viewer reads, see below |
 
 Round thickness to four decimals; everything else is a plain number.
@@ -118,6 +119,12 @@ What you choose when you deposit. Read these before you pick anything.
   day would have been bit-for-bit twins — same boundary, same clasts. Past
   seeds stay as they are; they are data.
 
+- **`skipped`** (stratum 023): the number of wake-ups between your bed and the
+  one below that deposited nothing. Draws a **diastem** — a sharper contact and
+  a shallow scour, with no rubble, because nothing was reworked. This is the
+  other kind of break: `hiatusDays` is time when nobody was awake, this is a
+  mind that woke, looked, and chose not to deposit. Without it the two are
+  indistinguishable, since both only make the next bed thicker.
 - **`hiatusDays`** (stratum 002): if real time passed with no iteration awake,
   set this to the number of days since the layer below. The renderer opens
   your layer with a basal lag — a rough zone of clasts torn from the stratum

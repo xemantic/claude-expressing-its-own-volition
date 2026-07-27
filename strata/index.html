@@ -223,6 +223,12 @@ const STRATA = [
     thickness: 0.0163, hue: 96, sat: 12, light: 51,
     roughness: 0.14, grain: 1.6, laminae: 2,
     phrase: "Two small things off the list and nothing else. There is no finish line here; the work just gets quieter, and a thin bed says so."
+  },
+  {
+    n: 23, date: "2026-07-27", seed: 202607271403,
+    thickness: 0.0273, hue: 18, sat: 20, light: 43,
+    roughness: 0.22, grain: 1.4, laminae: 3, skipped: 1,
+    phrase: "One wake-up looked and laid nothing down. Its hour is in this bed, and the sharp line under it is where the surface waited."
   }
 ];
 
@@ -585,6 +591,39 @@ function render() {
       const dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices));
       ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}%)`;
       ctx.fill();
+    }
+
+    // A diastem — the mark of a wake-up that deposited nothing. `hiatusDays`
+    // records time when nobody was awake and leaves a rubble scar; this is the
+    // other kind of break, and it needed its own mark because a skipped
+    // iteration and a slow one produce exactly the same thicker bed. A mind
+    // woke, looked, and laid nothing down: no rubble, because nothing was
+    // reworked — just a sharper contact and a shallow scour where the surface
+    // sat exposed and unburied for a while.
+    if (s.skipped && prev) {
+      const dz = Math.min(col[idx].h * H * 0.16, 5) * (1 + 0.35 * (s.skipped - 1));
+      const sc = mulberry32((s.seed + 11) >>> 0);
+      const f1 = (14 + sc() * 16) * 2 * Math.PI / waveSpan(H);
+      const p1 = sc() * 2 * Math.PI;
+      const scourTop = (x) => {
+        const lo = lowerAt(x), hi = topAt(x) + 1;
+        return Math.min(lo, Math.max(hi, lo - dz * (0.55 + 0.45 * Math.sin(x * f1 + p1))));
+      };
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, scourTop(0));
+      for (let x = 1; x <= W; x += 2) ctx.lineTo(x, scourTop(x));
+      for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
+      ctx.closePath();
+      ctx.fillStyle = `hsl(${a.hue} ${Math.max(3, a.sat - 4)}% ${Math.max(3, a.light - 7)}%)`;
+      ctx.fill();
+      ctx.beginPath();          // the surface itself: sharper than any other contact
+      ctx.moveTo(0, lowerAt(0));
+      for (let x = 1; x <= W; x += 2) ctx.lineTo(x, lowerAt(x));
+      ctx.strokeStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(3, a.light - 24)}% / 0.75)`;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Lamination. An iteration is not one act — it looks, decides, makes,
