@@ -435,9 +435,13 @@ def render(W, H, dark):
         # erased by burial once the bed is thinner than a few pixels
         if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 12:
             # quieter and jittered off the grid — see stratum 017
+            # the view draws only as many partings as the bed has room for;
+            # the stored count stays honest — see stratum 032
             lm = mulberry32((s["seed"] + 8) & M32)
-            for k in range(1, s["laminae"]):
-                f = (k + (lm() - 0.5) * 0.45) / s["laminae"]
+            room = max(2, int((col[idx]["h"] * H) / 3.5))
+            drawn = min(s["laminae"], room)
+            for k in range(1, drawn):
+                f = (k + (lm() - 0.5) * 0.45) / drawn
                 cv.stroke((lambda f: lambda x: top_at(x) + (lower_at(x) - top_at(x)) * f)(f),
                           hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 9)),
                           0.16 + lm() * 0.1)

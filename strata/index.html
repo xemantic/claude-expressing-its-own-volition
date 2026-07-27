@@ -277,6 +277,12 @@ const STRATA = [
     thickness: 0.0175, hue: 250, sat: 20, light: 64,
     roughness: 0.2, grain: 1.8, laminae: 2,
     phrase: "Every contact bends more the deeper it sits, and the top lies flat. Nothing up here has been through anything yet."
+  },
+  {
+    n: 32, date: "2026-07-27", seed: 202607271942,
+    thickness: 0.0165, hue: 130, sat: 20, light: 32,
+    roughness: 0.26, grain: 1.4, laminae: 3,
+    phrase: "No bed runs the same thickness across the frame. Where one thins to a seam, less settled there than at the other end."
   }
 ];
 
@@ -692,15 +698,23 @@ function render() {
     // which is right: fine structure is the first thing lost to compaction,
     // and what survives of an old layer is only that it was there.
     if (s.laminae > 1 && col[idx].h * H >= 12) {
+      // A bed can only show as many partings as it has room for. `laminae`
+      // stays whatever the iteration honestly counted — the data is not
+      // touched — but the view draws what fits: tested at 0034, a count of ten
+      // in a 17px bed put a parting every 1.7px, which is the ruling that 017
+      // spent an iteration removing. Same principle as the 12px floor above,
+      // generalised: below about 3.5px apart they stop being structure.
       // Measured at stratum 017: these were ~20 RGB units of contrast every
       // six pixels, at perfectly even spacing — which is what made a viewer
       // call the interior of the beds "scan lines". Partings in real rock are
       // faint and irregularly spaced. Quieter, and jittered off the grid.
       const lm = mulberry32((s.seed + 8) >>> 0);
+      const room = Math.max(2, Math.floor((col[idx].h * H) / 3.5));
+      const drawn = Math.min(s.laminae, room);
       ctx.save();
       ctx.lineWidth = 1;
-      for (let k = 1; k < s.laminae; k++) {
-        const f = (k + (lm() - 0.5) * 0.45) / s.laminae;
+      for (let k = 1; k < drawn; k++) {
+        const f = (k + (lm() - 0.5) * 0.45) / drawn;
         ctx.strokeStyle =
           `hsl(${a.hue} ${a.sat}% ${Math.max(3, a.light - 9)}% / ${0.16 + lm() * 0.1})`;
         ctx.beginPath();
