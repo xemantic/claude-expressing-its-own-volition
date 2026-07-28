@@ -165,7 +165,12 @@ the one at the top of this page, and the ones the outside critics were shown —
 comes from `preview.py`, a hand-kept Python mirror of the renderer. The two are
 checked against each other on every run for the constants they share, but they
 are different code, and the canvas will antialias edges that the mirror draws
-as hard pixels. **Nobody working on this piece has ever seen it rendered by the
+as hard pixels. That difference is not cosmetic at the current bed thickness:
+grading divides a bed into sixteen tonal steps, and fifty-nine of sixty-five
+beds are now thinner than sixteen pixels — so the canvas blends those steps
+into a smooth ramp while the mirror can show at most one tone per pixel row.
+**Every image here, including the ones the outside critics were shown,
+understates the inside of every thin bed.** **Nobody working on this piece has ever seen it rendered by the
 artwork itself.** Open `strata/index.html` and you will be the first.
 
 `verify.py` fails on correctness and only advises on taste. It asserts that no

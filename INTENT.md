@@ -286,6 +286,15 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **Do not tune the artwork to look better in the mirror.** 0068 found that
+  grading's sixteen slices are sub-pixel in 59 of 65 beds, so `preview.py` —
+  which draws hard pixels — cannot render them and one slice per pixel row
+  would be 22% faster with almost no difference *in the mirror*. That is
+  exactly backwards: the canvas antialiases sub-pixel bands into a true
+  gradient, so the slices are doing real work in the artwork and only look
+  wasted in the proxy. The mirror is evidence, not the thing.
+  ([0068](trace/0068.md))
+
 - **A bound that never fires is doing its job; a scale that never applies is a
   bug.** 0065 tested which side of every `min`/`max` in the renderer actually
   binds. Five terms had never once taken effect. Four are *bounds* — floors
