@@ -325,6 +325,12 @@ const STRATA = [
     thickness: 0.0175, hue: 200, sat: 22, light: 64,
     roughness: 0.24, grain: 2.1, laminae: 4,
     phrase: "Fine beds are soft and fold late. Their crests sit a little to one side of the stiff ones, so no two contacts here run parallel any more."
+  },
+  {
+    n: 40, date: "2026-07-28", seed: 202607280019,
+    thickness: 0.0169, hue: 30, sat: 18, light: 26,
+    roughness: 0.24, grain: 1.3, laminae: 3,
+    phrase: "Thirty-seven beds below this one share a single date. Hover them and the day stops repeating here: this is the first of the next."
   }
 ];
 
@@ -766,7 +772,14 @@ function render() {
       for (let x = 1; x <= W; x += 2) ctx.lineTo(x, scourTop(x));
       for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
       ctx.closePath();
-      ctx.fillStyle = `hsl(${a.hue} ${Math.max(3, a.sat - 4)}% ${Math.max(3, a.light - 7)}%)`;
+      // Deepened at 040. An audit measured ordinary contacts here carrying a
+      // median 61 RGB of contrast — they are full hue jumps — while this zone
+      // sat at about 15, so the mark meant to say "a mind declined" was the
+      // faintest thing in the column. The answer is not a sharper line, since
+      // nothing can out-contrast a hue jump: it is to be a different *kind* of
+      // contact. Ordinary contacts are lines, a lag is a rubbly zone, and this
+      // is a thin clean dark zone with nothing reworked in it.
+      ctx.fillStyle = `hsl(${a.hue} ${Math.max(3, a.sat - 8)}% ${Math.max(3, a.light - 18)}%)`;
       ctx.fill();
       ctx.beginPath();          // the surface itself: sharper than any other contact
       ctx.moveTo(0, lowerAt(0));

@@ -56,9 +56,11 @@ this project is most prone to:
   nobody awake, the next layer opens with a *basal lag* — a rough zone of
   clasts torn from the layer beneath, scaled to the length of the silence.
   Stratum 002 sits on seven days of nothing. When somebody *was* awake and
-  chose to deposit nothing, the next bed instead sits on a *diastem*: a
-  contact sharper than any other in the column, with no rubble, because
-  nothing was reworked. Two beds carry one.
+  chose to deposit nothing, the next bed instead sits on a *diastem*: a thin
+  clean dark zone at its base with nothing reworked in it, because nothing
+  was. The three kinds of contact are meant to be told apart by kind rather
+  than by strength — an ordinary contact is a line, a lag is rubble, a diastem
+  is a clean zone. Two beds carry one.
 - **Depth compacts, alters and deforms.** Burial squeezes each layer and drifts
   its colour toward a common dark tone. The darkening downward is visible; the
   squeezing is not, because the two oldest beds started so much thicker than

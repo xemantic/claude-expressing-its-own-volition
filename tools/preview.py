@@ -446,8 +446,10 @@ def render(W, H, dark):
                 lo, hi = lower_at(x), top_at(x) + 1
                 return min(lo, max(hi, lo - dz * (0.55 + 0.45 * math.sin(x * f1 + p1))))
 
+            # a thin clean dark zone — a different kind of contact, not a
+            # sharper line; see stratum 040
             cv.band(scour_top, lower_at,
-                    hsl_rgb(a["hue"], max(3, a["sat"] - 4), max(3, a["light"] - 7)))
+                    hsl_rgb(a["hue"], max(3, a["sat"] - 8), max(3, a["light"] - 18)))
             cv.stroke(lower_at,
                       hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 24)), 0.75)
 
