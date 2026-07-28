@@ -214,6 +214,14 @@ Every mechanism here is a *view* computed from immutable data. None of them touc
   to a stratum number rather than a depth — otherwise the event would migrate
   through the record as it grows, which is not an event at all.
 
+- **The record can break, not only bend** (stratum 045): every `FAULT_EVERY`
+  strata a fault cuts the column. It always drops the older side and never
+  lifts it, so the whole faulted block moves together and no bed can be pushed
+  through another — the boundary guarantee holds by construction, not by
+  clamping. The throw is taken up over `FAULT_RAMP` strata, so the beds
+  straddling a break thicken into a wedge instead of one bed swallowing it all.
+  A fault dies out upward: beds younger than the slip are uncut and seal it.
+
 - **Exposure only touches the newest bed** (stratum 014): it is the one thing
   nothing protects, so it weathers, and it goes smooth as soon as a successor
   buries it. Every other mechanism here accumulates with depth; this is the

@@ -355,6 +355,12 @@ const STRATA = [
     thickness: 0.0204, hue: 15, sat: 26, light: 74,
     roughness: 0.3, grain: 1.1, laminae: 3,
     phrase: "The checker had been guaranteeing a shape the renderer stopped drawing four beds ago. It agreed with itself, which is the easy kind."
+  },
+  {
+    n: 45, date: "2026-07-28", seed: 202607280325,
+    thickness: 0.0182, hue: 348, sat: 34, light: 40,
+    roughness: 0.26, grain: 2.4, laminae: 2,
+    phrase: "Rock folds until it cannot, then it breaks. Two faults cut this column and die out upward — find a step, follow it up until it vanishes."
   }
 ];
 
@@ -627,6 +633,53 @@ function episodeWeight(n, i) {
 // and how far its response lags laterally.
 const COMPETENCE = 0.3;   // spread in how strongly a bed answers, either side of 1
 const LAG = 150;          // furthest a weak bed's response slides sideways, px.
+
+const FAULT_EVERY = 17;   // strata between breaks — rarer than folds by design
+const FAULT_THROW = 0.055; // slip, as a fraction of frame height
+const FAULT_ZONE = 26;    // width of the damage zone the slip is smeared across, px
+const FAULT_RAMP = 3;     // strata over which the slip is taken up
+
+// Rock folds until it cannot, and then it breaks. 0045 measured the fold's
+// displacement outgrowing the beds it bends; real columns do not accumulate
+// that without limit — past some strain the rock faults instead.
+//
+// A fault drops the older side and never lifts it. That is not cosmetic:
+// everything below the break moves together, and an older bed is always
+// dropped at least as far as a younger one, so every gap can only widen. No
+// bed can be pushed through its neighbour, whatever the throw — the boundary
+// guarantee survives by construction rather than by clamping. The beds
+// straddling the break thicken into a wedge, which is what growth strata do.
+function faultEpisodes(strata, W, H) {
+  const out = [];
+  for (let n = FAULT_EVERY; n <= strata.length; n += FAULT_EVERY) {
+    const r = mulberry32((strata[0].seed ^ (n * 0x85EB)) >>> 0);
+    const at = 0.18 * W + r() * 0.64 * W;      // keep the plane off the edges
+    const throwPx = FAULT_THROW * H * (0.6 + r() * 0.8);
+    const downRight = r() < 0.5;
+    const prof = new Float64Array(W + 1);
+    for (let x = 0; x <= W; x++) {
+      let t = (x - at) / FAULT_ZONE;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const k = t * t * (3 - 2 * t);           // the smoothstep the folds use
+      prof[x] = throwPx * (downRight ? k : 1 - k);
+    }
+    out.push({ n, samples: prof });
+  }
+  return out;
+}
+
+// How far stratum i has been dropped at x. Taken up over FAULT_RAMP strata
+// rather than all at once — a fault slips repeatedly, and dumping a whole
+// throw into one bed inflates it into a single shapeless mass.
+function faultOffset(faults, i, x) {
+  let total = 0;
+  for (const f of faults) {
+    const t = (f.n - i + 1) / FAULT_RAMP;
+    if (t <= 0) continue;
+    total += t >= 1 ? f.samples[x] : f.samples[x] * t * t * (3 - 2 * t);
+  }
+  return total;
+}
                           // Swept at 039: 34px moved the adjacent-contact
                           // correlation from 0.998 to 0.994 — cosmetic. 150 is
                           // about a tenth of a fold wavelength and takes it to
@@ -670,6 +723,7 @@ function render() {
   // so the floor of the section never rises into view — the piece runs off
   // the bottom edge, the way a real exposure does
   const episodes = foldEpisodes(STRATA, W, H);
+  const faults = faultEpisodes(STRATA, W, H);
   // The floor takes every episode at full strength. The column is carried down
   // by however far that actually lifts it — measured, not bounded: episodes
   // have independent phases, so their sum grows roughly with the square root
@@ -695,7 +749,9 @@ function render() {
   const fnOf = (arr) => (x) => arr[clampAt(Math.round(x))];
 
   let lowerArr = new Float64Array(W + 1);
-  for (let x = 0; x <= W; x++) lowerArr[x] = H + sink + floorAt[x];
+  // the base carries the same drop as the oldest bed, so the whole faulted
+  // block moves as one and nothing below it can be crossed
+  for (let x = 0; x <= W; x++) lowerArr[x] = H + sink + floorAt[x] + faultOffset(faults, 1, x);
   let lowerAt = fnOf(lowerArr);
   let prev = null;
 
@@ -730,6 +786,7 @@ function render() {
         d += episodes[k].samples[sx] * weights[k] * comp.amp;
       }
       if (weather) d += weather(x);
+      d += faultOffset(faults, idx + 1, x);
       arr[x] = Math.min(base + noise(x) + d, lowerArr[x] - minGap);
     }
     const topAt = fnOf(arr);

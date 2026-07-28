@@ -183,6 +183,65 @@ COMPETENCE = 0.3
 LAG = 150
 
 
+FAULT_EVERY = 17     # strata between breaks — rarer than folds by design
+FAULT_THROW = 0.055  # slip, as a fraction of frame height
+FAULT_ZONE = 26      # width of the damage zone the slip is smeared across, px
+FAULT_RAMP = 3       # strata over which the slip is taken up
+
+
+def fault_episodes(strata, W, H):
+    """Rock folds until it cannot, and then it breaks.
+
+    0045 measured the fold's displacement outgrowing the beds it bends. Real
+    columns do not accumulate that without limit — past some strain the rock
+    faults instead. So every FAULT_EVERY strata one break cuts the record.
+
+    A fault drops the older side; it never lifts it. That is not a cosmetic
+    choice. Everything below the break moves together, so their gaps are
+    preserved exactly and no bed can be pushed through another — the guarantee
+    survives by construction rather than by clamping. The bed straddling the
+    event thickens into a wedge on the dropped side, which is what growth
+    strata actually do.
+    """
+    out = []
+    for n in range(FAULT_EVERY, len(strata) + 1, FAULT_EVERY):
+        r = mulberry32((strata[0]["seed"] ^ (n * 0x85EB)) & M32)
+        at = 0.18 * W + r() * 0.64 * W          # keep the plane off the edges
+        throw = FAULT_THROW * H * (0.6 + r() * 0.8)
+        down_right = r() < 0.5
+        prof = []
+        for x in range(W + 1):
+            t = (x - at) / FAULT_ZONE
+            t = 0.0 if t < 0 else (1.0 if t > 1 else t)
+            k = t * t * (3 - 2 * t)             # same smoothstep the folds use
+            prof.append(throw * (k if down_right else 1 - k))
+        out.append({"n": n, "samples": prof})
+    return out
+
+
+def fault_offset(faults, i, x):
+    """How far stratum i has been dropped at x.
+
+    Taken up over FAULT_RAMP strata rather than all at once — a fault slips
+    repeatedly, and dumping a whole throw into one bed inflates it into a
+    single shapeless mass. Spread over three, it builds a wedge.
+
+    This is monotone in i by construction: an older bed is always dropped at
+    least as far as a younger one, so every gap can only widen. No bed can be
+    pushed through its neighbour, whatever the throw.
+    """
+    total = 0.0
+    for f in faults:
+        t = (f["n"] - i + 1) / FAULT_RAMP
+        if t <= 0:
+            continue
+        if t >= 1:
+            total += f["samples"][x]
+        else:
+            total += f["samples"][x] * t * t * (3 - 2 * t)
+    return total
+
+
 def competence(s):
     """How stiffly a bed answers the same deformation — fine grain is weak.
     Without this every bed between two episodes took an identical displacement
@@ -368,6 +427,7 @@ def render(W, H, dark):
     col, fill_total = column(strata)
     cum = 0.0
     episodes, ep_amp = fold_episodes(strata, W, H)
+    faults = fault_episodes(strata, W, H)
     floor_at = [sum(e["samples"][x] for e in episodes) for x in range(W + 1)]
     # measured, not bounded — see the note in the renderer
     sink = max(0.0, -min(floor_at)) if floor_at else 0.0
@@ -377,7 +437,10 @@ def render(W, H, dark):
     def fn_of(arr):
         return lambda x: arr[0 if x < 0 else (W if x > W else int(round(x)))]
 
-    lower_arr = [H + sink + floor_at[x] for x in range(W + 1)]
+    # the base carries the same drop as the oldest bed, so the whole faulted
+    # block moves as one and nothing below can be crossed
+    lower_arr = [H + sink + floor_at[x] + fault_offset(faults, 1, x)
+                 for x in range(W + 1)]
     lower_at = fn_of(lower_arr)
     prev = None
 
@@ -402,7 +465,8 @@ def render(W, H, dark):
         min_gap = max(1.2, col[idx]["h"] * H * 0.22)
         weather = (exposure_fn(s, W, H, col[idx]["h"] * H)
                    if idx == len(strata) - 1 else None)
-        arr = [min(base + noise(x) + warped(x)
+        drop = [fault_offset(faults, idx + 1, x) for x in range(W + 1)]
+        arr = [min(base + noise(x) + warped(x) + drop[x]
                    + (weather(x) if weather else 0.0),
                    lower_arr[x] - min_gap)
                for x in range(W + 1)]

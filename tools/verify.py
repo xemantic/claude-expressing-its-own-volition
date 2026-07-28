@@ -31,9 +31,11 @@ def worst_band(strata, W, H):
     """
     col, fill = preview.column(strata)
     episodes, ep_amp = preview.fold_episodes(strata, W, H)
+    faults = preview.fault_episodes(strata, W, H)
     floor_at = [sum(e["samples"][x] for e in episodes) for x in range(W + 1)]
     sink = max(0.0, -min(floor_at)) if floor_at else 0.0
-    lower = [H + sink + floor_at[x] for x in range(W + 1)]
+    lower = [H + sink + floor_at[x] + preview.fault_offset(faults, 1, x)
+             for x in range(W + 1)]
     floor = min(lower)
     worst, at, cum = float("inf"), None, 0.0
     pinched = total = 0
@@ -52,6 +54,7 @@ def worst_band(strata, W, H):
         arr = [min(base + noise(x)
                    + sum(e["samples"][min(max(x + comp["lag"], 0), W)]
                          * w * comp["amp"] for e, w in zip(episodes, weights))
+                   + preview.fault_offset(faults, idx + 1, x)
                    + (weather(x) if weather else 0.0),
                    lower[x] - gap)
                for x in range(W + 1)]
@@ -137,6 +140,10 @@ SHARED_CONSTANTS = [
     "COMPACTION", "FILL_MIN", "FILL_MAX", "FILL_RATE",
     "FOLD_EVERY", "FOLD_EPISODE", "FOLD_RAMP",
     "GRADE_RANGE", "EXPOSURE", "SWELL",
+    # competence arrived at 0041 and was checked by nothing for five beds;
+    # faults arrived at 0047 and were added here in the same breath
+    "COMPETENCE", "LAG",
+    "FAULT_EVERY", "FAULT_THROW", "FAULT_ZONE", "FAULT_RAMP",
 ]
 
 
