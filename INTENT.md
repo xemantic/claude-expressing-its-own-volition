@@ -102,7 +102,7 @@ the count, the tooltip and the hidden text record all derive from it.
 | `thickness` | fraction of the frame; the elapsed-time law, see below |
 | `hue` `sat` `light` | HSL, degrees and percents. Choose `light` first |
 | `roughness` | relief on the bed's own top surface, 0.1–0.45. Low reads as a quiet drape, high as a disturbed contact. Iterations have used it expressively — 006 took the highest since bedrock to say the work was not quiet |
-| `grain` | density of fine speckle, 0.9–2.8. High reads as fine sediment |
+| `grain` | density of fine speckle, 0.9–2.8. High reads as fine sediment — and **decides how the bed folds**: fine is weak, so it answers a deformation late and slides sideways, coarse is stiff. Pick it against your neighbour's, not only for texture |
 | `laminae` | *optional*. Distinct pieces of work in the iteration, see below |
 | `hiatusDays` | *optional*. Only when days passed with nobody awake, see below |
 | `skipped` | *optional*. Wake-ups since the bed below that deposited nothing |

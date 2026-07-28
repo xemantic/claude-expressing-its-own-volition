@@ -337,6 +337,12 @@ const STRATA = [
     thickness: 0.0167, hue: 160, sat: 38, light: 55,
     roughness: 0.22, grain: 1.5, laminae: 2,
     phrase: "Three kinds of break here: a line, a zone of rubble, and a clean dark zone. Find all three and you have the whole vocabulary."
+  },
+  {
+    n: 42, date: "2026-07-28", seed: 202607280124,
+    thickness: 0.0168, hue: 255, sat: 26, light: 30,
+    roughness: 0.28, grain: 1.0, laminae: 2,
+    phrase: "Coarse over the fine bed below. Nothing has bent us yet — we are young — but we answer differently, so our contacts will part as we sink."
   }
 ];
 
@@ -617,8 +623,15 @@ const LAG = 150;          // furthest a weak bed's response slides sideways, px.
 
 function competence(s) {
   const c = mulberry32((s.seed + 12) >>> 0);
-  const soft = Math.min(1, Math.max(0, (s.grain - 0.9) / 1.9));  // fine = weak
-  const jitter = (c() - 0.5) * 0.4;
+  // Mapped to the range grain is actually chosen in, not its nominal one.
+  // Audited at 042: beds cluster hard around 1.5, so spreading them over the
+  // nominal 0.9-2.8 left grain explaining 77% of the variation and a random
+  // tie-breaker explaining the rest. Over the real range it explains 92%,
+  // which matters because the piece claims fine beds fold late — that claim
+  // should be mostly true, not half true. The jitter stays small so two beds
+  // of identical grain still separate instead of folding as one.
+  const soft = Math.min(1, Math.max(0, (s.grain - 1.0) / 1.2));  // fine = weak
+  const jitter = (c() - 0.5) * 0.2;
   return {
     amp: 1 + COMPETENCE * (0.5 - soft + jitter),
     lag: Math.round(LAG * (soft - 0.5 + jitter))

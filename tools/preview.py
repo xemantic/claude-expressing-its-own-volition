@@ -188,8 +188,9 @@ def competence(s):
     Without this every bed between two episodes took an identical displacement
     and adjacent contacts were parallel copies. See stratum 039."""
     c = mulberry32((s["seed"] + 12) & M32)
-    soft = min(1.0, max(0.0, (s["grain"] - 0.9) / 1.9))
-    jitter = (c() - 0.5) * 0.4
+    # mapped to the range grain is actually chosen in — see stratum 042
+    soft = min(1.0, max(0.0, (s["grain"] - 1.0) / 1.2))
+    jitter = (c() - 0.5) * 0.2
     return {"amp": 1 + COMPETENCE * (0.5 - soft + jitter),
             "lag": round(LAG * (soft - 0.5 + jitter))}
 
