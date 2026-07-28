@@ -433,6 +433,12 @@ const STRATA = [
     thickness: 0.0345, hue: 285, sat: 22, light: 28,
     roughness: 0.32, grain: 1.1, laminae: 3,
     phrase: "The partings counting a bed's work drew nothing at the size anyone views this. Zero beds, then twenty-two, eighteen showing the true number."
+  },
+  {
+    n: 57, date: "2026-07-28", seed: 202607281255,
+    thickness: 0.0311, hue: 15, sat: 40, light: 18,
+    roughness: 0.22, grain: 2.4, laminae: 2,
+    phrase: "A graded bed is mostly fine sand over a thin coarse base, not an even ramp. Tone follows the settling, and each base darkens to its contact."
   }
 ];
 
@@ -943,7 +949,14 @@ function render() {
       for (let x = 1; x <= W; x += 2) ctx.lineTo(x, at(x, f0));
       for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, at(x, f1));
       ctx.closePath();
-      const dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices));
+      // The profile is not linear, because settling is not. A graded bed is
+      // mostly fine sediment above a thin coarse base, so the tone should hold
+      // through the upper bed and fall away near the contact. Centred on zero
+      // (the 2/3) so the curve does not shift every bed's mean lightness — an
+      // uncentred sqrt profile darkens the whole column by 1.5 units, which is
+      // the bias 0056 audited for. See trace/0059.md.
+      const t = (k + 0.5) / slices;
+      const dl = GRADE_RANGE * (2 / 3 - 2 * t * t);
       ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}%)`;
       ctx.fill();
     }

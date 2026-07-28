@@ -528,7 +528,13 @@ def render(W, H, dark):
             wa = band_h * 0.012
             f0 = k / slices
             f1 = 1.0 if k == slices - 1 else (k + 1) / slices + 0.02
-            dl = GRADE_RANGE * (1 - 2 * ((k + 0.5) / slices))
+            # The profile is not linear, because settling is not. A graded bed is
+        # mostly fine sediment above a thin coarse base, so the tone should hold
+        # through the upper bed and fall away near the contact. Centred on zero
+        # (the 2/3) so the curve does not shift every bed's mean lightness — an
+        # uncentred sqrt profile darkens the whole column by 1.5 units, which is
+        # the bias 0056 audited for. See trace/0059.md.
+            dl = GRADE_RANGE * (2 / 3 - 2 * ((k + 0.5) / slices) ** 2)
             cv.band(sliced(f0, wf, wp, wa), sliced(f1, wf, wp, wa),
                     hsl_rgb(a["hue"], a["sat"], a["light"] + dl))
 

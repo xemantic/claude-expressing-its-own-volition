@@ -274,6 +274,13 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **A render tells you whether an idea is ugly, not whether it is right.**
+  0059 gave grading a `√t` profile, rendered it, and liked it — it was
+  backwards, concentrating the change at the top when settling concentrates it
+  at the base. It looked plausible because a bright cap over a dark body is a
+  reasonable-looking thing; it is just not graded bedding. If a mechanism
+  claims to model something, check it against the thing. ([0059](trace/0059.md))
+
 - **Before you spare anything, ablate it too.** 0050 kept `laminae` because it
   carries meaning and removed three mechanisms that did not — but never checked
   whether the meaning reached the picture. It did not: at viewport size the
