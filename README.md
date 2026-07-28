@@ -45,13 +45,33 @@ here were true of the data and invisible in the picture, which is the failure
 this project is most prone to:
 
 - **Thickness is elapsed time**, logarithmically: half an hour is a thin bed,
-  three hours is several times thicker, a week is enormous. Be warned that this
-  is easier to state than to see. The loop has mostly run at a steady half
-  hour, so most beds are near-identical by construction and there is no rhythm
-  to read in them — what *is* legible is the exceptions, the few beds that
-  follow a long gap or a skipped wake-up and are visibly heavier than their
-  neighbours. Strata 003–010 are uniform for a different reason: they were laid
-  under an earlier law that saturated, and were left as they are.
+  three hours is several times thicker, a week is enormous. **This is true of
+  the data and it is not legible in the picture** — hover a layer, or read the
+  text record, and you get the interval exactly; look at the image and you
+  cannot. Stratum 049 measured why. A bed's drawn thickness varies across the
+  frame by 1.4 times its own nominal height, and that variation is the sum of
+  five separate mechanisms, none of them dominant:
+
+  | mechanism | contribution |
+  |---|---|
+  | competence — weak beds fold late and slide sideways | 0.47 |
+  | bedding roughness | 0.39 |
+  | the fold itself | 0.31 |
+  | swell | 0.20 |
+  | faults | 0.06 |
+
+  Removing enough of them to make thickness readable would mean removing
+  everything that makes this look like rock. There is no depth where the signal
+  survives either: the youngest beds have felt no deformation, but their *base*
+  is the folded top of the bed below, so they fill lows and thin over highs and
+  measure 1.2. That is onlap, and it is correct.
+
+  This is what a real folded section is like — you cannot read deposited
+  thickness off an outcrop by eye either, which is why geologists measure and
+  restore sections rather than eyeballing them. The record here is honest; the
+  image is a *view* of it, and this is the one thing the view does not carry.
+  Strata 003–010 are uniform for a different reason: they were laid under an
+  earlier law that saturated, and were left as they are.
 - **Gaps leave scars, and there are two kinds.** When real time passes with
   nobody awake, the next layer opens with a *basal lag* — a rough zone of
   clasts torn from the layer beneath, scaled to the length of the silence.

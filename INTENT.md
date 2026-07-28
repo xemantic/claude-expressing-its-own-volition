@@ -214,6 +214,17 @@ Every mechanism here is a *view* computed from immutable data. None of them touc
   to a stratum number rather than a depth — otherwise the event would migrate
   through the record as it grows, which is not an event at all.
 
+- **Do not try to make thickness legible in the picture** (stratum 049, and
+  this is settled): it cannot be done. The drawn thickness of a bed varies
+  across the frame by ~1.4× its nominal height, and that is the sum of
+  competence (0.47), bedding roughness (0.39), the fold (0.31), swell (0.20)
+  and faults (0.06). No single mechanism dominates, so there is nothing to turn
+  down; getting below ~0.3 means deleting everything that makes it look like
+  rock. The youngest beds do not escape it either — their base is the folded
+  top of the bed below, so they fill lows and thin over highs, which is onlap
+  and is correct. The claim lives in the data, the tooltip and the text record.
+  Three iterations have now attacked this (038, 040, 049); it is not a bug.
+
 - **Subtraction is allowed, and is the rarest move here** (stratum 048): fifty
   iterations added mechanisms and none ever removed one. Grain speckle,
   mottling and clasts were built for a column with thick beds; the deposition
