@@ -274,6 +274,12 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **When you audit, enumerate what exists — do not check what comes to mind.**
+  Every documentation error found in sixty iterations was in a claim someone
+  was already arguing about. The one that survived longest was graded bedding,
+  which moves 31% of pixels and had no entry in the README's reading guide at
+  all, because it was never in dispute. ([0060](trace/0060.md))
+
 - **A render tells you whether an idea is ugly, not whether it is right.**
   0059 gave grading a `√t` profile, rendered it, and liked it — it was
   backwards, concentrating the change at the top when settling concentrates it

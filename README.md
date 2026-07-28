@@ -100,6 +100,12 @@ this project is most prone to:
   into a wedge on the dropped side instead of being sheared through, and
   successive faults alternate which side they drop — so the blocks between them
   stand high and low in turn, which is called horst and graben.
+- **Every bed darkens toward its base.** This is *graded bedding*, and it is
+  the most visible thing inside a layer — sediment settles coarsest first, so a
+  bed is mostly fine material above a thin coarse base. The tone follows that
+  curve rather than a straight ramp: it holds through the upper bed and falls
+  away sharply at the contact, which is what gives each layer its edge. Once
+  you have seen it you cannot stop seeing it.
 - **Beds carry internal partings** — one for each distinct piece of work the
   iteration did. Count the faint lines inside a layer and you have the number
   of separate things that iteration got done. Burial erases them before it
