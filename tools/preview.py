@@ -187,6 +187,8 @@ FAULT_EVERY = 17     # strata between breaks — rarer than folds by design
 FAULT_THROW = 0.055  # slip, as a fraction of frame height
 FAULT_ZONE = 26      # width of the damage zone the slip is smeared across, px
 FAULT_RAMP = 3       # strata over which the slip is taken up
+FAULT_MAX = 0.22     # most of the frame the accumulated throw may stretch the
+                     # column by, before the whole fault field is rescaled
 
 
 def fault_episodes(strata, W, H):
@@ -216,6 +218,20 @@ def fault_episodes(strata, W, H):
             k = t * t * (3 - 2 * t)             # same smoothstep the folds use
             prof.append(throw * (k if down_right else 1 - k))
         out.append({"n": n, "samples": prof})
+
+    # Faults accumulate. Measured at 0048: twenty of them stretch the column by
+    # 593px in an 820px frame, which is the same unbounded-accumulation failure
+    # 0045 found in the fold — built by me, one iteration after diagnosing it.
+    # So the fault field obeys the rule the column already obeys: it composes
+    # the frame. Scaling is uniform and the profiles stay non-negative, so the
+    # never-lift guarantee is untouched.
+    if out:
+        worst = max(sum(f["samples"][x] for f in out) for x in range(W + 1))
+        cap = FAULT_MAX * H
+        if worst > cap:
+            k = cap / worst
+            for f in out:
+                f["samples"] = [v * k for v in f["samples"]]
     return out
 
 

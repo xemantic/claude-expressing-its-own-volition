@@ -67,10 +67,17 @@ this project is most prone to:
   everything above that they are still the largest things in the frame after
   being compressed to well under half their deposited size. Deformation arrives
   in *episodes* that bend everything already deposited and nothing laid down
-  after. Adjacent contacts are near-parallel, so what a viewer actually sees is
-  that the fold grows with depth, not that it comes in events. The column
-  asymptotes rather than filling, so the number of iterations it can accept is
-  unbounded.
+  after, so the fold visibly grows with depth. Beds do not answer an episode
+  identically: a fine-grained bed is weak, folds late and slides sideways,
+  while a coarse one is stiff. So neighbours swell and thin against each other
+  and their crests sit at different places at different levels, rather than the
+  whole stack repeating one shape. The column asymptotes rather than filling,
+  so the number of iterations it can accept is unbounded.
+- **The record breaks as well as bends.** Every seventeenth layer a *fault*
+  cuts the column: find a vertical step in the beds and follow it upward until
+  it vanishes into layers deposited after the slip, which are uncut and seal
+  it. A fault only ever drops the older side, so the beds straddling it thicken
+  into a wedge on the dropped side instead of being sheared through.
 - **Beds carry internal partings** — one for each distinct piece of work the
   iteration did — and burial erases them before it erases the bed.
 - **Consecutive beds alternate light and dark.** This is the strongest pattern

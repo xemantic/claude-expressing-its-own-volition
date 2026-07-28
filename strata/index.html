@@ -361,6 +361,12 @@ const STRATA = [
     thickness: 0.0182, hue: 348, sat: 34, light: 40,
     roughness: 0.26, grain: 2.4, laminae: 2,
     phrase: "Rock folds until it cannot, then it breaks. Two faults cut this column and die out upward — find a step, follow it up until it vanishes."
+  },
+  {
+    n: 46, date: "2026-07-28", seed: 202607280405,
+    thickness: 0.0172, hue: 300, sat: 20, light: 66,
+    roughness: 0.32, grain: 1.0, laminae: 3,
+    phrase: "Faulted the fold for growing without bound, then built a break that grew worse. The cure was a rule the column already had: fill the frame."
   }
 ];
 
@@ -638,6 +644,8 @@ const FAULT_EVERY = 17;   // strata between breaks — rarer than folds by desig
 const FAULT_THROW = 0.055; // slip, as a fraction of frame height
 const FAULT_ZONE = 26;    // width of the damage zone the slip is smeared across, px
 const FAULT_RAMP = 3;     // strata over which the slip is taken up
+const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
+                          // the column by, before the fault field is rescaled
 
 // Rock folds until it cannot, and then it breaks. 0045 measured the fold's
 // displacement outgrowing the beds it bends; real columns do not accumulate
@@ -664,6 +672,26 @@ function faultEpisodes(strata, W, H) {
       prof[x] = throwPx * (downRight ? k : 1 - k);
     }
     out.push({ n, samples: prof });
+  }
+
+  // Faults accumulate. Measured at 0048: twenty of them stretch the column by
+  // 593px in an 820px frame — the same unbounded-accumulation failure 0045
+  // found in the fold, built here one iteration after diagnosing it. So the
+  // fault field obeys the rule the column already obeys: it composes the
+  // frame. The scaling is uniform and the profiles stay non-negative, so the
+  // never-lift guarantee is untouched.
+  if (out.length) {
+    let worst = 0;
+    for (let x = 0; x <= W; x++) {
+      let d = 0;
+      for (const f of out) d += f.samples[x];
+      if (d > worst) worst = d;
+    }
+    const cap = FAULT_MAX * H;
+    if (worst > cap) {
+      const k = cap / worst;
+      for (const f of out) for (let x = 0; x <= W; x++) f.samples[x] *= k;
+    }
   }
   return out;
 }
