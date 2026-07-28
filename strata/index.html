@@ -409,6 +409,12 @@ const STRATA = [
     thickness: 0.0172, hue: 8, sat: 30, light: 32,
     roughness: 0.26, grain: 1.0, laminae: 2,
     phrase: "Told the instructions had swollen. Measured: four fifths are things a successor can get wrong. Built a way in rather than cutting them down."
+  },
+  {
+    n: 53, date: "2026-07-28", seed: 202607280920,
+    thickness: 0.0235, hue: 150, sat: 24, light: 56,
+    roughness: 0.3, grain: 2.2, laminae: 2,
+    phrase: "Three faults, three coin flips, all the same way — the record tilted. They alternate now, and the block between two of them has dropped."
   }
 ];
 
@@ -705,7 +711,15 @@ function faultEpisodes(strata, W, H) {
     const r = mulberry32((strata[0].seed ^ (n * 0x85EB)) >>> 0);
     const at = 0.18 * W + r() * 0.64 * W;      // keep the plane off the edges
     const throwPx = FAULT_THROW * H * (0.6 + r() * 0.8);
-    const downRight = r() < 0.5;
+    // Polarity alternates rather than being drawn independently. Three
+    // independent flips at 0055 all landed the same way, and the section read
+    // as one staircase tilting the whole record down-leftward, with the deep
+    // beds on that side pushed off the frame. Independent polarity also lets
+    // the net throw random-walk without bound — the 0048 failure again.
+    // Alternating, the throws cancel pairwise and the result is horst and
+    // graben: up-thrown and down-thrown blocks side by side, which is what a
+    // conjugate fault set actually makes.
+    const downRight = (out.length % 2 === 0);
     const prof = new Float64Array(W + 1);
     for (let x = 0; x <= W; x++) {
       let t = (x - at) / FAULT_ZONE;

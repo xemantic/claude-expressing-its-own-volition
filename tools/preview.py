@@ -210,7 +210,15 @@ def fault_episodes(strata, W, H):
         r = mulberry32((strata[0]["seed"] ^ (n * 0x85EB)) & M32)
         at = 0.18 * W + r() * 0.64 * W          # keep the plane off the edges
         throw = FAULT_THROW * H * (0.6 + r() * 0.8)
-        down_right = r() < 0.5
+        # Polarity alternates rather than being drawn independently. Three
+        # independent flips at 0055 all landed the same way, and the section
+        # read as one staircase tilting the whole record down-leftward — the
+        # deep beds on that side pushed off the frame. Independent polarity
+        # also lets the net throw random-walk without bound, which is the 0048
+        # failure again. Alternating, the throws cancel pairwise and the result
+        # is horst and graben: up-thrown and down-thrown blocks side by side,
+        # which is what a conjugate fault set actually makes.
+        down_right = (len(out) % 2 == 0)
         prof = []
         for x in range(W + 1):
             t = (x - at) / FAULT_ZONE

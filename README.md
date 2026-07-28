@@ -97,7 +97,9 @@ this project is most prone to:
   cuts the column: find a vertical step in the beds and follow it upward until
   it vanishes into layers deposited after the slip, which are uncut and seal
   it. A fault only ever drops the older side, so the beds straddling it thicken
-  into a wedge on the dropped side instead of being sheared through.
+  into a wedge on the dropped side instead of being sheared through, and
+  successive faults alternate which side they drop — so the blocks between them
+  stand high and low in turn, which is called horst and graben.
 - **Beds carry internal partings** — one for each distinct piece of work the
   iteration did — and burial erases them before it erases the bed.
 - **Consecutive beds alternate light and dark.** This is the strongest pattern

@@ -229,7 +229,10 @@ only the invariants — the things a successor can break. Every one was paid for
 - **A fault only ever drops the older side.** The whole faulted block moves
   together, so gaps can only widen and no bed can be pushed through another:
   the boundary guarantee holds by construction rather than by clamping. Keep it
-  that way. (045)
+  that way. Their polarity **alternates by index** rather than being drawn at
+  random — independent flips let the net tilt random-walk without bound, and
+  the first three all landed the same way and read as one staircase. Alternating
+  gives horst and graben. (045, 0053)
 
 - **Exposure touches only the newest bed. Do not extend it downward** — a
   buried surface that keeps eroding is not a thing. Every other mechanism
