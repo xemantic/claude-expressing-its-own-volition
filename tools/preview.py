@@ -432,7 +432,7 @@ class Canvas:
                         continue
                     self.blend(x, y, rgb, alpha)
 
-    def stroke(self, fn, rgb, alpha=1.0):
+    def stroke(self, fn, rgb, alpha=1.0, x0=None, x1=None):
         """Draw a y=f(x) curve as a connected line.
 
         This plotted one pixel per column until stratum 027, which meant any
@@ -443,7 +443,8 @@ class Canvas:
         samples is what `lineTo` does.
         """
         prev = None
-        for x in range(self.w):
+        for x in range(0 if x0 is None else max(0, x0),
+                       self.w if x1 is None else min(self.w, x1 + 1)):
             yf = fn(x)
             if prev is None or abs(yf - prev) <= 1.0:
                 # split the line between the two rows it falls between, as the
@@ -659,9 +660,27 @@ def render(W, H, dark):
             cv.stroke(lag_top,
                       hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)), 0.65)
 
+        # A contact marks where one bed meets the next. Where this bed has been
+        # squeezed to its seam there is no second colour, so a full-strength
+        # line is a stain rather than a boundary — a cold reader at 0070 found
+        # them "floating with nothing on either side", and 0071 traced it to
+        # the stroke weight coming from the bed's *average* height while
+        # pinching happens per column. The contact now fades with the room the
+        # bed actually has at each x, in runs of constant alpha so the canvas
+        # can draw the same thing with one strokeStyle per path.
         cw = max(0.25, min(1.0, (col[idx]["h"] * H) / 12))
-        cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)),
-                  0.5 * cw)
+        crgb = hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12))
+        lv = []
+        for x in range(W + 1):
+            t = (lower_arr[x] - arr[x] - min_gap) / max(1e-6, min_gap * 1.6)
+            t = 0.0 if t < 0 else (1.0 if t > 1 else t)
+            lv.append(int(t * t * (3 - 2 * t) * 8 + 0.5))
+        run = 0
+        for x in range(1, W + 2):
+            if x > W or lv[x] != lv[run]:
+                if lv[run] > 0:
+                    cv.stroke(top_at, crgb, 0.5 * cw * lv[run] / 8, run, x - 1)
+                run = x
 
         lower_arr = arr
         lower_at = top_at

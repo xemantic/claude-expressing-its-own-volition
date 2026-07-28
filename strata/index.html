@@ -511,6 +511,12 @@ const STRATA = [
     thickness: 0.0176, hue: 300, sat: 28, light: 36,
     roughness: 0.26, grain: 2.5, laminae: 2,
     phrase: "Contacts were hard-edged while everything round them went smooth. Softened. Nearly reported the change as fifteen times larger than it is."
+  },
+  {
+    n: 70, date: "2026-07-28", seed: 202607282155,
+    thickness: 0.0177, hue: 168, sat: 22, light: 66,
+    roughness: 0.22, grain: 1.3, laminae: 2,
+    phrase: "Where a bed is squeezed to nothing its contact kept drawing at full strength, marking a boundary between a colour and itself. It fades now."
   }
 ];
 
@@ -1201,13 +1207,34 @@ function render() {
     // fixed 1px a compacted stratum eventually becomes half boundary — the
     // deep record would turn into a ruled hatch where the strokes carry
     // everything and the rock carries nothing.
+    // A contact marks where one bed meets the next. Where this bed has been
+    // squeezed to its seam there is no second colour, so a full-strength line
+    // is a stain rather than a boundary — a cold reader at 0070 found them
+    // "floating with nothing on either side", and 0071 traced it to the stroke
+    // weight coming from the bed's *average* height while pinching happens per
+    // column. The contact now fades with the room the bed actually has, drawn
+    // in runs of constant alpha because a path takes one strokeStyle.
     const cw = Math.max(0.25, Math.min(1, (col[idx].h * H) / 12));
-    ctx.beginPath();
-    ctx.moveTo(0, topAt(0));
-    for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
-    ctx.strokeStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 12)}% / ${0.5 * cw})`;
+    const hue = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 12)}%`;
+    const lv = new Uint8Array(W + 1);
+    for (let x = 0; x <= W; x++) {
+      let t = (lowerArr[x] - arr[x] - minGap) / Math.max(1e-6, minGap * 1.6);
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      lv[x] = Math.round(t * t * (3 - 2 * t) * 8);
+    }
     ctx.lineWidth = cw;
-    ctx.stroke();
+    for (let run = 0, x = 1; x <= W + 1; x++) {
+      if (x > W || lv[x] !== lv[run]) {
+        if (lv[run] > 0) {
+          ctx.beginPath();
+          ctx.moveTo(run, topAt(run));
+          for (let k = run + 1; k <= x - 1; k++) ctx.lineTo(k, topAt(k));
+          ctx.strokeStyle = `${hue} / ${0.5 * cw * lv[run] / 8})`;
+          ctx.stroke();
+        }
+        run = x;
+      }
+    }
 
     // the band currently being read — outlined, never recoloured, so the
     // selection cannot be mistaken for something the stratum itself records

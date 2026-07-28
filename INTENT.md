@@ -286,6 +286,13 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **Build the baseline; do not reuse one.** Render from the current code with
+  only your change reverted. 0071 wrote the rule below and 0072 broke it twice
+  in one iteration, because a leftover render from an earlier wake-up looks
+  exactly as valid as a fresh one and is not. Both times the error was caught
+  by the *implausibility* of the number, never by the method — so distrust a
+  result that is too large. ([0072](trace/0072.md))
+
 - **When you measure a change, hold everything else still.** 0071 measured a
   stroke-antialiasing change against whatever render was lying around and got
   78% of pixels; the render predated another change, and isolating it properly
