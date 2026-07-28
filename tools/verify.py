@@ -25,7 +25,7 @@ import preview  # noqa: E402
 
 
 def worst_band(strata, W, H):
-    """Return (thinnest band px, stratum n, floor y, H) for this configuration.
+    """Return (thinnest band px, stratum n, floor y, pinched fraction).
 
     Mirrors render() exactly: same column, same fold, same per-pixel clamp.
     """
@@ -36,6 +36,7 @@ def worst_band(strata, W, H):
     lower = [H + sink + floor_at[x] for x in range(W + 1)]
     floor = min(lower)
     worst, at, cum = float("inf"), None, 0.0
+    pinched = total = 0
     for idx, s in enumerate(strata):
         cum += col[idx]["h"]
         base = H * (1 - cum) + sink
@@ -44,8 +45,13 @@ def worst_band(strata, W, H):
         gap = max(1.2, col[idx]["h"] * H * 0.22)
         weather = (preview.exposure_fn(s, W, H, col[idx]["h"] * H)
                    if idx == len(strata) - 1 else None)
+        # competence — a bed answers the fold with its own strength and its own
+        # sideways lag. Omitted here until 0046, which meant this check had been
+        # guaranteeing a geometry the renderer stopped drawing at 0041.
+        comp = preview.competence(s)
         arr = [min(base + noise(x)
-                   + sum(e["samples"][x] * w for e, w in zip(episodes, weights))
+                   + sum(e["samples"][min(max(x + comp["lag"], 0), W)]
+                         * w * comp["amp"] for e, w in zip(episodes, weights))
                    + (weather(x) if weather else 0.0),
                    lower[x] - gap)
                for x in range(W + 1)]
@@ -53,8 +59,11 @@ def worst_band(strata, W, H):
             th = lower[x] - arr[x]
             if th < worst:
                 worst, at = th, s.get("n", idx + 1)
+            if th <= gap + 0.01:
+                pinched += 1
+            total += 1
         lower = arr
-    return worst, at, floor
+    return worst, at, floor, (pinched / total if total else 0.0)
 
 
 def synth(base, count, seed, thickness=None, roughness=None):
@@ -344,8 +353,11 @@ def main():
     cases.append((st, 1100, 750, "worst case: roughness 0.45 throughout"))
 
     failed = 0
+    pinch_live = []
     for strata, W, H, label in cases:
-        thin, at, floor = worst_band(strata, W, H)
+        thin, at, floor, pinch = worst_band(strata, W, H)
+        if label.startswith("live"):
+            pinch_live.append(pinch)
         ok = thin > 0 and floor >= H - 0.01
         failed += not ok
         print(f"{'ok  ' if ok else 'FAIL'}  {label:<36} "
@@ -353,6 +365,18 @@ def main():
               f"floor {floor:.1f} (>= H {H})")
 
     print(f"\n{len(cases) - failed}/{len(cases)} configurations pass")
+
+    # Advisory. Pinch-out is a feature — 006 says so — but its rate climbs as
+    # the column thickens, because fold displacement accumulates while beds
+    # compact. Measured at 0046: 9% at 42 strata, 41% at 160. Nothing is wrong
+    # at these levels; this is here so a successor meets the number on purpose
+    # rather than discovering it a hundred iterations from now.
+    if pinch_live:
+        rate = 100 * sum(pinch_live) / len(pinch_live)
+        note = ("" if rate < 25 else
+                " — climbing; see 0045/0046 before adding fold amplitude")
+        print(f"{'ok   ' if rate < 25 else 'note '} {rate:.1f}% of contact pixels "
+              f"pinch to the minimum gap (advisory){note}")
 
     missing = check_html_script()
     if missing:
