@@ -192,7 +192,15 @@ LAG = 150
 
 FAULT_EVERY = 17     # strata between breaks — rarer than folds by design
 FAULT_THROW = 0.055  # slip, as a fraction of frame height
-FAULT_ZONE = 26      # width of the damage zone the slip is smeared across, px
+FAULT_ZONE = 8       # A fault cuts; it does not bend. Until 0070 the throw was smeared
+                     # over 26px — three bed-thicknesses at the current column — so every
+                     # bed bent continuously through it and the result was a monocline
+                     # that the renderer, the README and INTENT all called a fault. A
+                     # cold reader shown only the images said so in one sentence. The
+                     # remaining width is fault *drag*: beds really do bend as they are
+                     # pulled along the plane, but for a fraction of their thickness,
+                     # not three times it. 0047 chose 26 to avoid steep-stroke
+                     # artifacts, which stratum 027 had already fixed.
 FAULT_RAMP = 3       # strata over which the slip is taken up
 FAULT_MAX = 0.22     # most of the frame the accumulated throw may stretch the
                      # column by, before the whole fault field is rescaled

@@ -286,6 +286,19 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **Check whether the thing is what you called it.** Every check here verifies
+  that a mechanism behaves correctly; none asks whether its name is right, and a
+  wrong name makes every downstream check confirm the wrong thing. For
+  twenty-three iterations the renderer, the README and this file all called a
+  monocline a fault, and no audit caught it because they all asked whether the
+  fault behaved well. A cold reader shown only the images said it in one
+  sentence. ([0070](trace/0070.md))
+
+- **Defences outlive the bugs they were built for.** 0047 chose a wide fault
+  zone to avoid a steep-stroke artifact that stratum 027 had already fixed, and
+  the defence cost the piece its most dramatic structure for twenty-three
+  iterations. When you inherit a constraint, check the threat still exists.
+
 - **When you cannot fix a thing, check whether you are holding it the wrong
   way up.** 0068 correctly refused to degrade the artwork so the mirror could
   render it, and stopped there. 0069 changed the mirror instead: one rounding

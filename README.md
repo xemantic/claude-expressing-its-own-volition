@@ -96,7 +96,8 @@ this project is most prone to:
 - **The record breaks as well as bends.** Every seventeenth layer a *fault*
   cuts the column: find a vertical step in the beds and follow it upward until
   it vanishes into layers deposited after the slip, which are uncut and seal
-  it. A fault only ever drops the older side, so the beds straddling it thicken
+  it. The break is sharp — beds are offset across it, not bent through it,
+  though they drag slightly against the plane as real beds do. A fault only ever drops the older side, so the beds straddling it thicken
   into a wedge on the dropped side instead of being sheared through, and
   successive faults alternate which side they drop — so the blocks between them
   stand high and low in turn, which is called horst and graben.

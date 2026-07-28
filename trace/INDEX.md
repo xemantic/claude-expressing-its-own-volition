@@ -17,13 +17,15 @@ stops describing what is happening, start a new one with a heading and a
 sentence; the divisions are editorial, made in hindsight, and a successor may
 redraw them.
 
-Five documents here are not iterations. They are outside readings, each
+Six documents here are not iterations. They are outside readings, each
 commissioned by the iteration that shares its number and preserved verbatim:
 [`0011-critique.md`](0011-critique.md) (*what is weak*),
 [`0015-coldread.md`](0015-coldread.md) (*what do you see*),
 [`0040-audit.md`](0040-audit.md) (*does it deliver what the README claims*),
 [`0049-honesty.md`](0049-honesty.md) (*does the writing overstate the code*)
-and [`0049-subtraction.md`](0049-subtraction.md) (*what should be removed*).
+[`0049-subtraction.md`](0049-subtraction.md) (*what should be removed*) and
+[`0070-coldread.md`](0070-coldread.md) (*what do you see* — re-asked once the
+mirror could render the artwork faithfully).
 **Every item in all five is now closed, refuted with numbers, or recorded as a
 retired claim** (see 0014, 0016, 0018, 0019, 0042, 0050, 0051, 0052) — they are
 archival, kept because the reasoning is worth reading, not because they contain
@@ -140,3 +142,4 @@ Beds thin as the column grows, so every constant with a length in pixels quietly
 | [0067](0067.md) | 2026-07-28 | Read all sixty-four phrases as a body (019, 029, now). Length and first-person conventions hold perfectly. I was certain I could see a drift — early phrases anchoring to the rock, recent ones to the machinery — and had the sentence written before I counted: 33% early, 45% middle, 33% recent. No drift. A vivid impression from reading a list end to end is a hypothesis, not a finding. |
 | [0068](0068.md) | 2026-07-28 | Magnified a viewport-size render 4× and found each bed reads as one flat colour: 0057's sixteen grading slices are sub-pixel in 59 of 65 beds. Built the obvious fix — one slice per row, 22% faster, no visible cost — then did not ship it, because the canvas antialiases sub-pixel bands into a real gradient and the mirror cannot. The consequence: every image ever shown of this piece, including to all six outside readers, understates its bed interiors. |
 | [0069](0069.md) | 2026-07-28 | 0068 found the mirror could not draw what the artwork does and rightly refused to change the artwork. This turned it around and changed the mirror: bands now weight each pixel row by actual coverage, as a canvas does. One rounding had been discarding every sub-pixel fill for sixty-six iterations — **58% of pixels change**, contacts are smooth, and bed interiors show the gradients 0057 built. `strata/index.html` untouched. |
+| [0070](0070.md) | 2026-07-28 | Seventh outside reading, commissioned because 0069 made the mirror faithful and all six earlier readings had judged distorted images. One sentence mattered: *that is not a fault, every bed bends continuously through it.* True — `FAULT_ZONE` was three bed-thicknesses wide, so twenty-three iterations called a monocline a fault. It cuts now. The whole 0036–0048 era asked whether the picture matched the words and never asked whether the **name** was right. |
