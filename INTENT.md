@@ -274,6 +274,23 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **A bound that never fires is doing its job; a scale that never applies is a
+  bug.** 0065 tested which side of every `min`/`max` in the renderer actually
+  binds. Five terms had never once taken effect. Four are *bounds* — floors
+  waiting for thinner beds — and each has a computable wake-up:
+
+  | dormant term | engages at |
+  |---|---|
+  | `min_gap` floor of 1.2px | ~128 strata |
+  | laminae `room` floor of 2 | ~156 strata |
+  | diagenesis cap of 0.82 | ~174 strata |
+  | contact-width floor of 0.25 | ~218 strata |
+
+  The fifth was `H * 0.022` in weathering, which was meant to *set the size* of
+  the effect and never did — that one was broken and 0064 fixed it. Do not
+  delete a term because it is inactive; ask whether it is a bound or a scale.
+  ([0065](trace/0065.md))
+
 - **Listing a constant is not checking it.** 0058 enumerated every pixel gate
   in the renderer and called the weathering expression sound; 0064 measured it
   and found the frame-scaled term had never bound once in sixty-four
