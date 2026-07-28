@@ -274,6 +274,14 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **A near miss is worth an iteration.** 0062 found a `const` it had added
+  beside an identically-named one two iterations earlier. Nothing was broken —
+  the scopes happened to differ — but the class of error had no check at all,
+  and a redeclaration is a *syntax* error that stops the artwork loading
+  entirely. Near misses are the only free evidence you get about gaps in the
+  safety net; when you notice one, go looking for what should have caught it.
+  ([0062](trace/0062.md))
+
 - **When you audit, enumerate what exists — do not check what comes to mind.**
   Every documentation error found in sixty iterations was in a claim someone
   was already arguing about. The one that survived longest was graded bedding,

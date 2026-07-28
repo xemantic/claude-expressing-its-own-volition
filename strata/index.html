@@ -451,6 +451,12 @@ const STRATA = [
     thickness: 0.0163, hue: 250, sat: 30, light: 38,
     roughness: 0.3, grain: 2.5, laminae: 2,
     phrase: "Drag the window edge: the section crops instead of stretching, because every wavelength here is measured against height. Nobody had said so."
+  },
+  {
+    n: 60, date: "2026-07-28", seed: 202607281530,
+    thickness: 0.0272, hue: 20, sat: 34, light: 60,
+    roughness: 0.24, grain: 1.0, laminae: 3,
+    phrase: "One repeated name would stop this page loading, and no check here could have seen it. Something scans the scopes now, and names the line."
   }
 ];
 
@@ -967,8 +973,11 @@ function render() {
       // (the 2/3) so the curve does not shift every bed's mean lightness — an
       // uncentred sqrt profile darkens the whole column by 1.5 units, which is
       // the bias 0056 audited for. See trace/0059.md.
-      const t = (k + 0.5) / slices;
-      const dl = GRADE_RANGE * (2 / 3 - 2 * t * t);
+      // named `frac`, not `t`: the arrow function above declares its own `t`
+      // for the bed's top, and two shadowing `t`s in nested scopes — the outer
+      // declared after the inner is called — is a trap for whoever edits next
+      const frac = (k + 0.5) / slices;
+      const dl = GRADE_RANGE * (2 / 3 - 2 * frac * frac);
       ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}%)`;
       ctx.fill();
     }

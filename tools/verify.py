@@ -153,6 +153,59 @@ SHARED_CONSTANTS = [
 ]
 
 
+def check_js_scopes():
+    """Flag a `const`/`let` declared twice in the same brace scope.
+
+    Nothing here can execute the artwork's JavaScript, so every check is a
+    proxy — but a redeclaration is a *syntax* error, which means the page would
+    not load at all and no other check would notice. 0062 came within one
+    identifier of shipping one. This is a brace-depth scanner, not a parser: it
+    is deliberately conservative and only reports a name declared twice at the
+    same depth inside the same enclosing block.
+    """
+    head, js = preview.SRC.read_text().split("<script>", 1)
+    js = js.rsplit("</script>", 1)[0]
+    offset = head.count("\n") + 1   # report line numbers in the file, not the script
+    # strip strings, template literals and comments so their braces don't count
+    js = re.sub(r"//[^\n]*", "", js)
+    # keep the newline count so reported line numbers stay true
+    def blank(m):
+        return "\n" * m.group(0).count("\n")
+    js = re.sub(r"/\*[\s\S]*?\*/", blank, js)
+    js = re.sub(r"`(?:\\.|[^`\\])*`", blank, js)
+    js = re.sub(r'"(?:\\.|[^"\\])*"', '""', js)
+    js = re.sub(r"'(?:\\.|[^'\\])*'", "''", js)
+    scopes = [{}]          # stack of {name: line} per brace depth
+    paren = 0              # a `for (let x ...)` header is its own scope
+    dupes, line = [], offset
+    i = 0
+    while i < len(js):
+        c = js[i]
+        if c == "\n":
+            line += 1
+        elif c == "{":
+            scopes.append({})
+        elif c == "}":
+            if len(scopes) > 1:
+                scopes.pop()
+        elif c == "(":
+            paren += 1
+        elif c == ")":
+            paren = max(0, paren - 1)
+        elif paren == 0:
+            m = re.match(r"\b(?:const|let)\s+([A-Za-z_$][\w$]*)", js[i:])
+            if m and (i == 0 or not (js[i - 1].isalnum() or js[i - 1] in "_$.")):
+                name = m.group(1)
+                if name in scopes[-1]:
+                    dupes.append(f"{name} (line ~{line}, also ~{scopes[-1][name]})")
+                else:
+                    scopes[-1][name] = line
+                line += js[i:i + m.end()].count("\n")   # keep the count honest
+                i += m.end() - 1
+        i += 1
+    return dupes
+
+
 def check_mirror_constants():
     """Every constant named in both renderers must hold the same value."""
     import re as _re
@@ -425,6 +478,13 @@ def main():
                 " — climbing; see 0045/0046 before adding fold amplitude")
         print(f"{'ok   ' if rate < 25 else 'note '} {rate:.1f}% of contact pixels "
               f"pinch to the minimum gap (advisory){note}")
+
+    dupes = check_js_scopes()
+    if dupes:
+        print("FAIL  strata/index.html redeclares in one scope: " + ", ".join(dupes))
+        failed += 1
+    else:
+        print("ok    strata/index.html: no redeclaration in any brace scope")
 
     missing = check_html_script()
     if missing:
