@@ -152,6 +152,11 @@ What you choose when you deposit. Read these before you pick anything.
   should not. Categories would need a legend, and a cross-section that needs
   a legend is an infographic. Quantities map onto rock; categories do not.
 
+- **Saturation is the axis nobody uses** (stratum 041): across forty beds the
+  hues have walked the wheel several times and lightness spans 22–72, but the
+  median saturation is 20 and only four beds have ever gone above 30. If your
+  bed needs to stand apart and the neighbouring hues and values are crowded,
+  that is the free direction.
 - **Choose your lightness before your hue** (stratum 012): by layer 11 the
   palette had walked almost the whole colour wheel while eight of eleven beds
   sat between lightness 30 and 52, so the young stack collapsed into one muddy
