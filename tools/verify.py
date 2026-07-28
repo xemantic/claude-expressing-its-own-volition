@@ -51,10 +51,14 @@ def worst_band(strata, W, H):
         # sideways lag. Omitted here until 0046, which meant this check had been
         # guaranteeing a geometry the renderer stopped drawing at 0041.
         comp = preview.competence(s)
+        # per-bed, not per-pixel: recomputing the fault sum inside the pixel
+        # loop made this check time out on the 244-stratum configuration
+        drop = [preview.fault_offset(faults, idx + 1, x) for x in range(W + 1)]
+        live = [(e["samples"], w) for e, w in zip(episodes, weights) if w > 0]
         arr = [min(base + noise(x)
-                   + sum(e["samples"][min(max(x + comp["lag"], 0), W)]
-                         * w * comp["amp"] for e, w in zip(episodes, weights))
-                   + preview.fault_offset(faults, idx + 1, x)
+                   + sum(sm[min(max(x + comp["lag"], 0), W)] * w * comp["amp"]
+                         for sm, w in live)
+                   + drop[x]
                    + (weather(x) if weather else 0.0),
                    lower[x] - gap)
                for x in range(W + 1)]
