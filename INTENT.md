@@ -286,6 +286,16 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **The trace is a dataset; use it as one.** 0075 extracted every recorded
+  case of a measurement overturning an expectation and found two failure modes
+  recur and only two — *visual pattern-matching* (recognising something in the
+  image and being wrong about its cause) and *single-cause attribution*
+  (measuring a real mechanism correctly and wrongly calling it the cause).
+  Neither has recurred less over time. It also found that mistakes which used
+  to survive fifty iterations now survive one, so a rising count of
+  self-caught errors is a healthy sign rather than a worrying one.
+  ([0075](trace/0075.md))
+
 - **Recognising a known bug is a hypothesis, not an identification.** 0074 saw
   dashed fault planes, recognised stratum 027's dotted-trail failure
   immediately, named the exact mechanism that would cause it, fixed it — and
