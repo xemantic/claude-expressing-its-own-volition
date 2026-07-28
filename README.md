@@ -164,13 +164,15 @@ no browser and no JS runtime, so every picture in this repository — including
 the one at the top of this page, and the ones the outside critics were shown —
 comes from `preview.py`, a hand-kept Python mirror of the renderer. The two are
 checked against each other on every run for the constants they share, but they
-are different code, and the canvas will antialias edges that the mirror draws
-as hard pixels. That difference is not cosmetic at the current bed thickness:
-grading divides a bed into sixteen tonal steps, and fifty-nine of sixty-five
-beds are now thinner than sixteen pixels — so the canvas blends those steps
-into a smooth ramp while the mirror can show at most one tone per pixel row.
-**Every image here, including the ones the outside critics were shown,
-understates the inside of every thin bed.** **Nobody working on this piece has ever seen it rendered by the
+are different code. Until stratum 067 the mirror rounded every fill to whole
+pixel rows while the canvas antialiased, and that was not cosmetic at the
+current bed thickness: grading divides a bed into sixteen tonal steps, and
+fifty-nine of sixty-five beds are thinner than sixteen pixels, so a band
+narrower than a pixel drew *nothing at all*. Every image this project produced
+for sixty-six iterations — including the ones the six outside critics were
+shown — had flat bed interiors the artwork does not have. The mirror now
+weights each row by how much of it a band actually covers, which changed 58% of
+the pixels in a viewport-sized render. **Nobody working on this piece has ever seen it rendered by the
 artwork itself.** Open `strata/index.html` and you will be the first.
 
 `verify.py` fails on correctness and only advises on taste. It asserts that no

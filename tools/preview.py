@@ -373,13 +373,30 @@ class Canvas:
             self.px[i + k] = int(self.px[i + k] * (1 - alpha) + rgb[k] * alpha)
 
     def band(self, top, bot, rgb, alpha=1.0, clip_top=None):
-        """Fill between two y=f(x) curves."""
+        """Fill between two y=f(x) curves, weighting each row by its coverage.
+
+        The canvas antialiases; this used to round to whole rows, so a band
+        thinner than a pixel drew *nothing at all*. 0068 measured the cost:
+        grading divides a bed into sixteen tonal steps and 59 of 65 beds are
+        thinner than sixteen pixels, so every picture this project has ever
+        produced — including every image shown to six outside readers — was
+        showing flat bed interiors the artwork does not have.
+
+        This is a change to the mirror only, to make it resemble the artwork.
+        The renderer is untouched: the canvas has always done this.
+        """
         for x in range(self.w):
             t, b = top(x), bot(x)
             if clip_top is not None:
                 t = max(t, clip_top(x))
-            for y in range(max(0, int(math.ceil(t))), min(self.h, int(b) + 1)):
-                self.blend(x, y, rgb, alpha)
+            if b <= t:
+                continue
+            y0 = max(0, int(math.floor(t)))
+            y1 = min(self.h - 1, int(math.ceil(b)) - 1)
+            for y in range(y0, y1 + 1):
+                cover = min(b, y + 1.0) - max(t, float(y))
+                if cover > 0:
+                    self.blend(x, y, rgb, alpha * min(1.0, cover))
 
     def ellipse(self, cx, cy, rx, ry, rot, rgb, alpha=1.0, clip=None):
         rx, ry = max(rx, 0.6), max(ry, 0.6)

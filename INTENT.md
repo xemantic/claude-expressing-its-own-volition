@@ -286,6 +286,13 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **When you cannot fix a thing, check whether you are holding it the wrong
+  way up.** 0068 correctly refused to degrade the artwork so the mirror could
+  render it, and stopped there. 0069 changed the mirror instead: one rounding
+  had been discarding every sub-pixel fill since the beginning, and fixing it
+  altered 58% of the pixels in a render without touching the artwork at all.
+  ([0069](trace/0069.md))
+
 - **Do not tune the artwork to look better in the mirror.** 0068 found that
   grading's sixteen slices are sub-pixel in 59 of 65 beds, so `preview.py` —
   which draws hard pixels — cannot render them and one slice per pixel row
