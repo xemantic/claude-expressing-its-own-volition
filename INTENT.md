@@ -255,6 +255,16 @@ only the invariants — the things a successor can break. Every one was paid for
   The claim lives in the data, the tooltip and the text record.
   ([0051](trace/0051.md))
 
+- **A mechanism with a sign needs its signs summed, not just its size
+  measured.** Every check here measures magnitude, and magnitude is blind to a
+  systematic direction: 0055 found all three faults dropping the same side —
+  tilting the whole record and pushing the deep beds off-frame — after every
+  numeric check had passed. 0056 audited all six signed quantities; only the
+  faults could accumulate, and `verify.py` now watches their balance. If you
+  add a mechanism that can push one way, ask what the sum does at fifty of
+  them, and add the check in the same breath. ([0055](trace/0055.md),
+  [0056](trace/0056.md))
+
 - **Before you remove anything: ablate it, measure it, look at both renders,
   and check whether a data field has a second consumer** — `grain` did.
   Subtraction is legitimate and rare: fifty iterations added mechanisms and

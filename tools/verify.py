@@ -267,6 +267,20 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
 # memory of the skip having happened.
 
 
+def check_fault_balance(strata, W=1400, H=820, limit=0.06):
+    """Do the faults' signs cancel, or do they all pull the same way?"""
+    faults = preview.fault_episodes(strata, W, H)
+    if len(faults) < 2:
+        return None
+    net = sum(f["samples"][W] - f["samples"][0] for f in faults)
+    gross = sum(abs(f["samples"][W] - f["samples"][0]) for f in faults)
+    if abs(net) > limit * H:
+        return (f"faults pull one way: net tilt {net:+.0f}px of {gross:.0f}px "
+                f"thrown ({abs(net) / H:.0%} of frame) — see 0055, polarity "
+                f"should alternate so the throws cancel")
+    return None
+
+
 MEMORY = Path.home() / (".claude/projects/-home-claude-git-claude-"
                         "expressing-its-own-volition/memory/strata-project.md")
 
@@ -450,6 +464,15 @@ def main():
     # than iterations, and it is the one thing here with nothing checking it.
     # It has rotted three times (018, 0035, 0053). Advisory, not FAIL: the file
     # lives outside the repo and may legitimately be absent.
+    # Faults are the one mechanism whose sign accumulates: each offsets some
+    # beds relative to others, so a set that all drops the same way tilts the
+    # whole record and random-walks without bound. 0055 found three-for-three
+    # by looking, after every magnitude check had passed — a bias in direction
+    # is invisible to anything measuring size. This watches the sum of signs.
+    tilt = check_fault_balance(live)
+    if tilt:
+        print("note  " + tilt)
+
     stale = check_memory_current(live)
     if stale:
         print("note  " + stale)
