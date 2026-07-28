@@ -144,7 +144,7 @@ def check_html_script():
 SHARED_CONSTANTS = [
     "COMPACTION", "FILL_MIN", "FILL_MAX", "FILL_RATE",
     "FOLD_EVERY", "FOLD_EPISODE", "FOLD_RAMP",
-    "GRADE_RANGE", "EXPOSURE", "SWELL",
+    "GRADE_RANGE", "EXPOSURE", "EXPOSURE_CAP", "SWELL",
     # competence arrived at 0041 and was checked by nothing for five beds;
     # faults arrived at 0047 and were added here in the same breath
     "COMPETENCE", "LAG",

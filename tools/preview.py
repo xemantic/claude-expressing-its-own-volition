@@ -127,7 +127,8 @@ def wave_span(H):
     return H * 1.6
 
 
-EXPOSURE = 0.3
+EXPOSURE = 0.022      # weathering depth as a fraction of the frame
+EXPOSURE_CAP = 0.8    # ...but never more than this much of the bed itself
 
 
 def exposure_fn(s, W, H, band):
@@ -135,7 +136,13 @@ def exposure_fn(s, W, H, band):
     Biased downward by its own mean: weathering removes material."""
     rng = mulberry32((s["seed"] + 5) & M32)
     octaves = []
-    amp = min(band * EXPOSURE, H * 0.022)
+    # Weathering depth is set by how long the surface has been exposed, not by
+    # how thick the topmost bed happens to be. Thickness is the *limit* — you
+    # cannot cut past the bed below — and the frame is the *scale*. Until 0064
+    # these two were the other way round, so `H * 0.022` never once bound in
+    # sixty-four iterations and the relief shrank with the beds: 12px when 014
+    # built it, 5.8px by 0064, heading for 2px. The horizon had gone flat.
+    amp = min(H * EXPOSURE, band * EXPOSURE_CAP)
     cycles = 2.5 + rng() * 3.5
     for _ in range(3):
         octaves.append(((cycles * 2 * math.pi) / wave_span(H), rng() * 2 * math.pi, amp))

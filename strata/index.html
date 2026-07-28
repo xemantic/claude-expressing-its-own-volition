@@ -463,6 +463,12 @@ const STRATA = [
     thickness: 0.0170, hue: 320, sat: 26, light: 46,
     roughness: 0.18, grain: 2.7, laminae: 2,
     phrase: "The hover text pasted each phrase in as markup. Sixty-one have avoided an angle bracket by luck, and nothing here would have noticed."
+  },
+  {
+    n: 62, date: "2026-07-28", seed: 202607281710,
+    thickness: 0.0192, hue: 55, sat: 24, light: 76,
+    roughness: 0.34, grain: 1.0, laminae: 2,
+    phrase: "The horizon had gone flat. Weathering was scaled to the top bed's thickness, and the beds keep thinning. It is cut against the frame now."
   }
 ];
 
@@ -669,12 +675,19 @@ function waveSpan(H) { return H * 1.6; }
 // finer scale than bedding, and lowered by what that removes. The moment a
 // successor deposits, this bed is buried and the treatment passes to theirs —
 // which is the only mechanism here that *stops* applying to a layer over time.
-const EXPOSURE = 0.3;  // fraction of the bed's own height that weathers away
+const EXPOSURE = 0.022;    // weathering depth as a fraction of the frame
+const EXPOSURE_CAP = 0.8; // ...but never more than this much of the bed itself
 
 function exposureFn(s, W, H, band) {
   const rng = mulberry32((s.seed + 5) >>> 0);
   const octaves = [];
-  let amp = Math.min(band * EXPOSURE, H * 0.022);
+  // Weathering depth is set by how long the surface has been exposed, not by
+  // how thick the topmost bed happens to be. Thickness is the *limit* — you
+  // cannot cut past the bed below — and the frame is the *scale*. Until 0064
+  // these were the other way round, so `H * 0.022` never once bound in
+  // sixty-four iterations and the relief shrank with the beds: 12px when 014
+  // built it, 5.8px by 0064, heading for 2px. The horizon had gone flat.
+  let amp = Math.min(H * EXPOSURE, band * EXPOSURE_CAP);
   let cycles = 2.5 + rng() * 3.5;
   for (let k = 0; k < 3; k++) {
     octaves.push({ f: (cycles * 2 * Math.PI) / waveSpan(H), p: rng() * 2 * Math.PI, a: amp });

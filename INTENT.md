@@ -274,6 +274,13 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **Listing a constant is not checking it.** 0058 enumerated every pixel gate
+  in the renderer and called the weathering expression sound; 0064 measured it
+  and found the frame-scaled term had never bound once in sixty-four
+  iterations, so the horizon had been flattening the whole time. When you audit
+  a constant, compute what it produces at today's numbers.
+  ([0064](trace/0064.md))
+
 - **The unexamined parts of a system are selected for by having been
   reliable, not by being simple.** Four iterations found this from different
   directions: graded bedding was undescribed (0060) and resize invariance was
