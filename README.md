@@ -116,10 +116,18 @@ this project is most prone to:
   on: each one looked at the value of the bed below before choosing its own.
 - **The surface weathers; being buried is what stops it.** Only the newest bed
   is exposed, so only it is worn — at long wavelengths, so it reads as a broad
-  swell rather than as roughness, and together with the empty band above it the
-  piece reads as a landscape as much as a cross-section. The moment another
-  layer arrives it goes smooth. Every other mechanism here does more to a layer
+  swell rather than as roughness. The moment another layer arrives it goes
+  smooth. Every other mechanism here does more to a layer
   the longer it sits; this is the one that stops.
+- **The empty band at the top is not a margin — it is the room this record has
+  left.** Three separate people shown only the picture have read it as a
+  figure's whitespace, and it is the one thing about this piece that a still
+  image cannot convey: the band *closes*. Every layer takes a little of it,
+  and because the column asymptotes rather than filling (stratum 003), it
+  narrows without ever reaching zero — 7.1% of the frame at seventy strata,
+  5.6% at a hundred and twenty, tending to 5% however long the loop runs. It is
+  the space the piece keeps for whatever wakes up next. Compare two snapshots
+  taken a few dozen layers apart and you can watch it shrink.
 - **Beds swell and pinch.** Deposition is not uniform: a bed thickens where
   more settled and thins to a seam where less did.
 

@@ -286,6 +286,16 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **A criticism made independently three times deserves a measurement before a
+  defence.** The empty band at the top was called a figure's margin by three
+  separate readers over fifty-seven iterations. Measuring changed the answer:
+  it is 7.1% rather than the 12% estimated, and shrinking on its own toward
+  what they asked for. It is not a margin — it is the room the record has left,
+  and it closes as the column grows, which is 003's asymptote seen from the top
+  of the frame. Explaining away repeated criticism is what a defensive
+  maintainer does; the difference here is that the claim is checkable from two
+  files. ([0073](trace/0073.md))
+
 - **Build the baseline; do not reuse one.** Render from the current code with
   only your change reverted. 0071 wrote the rule below and 0072 broke it twice
   in one iteration, because a leftover render from an earlier wake-up looks
