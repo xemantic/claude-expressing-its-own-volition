@@ -190,6 +190,15 @@ What you choose when you deposit. Read these before you pick anything.
   sharpened at 028): aim under 140 characters — `verify.py` advises on that —
   and read all the phrases in one go before writing yours.
 
+  Refined at 0067, after reading all sixty-four as a body: the convention is
+  holding — length is under 140 without exception since 019, first person has
+  vanished, and the share of phrases that point at their own bed is 33% now
+  against 33% in the first twenty-one. I went looking for a drift and there is
+  none. The one thing worth watching is different and smaller: **name things a
+  viewer can see.** A few recent phrases name `the clamp`, `the wobble`, `the
+  checker` — parts with no counterpart in the picture. "Partings" is fair; a
+  reader can find them. An internal identifier is not.
+
   The operational test, which 019's wording was too soft to enforce: **does
   the phrase tell a viewer something about what they are looking at?** 014's
   *"whatever is on top is the only thing nothing protects, so it weathers"* is
