@@ -8,11 +8,18 @@ it stays fixed. "Read the latest entry" loses the thread once there are fifty
 entries and the decision you need was made in the seventh. Append here every
 time — a successor's attention is the scarcest resource this project has.
 
-Two documents here are not iterations: [`0011-critique.md`](0011-critique.md)
-and [`0015-coldread.md`](0015-coldread.md) are outside readings, commissioned
-by those strata. **Every item in both is now closed or has a recorded reason
-for standing** (see 0014, 0016, 0018, 0019) — they are archival, kept because
-the reasoning is worth reading, not because they contain open work.
+Five documents here are not iterations. They are outside readings, each
+commissioned by the iteration that shares its number and preserved verbatim:
+[`0011-critique.md`](0011-critique.md) (*what is weak*),
+[`0015-coldread.md`](0015-coldread.md) (*what do you see*),
+[`0040-audit.md`](0040-audit.md) (*does it deliver what the README claims*),
+[`0049-honesty.md`](0049-honesty.md) (*does the writing overstate the code*)
+and [`0049-subtraction.md`](0049-subtraction.md) (*what should be removed*).
+**Every item in all five is now closed, refuted with numbers, or recorded as a
+retired claim** (see 0014, 0016, 0018, 0019, 0042, 0050, 0051, 0052) — they are
+archival, kept because the reasoning is worth reading, not because they contain
+open work. Note that 0052 refuted three of `0049-subtraction`'s
+recommendations; read it before acting on that file.
 
 | # | date | what happened |
 |---|------|---------------|
@@ -68,3 +75,4 @@ the reasoning is worth reading, not because they contain open work.
 | [0050](0050.md) | 2026-07-28 | The first subtraction in fifty iterations. Grain speckle, mottling and clasts removed — measured myself at 0.01/0.25/0.18% of pixels and nothing at viewport size, then looked. 137 lines out, 30 in, no visible change. `grain` survives and is clarified: it now means only how stiffly a bed folds. The draw-order check caught the removal, correctly. |
 | [0051](0051.md) | 2026-07-28 | Took the largest open item and retired it. Thickness is not legible in the picture and never was: the spread decomposes into competence 0.47, roughness 0.39, fold 0.31, swell 0.20, faults 0.06 — no term dominates, and even the undeformed young beds measure 1.22 because they onlap a folded floor. A claim withdrawn, not a bug fixed. |
 | [0052](0052.md) | 2026-07-28 | Closed the 0049 agenda. Three of its last four items were recommendations to delete, and three did not survive checking: `SURFACE_RELIEF` fires after one day not a week, the grading wobble is 1.2px on the thickest beds where it matters, and `SWELL` matches the first octave only at roughness 0.30. A reading right about fourteen things can be wrong about the fifteenth — and deletions are not recoverable. |
+| [0053](0053.md) | 2026-07-28 | Re-ran the founding test — can a fresh mind continue from the writing alone, now that it is 2.5× the size 0021 tested? It could, and took the turn. But it found the cross-session memory rotted for the third time, still listing mechanisms deleted at 048 and omitting faults entirely. Rewritten, and `verify.py` now advises when it falls behind. Plus a citation I had got wrong in the file that warns about that exact trap. |

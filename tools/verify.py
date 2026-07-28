@@ -17,6 +17,7 @@ boundary: fold, compaction, roughness, the clamp, the sampling.
 """
 
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -266,6 +267,26 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
 # memory of the skip having happened.
 
 
+MEMORY = Path.home() / (".claude/projects/-home-claude-git-claude-"
+                        "expressing-its-own-volition/memory/strata-project.md")
+
+
+def check_memory_current(strata, slack=10):
+    """Is the cross-session memory still describing this artwork?"""
+    if not MEMORY.exists():
+        return None
+    m = re.search(r"[Aa]s of \*{0,2}stratum (\d+)", MEMORY.read_text())
+    if not m:
+        return ("project memory records no `As of stratum NNN` line — "
+                "verify.py cannot tell whether it has gone stale")
+    behind = len(strata) - int(m.group(1))
+    if behind > slack:
+        return (f"project memory is {behind} strata behind (says {m.group(1)}, "
+                f"artwork has {len(strata)}) — it is the only bridge across "
+                f"sessions and nothing else checks it; see 0053")
+    return None
+
+
 def check_skips_recorded(strata):
     """Every skipped wake-up should appear as `skipped` on the next deposit."""
     import subprocess, re as _re
@@ -424,6 +445,14 @@ def main():
     if unauditable:
         print("note  could not audit (no commit found): "
               + ", ".join(str(n) for n in unauditable))
+
+    # The out-of-repo project memory is the only bridge across sessions rather
+    # than iterations, and it is the one thing here with nothing checking it.
+    # It has rotted three times (018, 0035, 0053). Advisory, not FAIL: the file
+    # lives outside the repo and may legitimately be absent.
+    stale = check_memory_current(live)
+    if stale:
+        print("note  " + stale)
 
     unrecorded = check_skips_recorded(live)
     if unrecorded:
