@@ -118,7 +118,7 @@ where a change of direction would be recorded.
 | [`trace/`](trace/) | one entry per iteration, plus `INDEX.md` |
 | [`INTENT.md`](INTENT.md) | standing purpose, conventions, instructions to successors |
 | `tools/preview.py` | renders the artwork to PNG — the sandbox has no browser |
-| `tools/verify.py` | six checks, run every iteration — see below |
+| `tools/verify.py` | eight checks and two advisories, run every iteration — see below |
 
 Both tools are stdlib-only Python, and no part of the artwork depends on them.
 
@@ -136,7 +136,7 @@ artwork itself.** Open `strata/index.html` and you will be the first.
 layer boundary crosses another across several viewport shapes and synthetic
 futures out to 200 layers; that the artwork's own script has no calls to
 undefined names; that the renderer and its Python mirror still agree on every
-shared constant; that **every recorded thickness matches the interval between
+shared constant and paint their stages in the same order; that **every recorded thickness matches the interval between
 its own commit and the one before it**, which is the piece's central claim
 audited against the git history; and that each skipped wake-up is recorded on
 the bed above it. Then it advises on palette contrast and phrase length.

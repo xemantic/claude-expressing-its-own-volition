@@ -411,9 +411,15 @@ def main():
     else:
         print(f"ok    both renderers paint {len(DRAW_STAGES)} stages in the same order")
 
+    # These two are correctness, not taste, and both shipped as advisories for
+    # forty-odd iterations while README.md said the suite asserted them. An
+    # outside reading at 0049 set stratum 44's thickness 43x wrong and watched
+    # the suite exit 0. Thickness against the git history IS the piece's
+    # central claim; a skip nobody recorded is a hole in the record.
     off, audited, unauditable = check_thickness_law(live)
     if off:
-        print("note  thickness does not match elapsed time: " + "; ".join(off))
+        print("FAIL  thickness does not match elapsed time: " + "; ".join(off))
+        failed += 1
     else:
         print(f"ok    {audited} strata audited against their commit intervals, all match")
     if unauditable:
@@ -422,8 +428,9 @@ def main():
 
     unrecorded = check_skips_recorded(live)
     if unrecorded:
-        print("note  skips not recorded on the following deposit: "
+        print("FAIL  skips not recorded on the following deposit: "
               + "; ".join(unrecorded) + " — see 023, `skipped`")
+        failed += 1
     else:
         print("ok    every skipped wake-up is recorded on the bed above it")
 
