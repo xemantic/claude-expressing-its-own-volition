@@ -203,6 +203,12 @@ def check_js_scopes():
                 line += js[i:i + m.end()].count("\n")   # keep the count honest
                 i += m.end() - 1
         i += 1
+    # the scanner has already counted every brace and paren; unbalanced ones
+    # are the other syntax error that stops the page loading outright
+    if len(scopes) != 1:
+        dupes.append(f"unbalanced braces: {len(scopes) - 1} left open")
+    if paren != 0:
+        dupes.append(f"unbalanced parentheses: {paren} left open")
     return dupes
 
 

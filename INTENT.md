@@ -274,6 +274,13 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **The unexamined parts of a system are selected for by having been
+  reliable, not by being simple.** Four iterations found this from different
+  directions: graded bedding was undescribed (0060) and resize invariance was
+  undescribed (0061) because both simply worked; the redeclaration gap (0062)
+  and the tooltip's `innerHTML` (0063) went unchecked for the same reason.
+  When you go looking, prefer the parts that have never caused trouble.
+
 - **A near miss is worth an iteration.** 0062 found a `const` it had added
   beside an identically-named one two iterations earlier. Nothing was broken —
   the scopes happened to differ — but the class of error had no check at all,

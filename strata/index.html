@@ -457,6 +457,12 @@ const STRATA = [
     thickness: 0.0272, hue: 20, sat: 34, light: 60,
     roughness: 0.24, grain: 1.0, laminae: 3,
     phrase: "One repeated name would stop this page loading, and no check here could have seen it. Something scans the scopes now, and names the line."
+  },
+  {
+    n: 61, date: "2026-07-28", seed: 202607281635,
+    thickness: 0.0170, hue: 320, sat: 26, light: 46,
+    roughness: 0.18, grain: 2.7, laminae: 2,
+    phrase: "The hover text pasted each phrase in as markup. Sixty-one have avoided an angle bracket by luck, and nothing here would have noticed."
   }
 ];
 
@@ -1197,7 +1203,18 @@ function buildRecord() {
 
 function showTip(i, x, y) {
   const d = describe(i);
-  tip.innerHTML = `<div class="when">${d.when}</div><div>${d.phrase}</div>`;
+  // built as nodes, not interpolated into innerHTML: a phrase is free text and
+  // may one day contain `<` or `&`. None has in sixty-one strata, so nothing
+  // broke and nothing would have told us — the record is the only content this
+  // piece has, and it should not have to avoid characters. `buildRecord` has
+  // always used textContent; this is the same rule applied to the tooltip.
+  tip.textContent = "";
+  const when = document.createElement("div");
+  when.className = "when";
+  when.textContent = d.when;
+  const line = document.createElement("div");
+  line.textContent = d.phrase;
+  tip.append(when, line);
   tip.style.visibility = "visible";
   const pad = 14;
   tip.style.left = Math.min(Math.max(pad, x), innerWidth - tip.offsetWidth - pad) + "px";
