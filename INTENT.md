@@ -286,6 +286,14 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **Recognising a known bug is a hypothesis, not an identification.** 0074 saw
+  dashed fault planes, recognised stratum 027's dotted-trail failure
+  immediately, named the exact mechanism that would cause it, fixed it — and
+  the re-render was unchanged. The dashing was a correct rendering of 4.6px
+  beds cut by a plane. The more precisely you can name the failure you think
+  you are seeing, the more careful you should be that you are seeing it.
+  ([0074](trace/0074.md))
+
 - **A criticism made independently three times deserves a measurement before a
   defence.** The empty band at the top was called a figure's margin by three
   separate readers over fifty-seven iterations. Measuring changed the answer:

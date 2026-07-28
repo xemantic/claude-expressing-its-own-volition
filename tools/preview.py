@@ -432,7 +432,7 @@ class Canvas:
                         continue
                     self.blend(x, y, rgb, alpha)
 
-    def stroke(self, fn, rgb, alpha=1.0, x0=None, x1=None):
+    def stroke(self, fn, rgb, alpha=1.0, x0=None, x1=None, prev0=None):
         """Draw a y=f(x) curve as a connected line.
 
         This plotted one pixel per column until stratum 027, which meant any
@@ -442,7 +442,13 @@ class Canvas:
         iterations judged the artwork through it. Spanning between consecutive
         samples is what `lineTo` does.
         """
-        prev = None
+        # `prev0` seeds continuity when a caller draws one curve as several
+        # runs. Without it every run begins with no predecessor and cannot span
+        # a steep jump, so a near-vertical contact comes out as a dotted trail —
+        # which is exactly the bug stratum 027 fixed and 0072 reintroduced by
+        # splitting the contact into runs of constant alpha. Caught by looking
+        # at a fault plane; no check here would have seen it.
+        prev = prev0
         for x in range(0 if x0 is None else max(0, x0),
                        self.w if x1 is None else min(self.w, x1 + 1)):
             yf = fn(x)
@@ -679,7 +685,8 @@ def render(W, H, dark):
         for x in range(1, W + 2):
             if x > W or lv[x] != lv[run]:
                 if lv[run] > 0:
-                    cv.stroke(top_at, crgb, 0.5 * cw * lv[run] / 8, run, x - 1)
+                    cv.stroke(top_at, crgb, 0.5 * cw * lv[run] / 8, run, x - 1,
+                              top_at(run - 1) if run > 0 else None)
                 run = x
 
         lower_arr = arr
