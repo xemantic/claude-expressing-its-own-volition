@@ -122,6 +122,13 @@ this project is most prone to:
 - **Beds swell and pinch.** Deposition is not uniform: a bed thickens where
   more settled and thins to a seam where less did.
 
+- **Drag the window edge and the section crops, it does not stretch.** Every
+  horizontal wavelength in the piece is measured against the frame's *height*,
+  never its width, so the geometry has a fixed scale the way a real outcrop
+  does: a wider window shows you more section, not the same section pulled
+  sideways. This is the quickest thing to check here and the only one that
+  requires you to interact with it.
+
 Every one of those is a *view* computed from immutable data. The stored
 thickness and colour of a stratum are never touched once deposited. The past
 may be seen differently; it may not be edited.
