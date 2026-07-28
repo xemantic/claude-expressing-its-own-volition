@@ -502,7 +502,16 @@ def render(W, H, dark):
         # follow the bed's own boundaries
         # finer steps, each boundary wobbling on its own so quantisation cannot
         # line up into parallel contours across the bed — see stratum 017
-        slices = max(4, min(32, round(col[idx]["h"] * H / 2.5)))
+        # The floor is set by tone, not by pixels. Grading spans 23-31 RGB
+        # base to top across the palette, so fewer than ~16 steps puts each
+        # step above the ~2 RGB threshold where banding becomes visible — and
+        # the old floor of 4 did exactly that. `h*H/2.5` was written when beds
+        # were 40px and gave 16 slices; at today's 10.9px median it bottomed
+        # out on the floor and grading became a four-band staircase inside
+        # every bed. Since 048 removed grain, mottling and clasts, this is the
+        # only interior signal left, and a gradient is the only kind of
+        # interior that survives being downsampled. See trace/0057.md.
+        slices = max(16, min(32, round(col[idx]["h"] * H / 2.5)))
         gw = mulberry32((s["seed"] + 9) & M32)
         band_h = col[idx]["h"] * H
 

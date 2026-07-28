@@ -255,6 +255,15 @@ only the invariants — the things a successor can break. Every one was paid for
   The claim lives in the data, the tooltip and the text record.
   ([0051](trace/0051.md))
 
+- **Any mechanism with a length scale in pixels will be disfigured as the beds
+  thin.** The deposition rule makes beds permanently thinner — median 10.9px
+  now and falling — so a floor, threshold or minimum written for the column as
+  it was will quietly stop meaning what it meant. Three instances: grain,
+  mottling and clasts degraded to invisible and were removed (048); grading's
+  slice floor of 4 degraded to *visible and wrong*, rendering a gradient as
+  four hard bands (0057). When you write a pixel constant, ask what it does at
+  6px. ([0050](trace/0050.md), [0057](trace/0057.md))
+
 - **A mechanism with a sign needs its signs summed, not just its size
   measured.** Every check here measures magnitude, and magnitude is blind to a
   systematic direction: 0055 found all three faults dropping the same side —

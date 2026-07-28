@@ -353,7 +353,9 @@ def check_phrase_length(strata, limit=140):
 DRAW_STAGES = [
     ("band fill", r"ctx\.fillStyle = `hsl\(\$\{a\.hue\} \$\{a\.sat\}% \$\{a\.light\}%\)`",
                   r'cv\.band\(top_at, lower_at, hsl_rgb\(a\["hue"\]'),
-    ("grading",   r"const slices = ",                        r"slices = max\(4"),
+    # matched without the floor value — 0057 changed 4 to 16 and this marker
+    # broke, which is the check noticing a tuning change it should not care about
+    ("grading",   r"const slices = ",                        r"slices = max\("),
     ("diastem",   r"if \(s\.skipped && prev\)",              r'if s\.get\("skipped"\) and prev'),
     ("laminae",   r"if \(s\.laminae > 1",                    r'if s\.get\("laminae", 0\) > 1'),
     ("lag",       r"if \(s\.hiatusDays && prev\)",           r'if s\.get\("hiatusDays"\) and prev'),

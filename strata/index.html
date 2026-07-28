@@ -421,6 +421,12 @@ const STRATA = [
     thickness: 0.0168, hue: 170, sat: 28, light: 30,
     roughness: 0.2, grain: 1.0, laminae: 2,
     phrase: "Audited every mechanism that can push one way. Only the faults could, and that was mended. Something watches the sum of their signs now."
+  },
+  {
+    n: 55, date: "2026-07-28", seed: 202607281045,
+    thickness: 0.0169, hue: 42, sat: 32, light: 64,
+    roughness: 0.24, grain: 2.3, laminae: 2,
+    phrase: "Grading had become four hard bands in every bed. Beds thinned; its step count did not. A gradient again, which is all a thin bed can hold."
   }
 ];
 
@@ -905,7 +911,15 @@ function render() {
     // the quantisation cannot line up into parallel contours across the bed.
     // Measured at 017: six slices over a 24px bed left 4 RGB units per step,
     // which reads as ruling. Graded bedding is not perfectly parallel anyway.
-    const slices = Math.max(4, Math.min(32, Math.round(col[idx].h * H / 2.5)));
+    // The floor is set by tone, not by pixels. Grading spans 23-31 RGB base
+    // to top across the palette, so fewer than ~16 steps puts each step above
+    // the ~2 RGB threshold where banding shows — and the old floor of 4 did
+    // exactly that. `h*H/2.5` was written when beds were 40px and gave 16
+    // slices; at today's 10.9px median it bottomed out on the floor, and
+    // grading became a four-band staircase inside every bed. Since 048
+    // removed grain, mottling and clasts this is the only interior signal
+    // left, and a gradient is the only interior that survives downsampling.
+    const slices = Math.max(16, Math.min(32, Math.round(col[idx].h * H / 2.5)));
     const gw = mulberry32((s.seed + 9) >>> 0);
     const band = col[idx].h * H;
     for (let k = 0; k < slices; k++) {
