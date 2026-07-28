@@ -444,14 +444,23 @@ class Canvas:
         """
         prev = None
         for x in range(self.w):
-            y = int(round(fn(x)))
-            if prev is None or abs(y - prev) <= 1:
-                self.blend(x, y, rgb, alpha)
+            yf = fn(x)
+            if prev is None or abs(yf - prev) <= 1.0:
+                # split the line between the two rows it falls between, as the
+                # canvas does. 0069 gave `band` coverage weighting and left this
+                # rounding to whole rows, so contacts stayed hard-edged while
+                # everything around them went smooth — a cold reader at 0070
+                # found the seam at 8x and called the steep limb "crunchy".
+                top = yf - 0.5
+                y0 = int(math.floor(top))
+                f = top - y0
+                self.blend(x, y0, rgb, alpha * (1.0 - f))
+                self.blend(x, y0 + 1, rgb, alpha * f)
             else:
-                step = 1 if y > prev else -1
-                for yy in range(prev + step, y + step, step):
+                lo, hi = (prev, yf) if prev < yf else (yf, prev)
+                for yy in range(int(math.floor(lo)), int(math.ceil(hi))):
                     self.blend(x, yy, rgb, alpha)
-            prev = y
+            prev = yf
 
     def png(self, path):
         raw = b"".join(

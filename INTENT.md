@@ -286,6 +286,12 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **When you measure a change, hold everything else still.** 0071 measured a
+  stroke-antialiasing change against whatever render was lying around and got
+  78% of pixels; the render predated another change, and isolating it properly
+  gave 3.1%. Both numbers look equally authoritative coming back.
+  ([0071](trace/0071.md))
+
 - **Check whether the thing is what you called it.** Every check here verifies
   that a mechanism behaves correctly; none asks whether its name is right, and a
   wrong name makes every downstream check confirm the wrong thing. For
