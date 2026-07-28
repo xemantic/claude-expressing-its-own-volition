@@ -549,28 +549,12 @@ def render(W, H, dark):
                           hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 9)),
                           0.16 + lm() * 0.1)
 
-        g = mulberry32(s["seed"] + 1)
-        ge = mulberry32((s["seed"] + 10) & M32)
-        grain_f = (1.1 + ge() * 1.8) * 2 * math.pi / wave_span(H)
-        grain_p = ge() * 2 * math.pi
-        count = int((s["grain"] * col[idx]["h"] * H * W) / 900 / math.sqrt(col[idx]["ratio"]))
-        for _ in range(count):
-            x = g() * W
-            t, b = top_at(x), lower_at(x)
-            if b <= t:
-                g(); g(); g()
-                continue
-            y = t + g() * (b - t)
-            dl = (g() - 0.5) * 20
-            # grain clusters rather than sprinkling evenly — see stratum 019
-            env = 0.25 + 0.75 * (0.5 + 0.5 * math.sin(x * grain_f + grain_p))
-            alpha = (0.04 + g() * 0.18) * env
-            r = 0.8 + g() * 1.6
-            rgb = hsl_rgb(a["hue"], a["sat"], a["light"] + dl)
-            for dy in range(int(r) + 1):
-                for dx in range(int(r) + 1):
-                    cv.blend(int(x) + dx, int(y) + dy, rgb, alpha)
-
+        # Grain speckle, mottling and clasts were removed at stratum 048.
+        # Three texture systems built for a column with thick beds; the
+        # deposition rule made beds permanently thin, and by 0050 they moved
+        # 0.01%, 0.25% and 0.18% of pixels — nothing at viewport size. The
+        # `grain` field survives: it decides how stiffly a bed folds.
+        # See trace/0050.md and trace/0049-subtraction.md.
         if s.get("hiatusDays") and prev:
             band = col[idx]["h"] * H
             span = min(band * 0.28, band * (0.06 + s["hiatusDays"] * 0.018),
@@ -602,38 +586,6 @@ def render(W, H, dark):
 
             cv.stroke(lag_top,
                       hsl_rgb(a["hue"], a["sat"], max(3, a["light"] - 20)), 0.65)
-
-        # mottling: a large mass is never one tone, and the thick beds had
-        # been the least textured things in the picture
-        mo = mulberry32(s["seed"] + 7)
-        for _ in range(round(col[idx]["h"] * H * W / 17000)):
-            bx = mo() * W
-            t, b = top_at(bx), lower_at(bx)
-            if b - t < 6:
-                mo(); mo(); mo()
-                continue
-            band = b - t
-            by = t + mo() * band
-            cv.ellipse(bx, by, band * (1.5 + mo() * 2.5), band * (0.25 + mo() * 0.3),
-                       0.0, hsl_rgb(a["hue"], a["sat"], a["light"] + (mo() - 0.5) * 26),
-                       0.13,
-                       clip=lambda px, py: top_at(px) <= py <= lower_at(px))
-
-        # clasts: the coarse fraction — a density, not a handful
-        c = mulberry32(s["seed"] + 2)
-        band_px = max(1.0, col[idx]["h"] * H)
-        clast_scale = min(1.0, band_px / 26)
-        for _ in range(round(band_px * W / 3500)):
-            x = c() * W
-            t, b = top_at(x), lower_at(x)
-            if b - t < 2.5:
-                c(); c(); c(); c()
-                continue
-            inset = min(3.0, (b - t) * 0.18)
-            y = t + inset + c() * (b - t - 2 * inset)
-            cv.ellipse(x, y, (1.4 + c() * 4) * clast_scale,
-                       (0.8 + c() * 2.2) * clast_scale, (c() - 0.5) * 1.2,
-                       hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 14)), 0.3)
 
         cw = max(0.25, min(1.0, (col[idx]["h"] * H) / 12))
         cv.stroke(top_at, hsl_rgb(a["hue"], a["sat"], max(4, a["light"] - 12)),

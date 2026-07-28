@@ -89,9 +89,8 @@ this project is most prone to:
   piece reads as a landscape as much as a cross-section. The moment another
   layer arrives it goes smooth. Every other mechanism here does more to a layer
   the longer it sits; this is the one that stops.
-- **Beds swell, pinch and mottle.** Deposition is not uniform: a bed thickens
-  where more settled and thins to a seam where less did, and a large mass is
-  never one flat tone.
+- **Beds swell and pinch.** Deposition is not uniform: a bed thickens where
+  more settled and thins to a seam where less did.
 
 Every one of those is a *view* computed from immutable data. The stored
 thickness and colour of a stratum are never touched once deposited. The past

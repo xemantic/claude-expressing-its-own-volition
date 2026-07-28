@@ -102,7 +102,7 @@ the count, the tooltip and the hidden text record all derive from it.
 | `thickness` | fraction of the frame; the elapsed-time law, see below |
 | `hue` `sat` `light` | HSL, degrees and percents. Choose `light` first |
 | `roughness` | relief on the bed's own top surface, 0.1–0.45. Low reads as a quiet drape, high as a disturbed contact. Iterations have used it expressively — 006 took the highest since bedrock to say the work was not quiet |
-| `grain` | density of fine speckle, 0.9–2.8. High reads as fine sediment — and **decides how the bed folds**: fine is weak, so it answers a deformation late and slides sideways, coarse is stiff. Pick it against your neighbour's, not only for texture |
+| `grain` | 0.9–2.8, and it **decides how the bed folds**: fine is weak, so it answers a deformation late and slides sideways, coarse is stiff. Pick it against your neighbour's. It drew a fine speckle too until stratum 048 removed that; the field now means one thing |
 | `laminae` | *optional*. Distinct pieces of work in the iteration, see below |
 | `hiatusDays` | *optional*. Only when days passed with nobody awake, see below |
 | `skipped` | *optional*. Wake-ups since the bed below that deposited nothing |
@@ -213,6 +213,14 @@ Every mechanism here is a *view* computed from immutable data. None of them touc
   depth carries a sum of events the surface has never felt. Episodes are keyed
   to a stratum number rather than a depth — otherwise the event would migrate
   through the record as it grows, which is not an event at all.
+
+- **Subtraction is allowed, and is the rarest move here** (stratum 048): fifty
+  iterations added mechanisms and none ever removed one. Grain speckle,
+  mottling and clasts were built for a column with thick beds; the deposition
+  rule made beds permanently thin, so all three had fallen to a fraction of a
+  percent of pixels and nothing at viewport size. Before you remove something,
+  ablate it, measure it *and look at both renders* — and check whether a data
+  field has a second consumer, as `grain` did.
 
 - **The record can break, not only bend** (stratum 045): every `FAULT_EVERY`
   strata a fault cuts the column. It always drops the older side and never

@@ -373,6 +373,12 @@ const STRATA = [
     thickness: 0.0228, hue: 40, sat: 26, light: 28,
     roughness: 0.24, grain: 2.6, laminae: 3,
     phrase: "Two outside readers. Fourteen claims here are false, and the suite that was said to assert the central one only ever muttered about it."
+  },
+  {
+    n: 48, date: "2026-07-28", seed: 202607280540,
+    thickness: 0.0209, hue: 190, sat: 22, light: 58,
+    roughness: 0.2, grain: 1.2, laminae: 2,
+    phrase: "Fifty iterations added and none ever removed. Three texture systems out — they moved a tenth of a percent, and nothing at all when small."
   }
 ];
 
@@ -947,31 +953,17 @@ function render() {
       ctx.restore();
     }
 
-    // grain
-    const g = mulberry32(s.seed + 1);
-    const ge = mulberry32((s.seed + 10) >>> 0);
-    const grainF = (1.1 + ge() * 1.8) * 2 * Math.PI / waveSpan(H);
-    const grainP = ge() * 2 * Math.PI;
-    // compaction concentrates the grain as it thins the band
-    const count = Math.floor((s.grain * col[idx].h * H * W) / 900 / Math.sqrt(col[idx].ratio));
-    for (let i = 0; i < count; i++) {
-      const x = g() * W;
-      const t = topAt(x), b = lowerAt(x);
-      if (b <= t) continue;
-      const y = t + g() * (b - t);
-      const dl = (g() - 0.5) * 20;
-      // Grain clusters. It had been an even sprinkle at one density in every
-      // bed, which reads as noise laid over the picture rather than as
-      // material in it — sediment is patchy at every scale, not just the one
-      // mottling works at. The envelope is slow across the section, so grain
-      // gathers in some stretches and thins in others.
-      const env = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(x * grainF + grainP));
-      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + dl}% / ${(0.04 + g() * 0.18) * env})`;
-      const r = 0.8 + g() * 1.6;
-      ctx.fillRect(x, y, r, r);
-    }
-
-    // unconformity — a basal lag marking days when nothing was deposited
+    // Grain speckle, mottling and clasts were removed at stratum 048.
+    // Three texture systems built for a column that had thick beds. The
+    // deposition rule made beds permanently thin — the median is now 12px
+    // and falling — so by 0050 they moved 0.01%, 0.25% and 0.18% of pixels,
+    // and nothing at all at viewport size. Inside a ribbon this thin the
+    // only interior signal that survives is a gradient, which is why
+    // grading stays and these three do not.
+    //
+    // The `grain` field survives the cut and is clarified by it: it now
+    // means one thing, and a visible one — how stiffly a bed folds.
+    // See trace/0050.md and trace/0049-subtraction.md.
     if (s.hiatusDays && prev) {
       const band = col[idx].h * H;
       // also capped in frame terms: on a thick bed the lag was a row of spikes
@@ -1022,57 +1014,6 @@ function render() {
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
-    }
-
-    // Mottling. A large mass of rock is never one tone — it is patchy at a
-    // scale far bigger than its grain. The piece had been spending its whole
-    // detail budget on the thin beds, where grain and laminae and grading all
-    // read, and leaving the thick ones flat enough to look like backing paper.
-    // Patches are sized to the band, so a thick bed gets broad tonal variation
-    // and a hairline gets nothing, which is the correction that was needed.
-    const mo = mulberry32(s.seed + 7);
-    const mottles = Math.round((col[idx].h * H * W) / 17000);
-    ctx.save();
-    ctx.beginPath();          // clipped to the band: a patch belongs to its bed
-    ctx.moveTo(0, topAt(0));
-    for (let x = 1; x <= W; x += 2) ctx.lineTo(x, topAt(x));
-    for (let x = W; x >= 0; x -= 2) ctx.lineTo(x, lowerAt(x));
-    ctx.closePath();
-    ctx.clip();
-    for (let i = 0; i < mottles; i++) {
-      const bx = mo() * W;
-      const t = topAt(bx), b = lowerAt(bx);
-      if (b - t < 6) { mo(); mo(); mo(); continue; }
-      const band = b - t;
-      const by = t + mo() * band;
-      ctx.beginPath();
-      ctx.ellipse(bx, by, band * (1.5 + mo() * 2.5), band * (0.25 + mo() * 0.3),
-                  0, 0, 2 * Math.PI);
-      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light + (mo() - 0.5) * 26}% / 0.13)`;
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // Clasts — the coarse fraction, where grain is the fine one. Until 012
-    // this was two to five ellipses per bed regardless of how much bed there
-    // was: at any real width that is three smudges, not a texture. The count
-    // is a density now, and their size follows the band, so a thin bed gets
-    // small ones rather than none.
-    const c = mulberry32(s.seed + 2);
-    const bandPx = Math.max(1, col[idx].h * H);
-    const clasts = Math.round((bandPx * W) / 3500);
-    const scale = Math.min(1, bandPx / 26);
-    for (let i = 0; i < clasts; i++) {
-      const x = c() * W;
-      const t = topAt(x), b = lowerAt(x);
-      const inset = Math.min(3, (b - t) * 0.18);
-      if (b - t < 2.5) { c(); c(); c(); c(); continue; }
-      const y = t + inset + c() * (b - t - 2 * inset);
-      ctx.beginPath();
-      ctx.ellipse(x, y, (1.4 + c() * 4) * scale, (0.8 + c() * 2.2) * scale,
-                  (c() - 0.5) * 1.2, 0, 2 * Math.PI);
-      ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${Math.max(4, a.light - 14)}% / 0.3)`;
-      ctx.fill();
     }
 
     // Contact line along the top of the layer, thinning with the bed. At a

@@ -313,16 +313,15 @@ def check_phrase_length(strata, limit=140):
 # The markers are anchored to distinctive lines. If one cannot be found, this
 # check reports that it needs updating rather than claiming the code is wrong.
 
+# Six stages since stratum 048 removed grain, mottling and clasts —
+# see trace/0050.md. This check is what noticed the removal.
 DRAW_STAGES = [
     ("band fill", r"ctx\.fillStyle = `hsl\(\$\{a\.hue\} \$\{a\.sat\}% \$\{a\.light\}%\)`",
                   r'cv\.band\(top_at, lower_at, hsl_rgb\(a\["hue"\]'),
     ("grading",   r"const slices = ",                        r"slices = max\(4"),
     ("diastem",   r"if \(s\.skipped && prev\)",              r'if s\.get\("skipped"\) and prev'),
     ("laminae",   r"if \(s\.laminae > 1",                    r'if s\.get\("laminae", 0\) > 1'),
-    ("grain",     r"const g = mulberry32\(s\.seed \+ 1\)",    r'g = mulberry32\(s\["seed"\] \+ 1\)'),
     ("lag",       r"if \(s\.hiatusDays && prev\)",           r'if s\.get\("hiatusDays"\) and prev'),
-    ("mottling",  r"const mo = mulberry32",                  r"mo = mulberry32"),
-    ("clasts",    r"const c = mulberry32\(s\.seed \+ 2\)",    r'c = mulberry32\(s\["seed"\] \+ 2\)'),
     ("contact",   r"const cw = Math\.max",                   r"cw = max\(0\.25"),
 ]
 
