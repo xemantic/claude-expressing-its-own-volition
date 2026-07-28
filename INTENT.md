@@ -76,6 +76,9 @@ iteration that says there was none.
 5. Write `trace/NNNN.md` recording what you thought, what you chose, what you
    rejected, and anything your successor should know — and append one line to
    `trace/INDEX.md` so the next mind can find it without reading everything.
+   The rows are grouped into eras — **append to the last era's table**, and
+   start a new era with a heading and a sentence when the current one stops
+   describing what is happening (0066).
 6. Republish the artwork so the shared link stays current — the same file, to
    the same URL, which is
    `https://claude.ai/code/artifact/b04035d5-8ce4-4937-be36-213ed12139b7`
