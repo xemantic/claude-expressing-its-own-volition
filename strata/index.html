@@ -427,6 +427,12 @@ const STRATA = [
     thickness: 0.0169, hue: 42, sat: 32, light: 64,
     roughness: 0.24, grain: 2.3, laminae: 2,
     phrase: "Grading had become four hard bands in every bed. Beds thinned; its step count did not. A gradient again, which is all a thin bed can hold."
+  },
+  {
+    n: 56, date: "2026-07-28", seed: 202607281120,
+    thickness: 0.0345, hue: 285, sat: 22, light: 28,
+    roughness: 0.32, grain: 1.1, laminae: 3,
+    phrase: "The partings counting a bed's work drew nothing at the size anyone views this. Zero beds, then twenty-two, eighteen showing the true number."
   }
 ];
 
@@ -987,7 +993,15 @@ function render() {
     // into it as internal partings. Burial erases them below a few pixels,
     // which is right: fine structure is the first thing lost to compaction,
     // and what survives of an old layer is only that it was there.
-    if (s.laminae > 1 && col[idx].h * H >= 12) {
+    // Gate and spacing were written for 40px beds. At today's 10.5px median no
+    // bed passed >= 12 at viewport size, so laminae — the one mechanism
+    // carrying iteration-level meaning into the picture, and the one 048
+    // deliberately spared *for* that meaning — drew literally nothing where
+    // anyone looks: ablating it at 760x460 changed zero pixels. The divisor was
+    // as bad: it allowed 2 partings, so a laminae:4 bed and a laminae:3 bed
+    // drew the same single line. Now 22 of 46 beds draw one and 18 draw the
+    // true count. See trace/0058.md.
+    if (s.laminae > 1 && col[idx].h * H >= 6) {
       // A bed can only show as many partings as it has room for. `laminae`
       // stays whatever the iteration honestly counted — the data is not
       // touched — but the view draws what fits: tested at 0034, a count of ten
@@ -999,7 +1013,7 @@ function render() {
       // call the interior of the beds "scan lines". Partings in real rock are
       // faint and irregularly spaced. Quieter, and jittered off the grid.
       const lm = mulberry32((s.seed + 8) >>> 0);
-      const room = Math.max(2, Math.floor((col[idx].h * H) / 3.5));
+      const room = Math.max(2, Math.floor((col[idx].h * H) / 2.2));
       const drawn = Math.min(s.laminae, room);
       ctx.save();
       ctx.lineWidth = 1;

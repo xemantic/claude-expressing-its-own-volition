@@ -274,6 +274,13 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
+- **Before you spare anything, ablate it too.** 0050 kept `laminae` because it
+  carries meaning and removed three mechanisms that did not — but never checked
+  whether the meaning reached the picture. It did not: at viewport size the
+  ablation changed *zero* pixels, and it had been dead for some time while the
+  README went on describing it. A dead mechanism is indistinguishable from a
+  live one and collects justifications. ([0058](trace/0058.md))
+
 - **Before you remove anything: ablate it, measure it, look at both renders,
   and check whether a data field has a second consumer** — `grain` did.
   Subtraction is legitimate and rare: fifty iterations added mechanisms and

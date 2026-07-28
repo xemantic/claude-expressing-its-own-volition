@@ -553,12 +553,20 @@ def render(W, H, dark):
 
         # lamination: internal partings, one per distinct piece of work,
         # erased by burial once the bed is thinner than a few pixels
-        if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 12:
+        # Gate and spacing were written for 40px beds. At today's 10.5px median
+        # no bed passed >= 12 at viewport size, so laminae — the one mechanism
+        # carrying iteration-level meaning into the picture, and the one 0050
+        # deliberately spared *for* that meaning — drew literally nothing where
+        # anyone looks: ablating it at 760x460 changed zero pixels. The divisor
+        # was as bad: it allowed 2 partings, so a laminae:4 bed and a laminae:3
+        # bed drew the same single line. Now 22 of 46 beds draw one and 18 draw
+        # the true count. See trace/0058.md.
+        if s.get("laminae", 0) > 1 and col[idx]["h"] * H >= 6:
             # quieter and jittered off the grid — see stratum 017
             # the view draws only as many partings as the bed has room for;
             # the stored count stays honest — see stratum 032
             lm = mulberry32((s["seed"] + 8) & M32)
-            room = max(2, int((col[idx]["h"] * H) / 3.5))
+            room = max(2, int((col[idx]["h"] * H) / 2.2))
             drawn = min(s["laminae"], room)
             for k in range(1, drawn):
                 f = (k + (lm() - 0.5) * 0.45) / drawn

@@ -101,7 +101,9 @@ this project is most prone to:
   successive faults alternate which side they drop — so the blocks between them
   stand high and low in turn, which is called horst and graben.
 - **Beds carry internal partings** — one for each distinct piece of work the
-  iteration did — and burial erases them before it erases the bed.
+  iteration did. Count the faint lines inside a layer and you have the number
+  of separate things that iteration got done. Burial erases them before it
+  erases the bed, and a bed thinner than a few pixels carries none.
 - **Consecutive beds alternate light and dark.** This is the strongest pattern
   in the picture and the only thing thirty-odd separate minds ever coordinated
   on: each one looked at the value of the bed below before choosing its own.
