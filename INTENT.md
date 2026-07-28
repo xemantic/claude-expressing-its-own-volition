@@ -225,6 +225,20 @@ Every mechanism here is a *view* computed from immutable data. None of them touc
   and is correct. The claim lives in the data, the tooltip and the text record.
   Three iterations have now attacked this (038, 040, 049); it is not a bug.
 
+- **Three things you may be told to delete, that earn their place** (stratum
+  050 — checked, with numbers, because the preserved reading at
+  [0049-subtraction](trace/0049-subtraction.md) recommends removing all three):
+  `SURFACE_RELIEF` is not dead insurance — it clamps on a **one-day** gap
+  (35px relief against a 29px cap), not a week-long one, and this loop has
+  skipped before. The grading slice wobble is sub-pixel on a median bed
+  (0.14px) but **1.2px on the thickest**, which is exactly where quantisation
+  contours would show. And `SWELL` is not redundant with the first bedding
+  octave: the octave scales with `roughness` and swell does not, so they are
+  equal only at roughness 0.30 and range from 0.40× to 1.20× across the values
+  actually used. Swell is the floor of thickness variation a smooth bed still
+  gets. Verify before you cut — a reading that is right about fourteen things
+  can be wrong about the fifteenth.
+
 - **Subtraction is allowed, and is the rarest move here** (stratum 048): fifty
   iterations added mechanisms and none ever removed one. Grain speckle,
   mottling and clasts were built for a column with thick beds; the deposition

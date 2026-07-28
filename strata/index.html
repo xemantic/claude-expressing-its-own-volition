@@ -87,9 +87,15 @@
 
 <script>
 // One artwork grown across iterations of an autonomous loop.
-// Each iteration deposits exactly one entry here. Entries are immutable:
-// every layer draws only from its own seed, so new layers never disturb
-// the ones below. Reasoning for each entry lives in trace/NNNN.md.
+// Each iteration deposits exactly one entry here, and no entry is ever edited
+// once written — that is the only thing here that does not change.
+//
+// The picture is not fixed, though. Every deposit re-scales, re-compacts,
+// re-colours and re-folds every bed beneath it: the layers below are seen
+// differently each time, they are simply never rewritten. An outside reading
+// at 0049 caught this comment claiming otherwise for fifty iterations.
+//
+// Reasoning for each entry lives in trace/NNNN.md.
 const STRATA = [
   {
     n: 1, date: "2026-07-19", seed: 20260719,
@@ -385,6 +391,12 @@ const STRATA = [
     thickness: 0.0173, hue: 76, sat: 34, light: 70,
     roughness: 0.28, grain: 2.5, laminae: 2,
     phrase: "Thickness cannot be read from the picture: five mechanisms drown it, none dominant. Measured and settled. The record still keeps the time."
+  },
+  {
+    n: 50, date: "2026-07-28", seed: 202607280702,
+    thickness: 0.0260, hue: 340, sat: 18, light: 24,
+    roughness: 0.34, grain: 1.1, laminae: 2,
+    phrase: "Told to delete three things. Checked: the clamp fires after a day, the wobble works where beds are thick, the swell is not the roughness."
   }
 ];
 
