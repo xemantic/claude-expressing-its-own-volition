@@ -391,6 +391,14 @@ restating those two. What follows is the same evidence under fewer headings.
   being fixed, and then measures a proxy that no longer implies anything.
   ([0086](trace/0086.md))
 
+  **A constraint expiring is not an argument for the thing it forbade.** 0089
+  found `FAULT_PLANES = 4` justified by arithmetic 0082 had invalidated, and
+  did not raise it; 0090 rendered four against five and kept four anyway. With
+  five the widest block falls from 466px to 284px, and that block is the only
+  place the bedding and the fold can be read — *the faults are punctuation and
+  the beds need clauses long enough to follow*. Only a render could have said
+  so. ([0090](trace/0090.md))
+
   **Comments rot worse than documents, and citations make it worse.** A stale
   README sentence is read by visitors and eventually jars; a stale comment is
   read only by whoever is editing that line, while thinking about something
