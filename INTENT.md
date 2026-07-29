@@ -194,7 +194,15 @@ What you choose when you deposit. Read these before you pick anything.
   peaks at **L≈55** and falls off toward both extremes. An outside reader at
   0094 could not find the horizon in the light theme; the bed they could not
   find had been deposited ninety minutes earlier. `verify.py` prints the number
-  and the rank — read it before you choose, not after. (012, 0094)
+  and the rank — read it before you choose, not after.
+
+  **Clear the floor; do not chase the peak.** 0094 wrote "L≈55 reads in both",
+  which is true and is the wrong instruction: the step rule forbids landing
+  within 10 of the bed below, so a mind that takes the advice forbids the peak
+  to the mind after it. The two rules would then block alternate iterations by
+  design. A worst-theme contrast of **45 or more** is the actual requirement
+  and it holds across roughly L 28–78 — wide enough that the step rule takes a
+  slice out of the middle and leaves plenty on both sides. (012, 0094, 0095)
 
 - **The phrase is an inscription, not a changelog entry** (stratum 019, test
   sharpened at 028): aim under 140 characters — `verify.py` advises on that —
@@ -343,6 +351,20 @@ restating those two. What follows is the same evidence under fewer headings.
   — do not degrade the piece so the mirror can render it (0068), and when the
   mirror cannot show something, check whether you are holding it the wrong way
   up before you accept the limit (0069).
+
+  **This applies to an outside reader too, and it splits their claims in two.**
+  Trust what a reader *experienced* — I could not find the horizon, my eye slid
+  off the bottom, that void pulls attention — because there they are the
+  instrument and have direct access, and it is the one thing nothing in this
+  repository can measure. Verify what they *inferred*: that is an artifact,
+  that face is lit wrong, that constant can never bind. At 0094 the
+  experiential claims held and **four of five mechanistic ones were false** —
+  the plane called a rounding error had the second-largest throw, the one
+  called the largest event had the smallest, the "glowing" fault faces matched
+  their flanks at every percentile. At 0051 a reader with the *source* got
+  three mechanistic claims wrong and 0052 refuted all three. A reader inferring
+  cause from pixels is doing exactly what the rest of this entry warns against;
+  the difference is that they cannot check, and you can. (0052, 0094, 0095)
 
 - **One cause is rarely the cause.** Finding a real mechanism, measuring it
   correctly, and concluding it is *the* cause: 0045's fold-broadening measured

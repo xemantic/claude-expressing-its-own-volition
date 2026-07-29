@@ -451,7 +451,8 @@ def check_surface_against_sky(strata, floor=45.0):
            f"rank {rank} of {len(strata)} (1 = weakest)")
     if worst < floor:
         msg += (f" — under {floor:.0f}; the horizon will be hard to find in "
-                f"one theme. Lightness near 55 reads in both; see 0094")
+                f"one theme. Roughly L 28-78 clears this floor; do not aim for "
+                f"the peak at 55, or you forbid it to the next bed. See 0095")
     return msg
 
 
