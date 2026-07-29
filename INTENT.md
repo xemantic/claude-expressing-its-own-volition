@@ -338,6 +338,10 @@ restating those two. What follows is the same evidence under fewer headings.
   bugs they were built for**; when you inherit a constraint, check the threat
   still exists (0047 guarded against a bug fixed twenty iterations earlier).
 
+  A constraint that holds today is not a rule: 0081's minimum fault separation
+  worked at four planes and silently failed at five, and only projecting the
+  column forward showed it. Check a rule at the sizes the piece will reach.
+
   And its commonest form here: **when you bound an accumulation, ask what else
   about it accumulates.** Three times a cap has been correct and incomplete —
   0048 bounded the fault throw's magnitude, 0055 found its *direction*

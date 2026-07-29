@@ -149,7 +149,7 @@ SHARED_CONSTANTS = [
     # faults arrived at 0047 and were added here in the same breath
     "COMPETENCE", "LAG",
     "FAULT_EVERY", "FAULT_THROW", "FAULT_ZONE", "FAULT_RAMP",
-    "FAULT_PLANES",
+    "FAULT_PLANES", "FAULT_APART",
     "FAULT_MAX",
 ]
 

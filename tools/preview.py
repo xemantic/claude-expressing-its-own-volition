@@ -204,7 +204,18 @@ FAULT_ZONE = 8       # A fault cuts; it does not bend. Until 0070 the throw was 
 FAULT_RAMP = 3       # strata over which the slip is taken up
 FAULT_MAX = 0.22     # most of the frame the accumulated throw may stretch the
                      # column by, before the whole fault field is rescaled
-FAULT_PLANES = 5     # distinct planes; later slips reactivate an existing one.
+FAULT_APART = 0.12   # least separation between planes, as a fraction of width.
+                     # Drawn uniformly, two planes can land 36px apart in a
+                     # 1400px frame — as strata 34 and 51 did — and then read as
+                     # one step of their combined throw, which defeats the
+                     # horst-and-graben the alternating polarity is for. Same
+                     # class as 0055: a random draw that needed a constraint.
+FAULT_PLANES = 4     # distinct planes; later slips reactivate an existing one.
+                     # Four, not five: five planes each FAULT_APART from the
+                     # others need 672px of the 896px the section allows them,
+                     # and the search fails often enough that a crowded pair
+                     # slips through. Four leaves room, and five blocks is
+                     # already more vertical incident than the beds want.
                      # 0048 capped the accumulated *throw* and nobody capped the
                      # *count* — at one new plane every FAULT_EVERY strata the
                      # frame is cut into 21 blocks by 340 strata and the section
@@ -231,8 +242,12 @@ def fault_episodes(strata, W, H):
     planes = []
     for n in range(FAULT_EVERY, len(strata) + 1, FAULT_EVERY):
         r = mulberry32((strata[0]["seed"] ^ (n * 0x85EB)) & M32)
-        if len(out) < FAULT_PLANES:
+        if len(planes) < FAULT_PLANES:
             at = 0.18 * W + r() * 0.64 * W      # keep the plane off the edges
+            for _ in range(24):                 # ...and clear of its neighbours
+                if all(abs(at - q) >= FAULT_APART * W for q in planes):
+                    break
+                at = 0.18 * W + r() * 0.64 * W
         else:                                   # reactivate an existing plane
             r()
             at = planes[int(r() * len(planes)) % len(planes)]

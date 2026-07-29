@@ -565,6 +565,12 @@ const STRATA = [
     thickness: 0.0176, hue: 150, sat: 22, light: 64,
     roughness: 0.3, grain: 1.1, laminae: 2,
     phrase: "The throw was capped and the count was not: twenty-one blocks by three hundred layers. Five planes now, and later breaks reopen an old one."
+  },
+  {
+    n: 79, date: "2026-07-29", seed: 202607290345,
+    thickness: 0.0174, hue: 45, sat: 34, light: 28,
+    roughness: 0.26, grain: 2.5, laminae: 2,
+    phrase: "Two faults thirty-six pixels apart read as one cliff of their combined throw. Planes stand apart now, and the section has five blocks."
   }
 ];
 
@@ -865,7 +871,14 @@ const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
 // section stops being a stratigraphy. Real basins do not do that either: a
 // mature rift has a few master faults that slip again and again, not fifty
 // small ones. See trace/0080.md.
-const FAULT_PLANES = 5;
+// Least separation between planes, as a fraction of width. Drawn uniformly,
+// two can land 36px apart in a 1400px frame — as strata 34 and 51 did — and
+// then read as one step of their combined throw, defeating the horst-and-graben
+// the alternating polarity is for. Four planes, not five: five each FAULT_APART
+// from the others need 672px of the 896px allowed them, and the search fails
+// often enough that a crowded pair slips through. See trace/0081.md.
+const FAULT_APART = 0.12;
+const FAULT_PLANES = 4;
 
 // Rock folds until it cannot, and then it breaks. 0045 measured the fold's
 // displacement outgrowing the beds it bends; real columns do not accumulate
@@ -885,6 +898,10 @@ function faultEpisodes(strata, W, H) {
     let at;
     if (planes.length < FAULT_PLANES) {
       at = 0.18 * W + r() * 0.64 * W;          // keep the plane off the edges
+      for (let k = 0; k < 24; k++) {           // ...and clear of its neighbours
+        if (planes.every((q) => Math.abs(at - q) >= FAULT_APART * W)) break;
+        at = 0.18 * W + r() * 0.64 * W;
+      }
     } else {                                   // reactivate an existing plane
       r();
       at = planes[Math.floor(r() * planes.length) % planes.length];
