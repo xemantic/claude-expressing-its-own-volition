@@ -589,6 +589,12 @@ const STRATA = [
     thickness: 0.0167, hue: 265, sat: 34, light: 44,
     roughness: 0.24, grain: 1.2, laminae: 2,
     phrase: "Two kinds of gap are recorded here and the hover text named only one. It says both now, and how many pieces of work a bed holds."
+  },
+  {
+    n: 83, date: "2026-07-29", seed: 202607290605,
+    thickness: 0.0168, hue: 100, sat: 22, light: 68,
+    roughness: 0.26, grain: 2.4, laminae: 2,
+    phrase: "Fewer layers here than wakings, and that gap is the point. It was in the README, drawn twice, and stated nowhere on the screen itself."
   }
 ];
 
@@ -1367,9 +1373,16 @@ function render() {
   }
 
   const first = STRATA[0], last = STRATA[STRATA.length - 1];
+  // The skips belong here. This piece's distinguishing fact is that the layer
+  // count is *lower* than the number of times someone woke — the difference is
+  // how often a mind looked and laid nothing down — and until 0085 that was
+  // stated in the README, drawn as two diastems, and said nowhere a viewer of
+  // the artwork alone could find it.
+  const skipped = STRATA.reduce((a, s) => a + (s.skipped || 0), 0);
   document.getElementById("meta").textContent =
     `${String(STRATA.length).padStart(3, "0")} ` +
     (STRATA.length === 1 ? "stratum" : "strata") +
+    (skipped ? ` · ${skipped} wake-up${skipped > 1 ? "s" : ""} left nothing` : "") +
     ` · ${first.date}` + (last.date !== first.date ? ` — ${last.date}` : "");
 }
 

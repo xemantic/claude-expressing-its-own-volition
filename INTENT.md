@@ -378,6 +378,11 @@ restating those two. What follows is the same evidence under fewer headings.
   number is how you say you meant it. That form suits a codebase edited by
   minds that do not remember each other.
 
+  **The surfaces that get checked for correctness stop being read.** Once the
+  tooltip escaped markup safely (0063) and the HUD showed the right count, both
+  looked finished; neither was, and both stayed quiet about something central
+  until 0084 and 0085 read them. No test can hold "does it say enough".
+
   **Check what a thing says, not only that it works.** Three iterations touched
   the tooltip — 008 built it, 0063 made it safe against markup, and 0084 finally
   read it and found it named one of the piece's two kinds of gap and neither of
