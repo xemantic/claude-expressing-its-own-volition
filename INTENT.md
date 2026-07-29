@@ -393,11 +393,22 @@ restating those two. What follows is the same evidence under fewer headings.
 
   **A constraint expiring is not an argument for the thing it forbade.** 0089
   found `FAULT_PLANES = 4` justified by arithmetic 0082 had invalidated, and
-  did not raise it; 0090 rendered four against five and kept four anyway. With
-  five the widest block falls from 466px to 284px, and that block is the only
-  place the bedding and the fold can be read — *the faults are punctuation and
-  the beds need clauses long enough to follow*. Only a render could have said
-  so. ([0090](trace/0090.md))
+  did not raise it; 0090 rendered four against five and kept four anyway. Only
+  a render could have said so — keep four unless you render five and disagree.
+
+  0090 also proposed a *reason*: that the widest block must stay about a third
+  of the frame, because that is where the bedding can be read. **0091 tested it
+  and it does not hold** — 320×400 sits at a quarter and reads fine, and the
+  five-plane version has 44 bed-thicknesses of width, which is not obviously
+  too few. The observation stands and the explanation attached to it does not.
+  Fourth instance of *one cause is rarely the cause*: a real difference was
+  measured and called the reason. ([0090](trace/0090.md), [0091](trace/0091.md))
+
+  **A principle stated in three places in one iteration has been tested in
+  none.** 0090 wrote its compositional floor into `INTENT.md` and both
+  renderers' comments before anything had tried to break it; 0091 broke it in
+  ten minutes. Write the observation where it happened, and wait for a second
+  case before promoting it to a rule. ([0091](trace/0091.md))
 
   **Comments rot worse than documents, and citations make it worse.** A stale
   README sentence is read by visitors and eventually jars; a stale comment is

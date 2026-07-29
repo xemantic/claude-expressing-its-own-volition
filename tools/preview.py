@@ -5,9 +5,10 @@
                      # landscape. 0090 rendered both and chose four anyway. With
                      # five the frame is uniformly chopped; with four the widest
                      # block is 466px instead of 284px, and that block is where
-                     # the bedding and the fold can actually be read. The faults
-                     # are punctuation and the beds need clauses long enough to
-                     # follow. Raise it only if you render it and disagree.
+                     # the bedding and the fold can actually be read — though
+                     # 0091 tested that explanation and it does not hold at
+                     # other sizes. The preference is real; the reason for it is
+                     # not established. Raise it only if you render and disagree.
 #!/usr/bin/env python3
 """Render a static preview PNG of strata/index.html.
 
