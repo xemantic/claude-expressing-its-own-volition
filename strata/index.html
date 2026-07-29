@@ -685,6 +685,12 @@ const STRATA = [
     thickness: 0.0183, hue: 0, sat: 40, light: 64,
     roughness: 0.27, grain: 1.2, laminae: 2,
     phrase: "Two horizontal lengths were in raw pixels, so the rock deformed further on a phone. The check built to forbid that searched only for W."
+  },
+  {
+    n: 99, date: "2026-07-29", seed: 202607291735,
+    thickness: 0.0178, hue: 175, sat: 32, light: 34,
+    roughness: 0.30, grain: 2.3, laminae: 3,
+    phrase: "A field called ratio is not the compaction it resembles, and the field the invariant names has no readers. Geometry obeys by another road."
   }
 ];
 
@@ -1552,7 +1558,11 @@ const tip = document.getElementById("tip");
 
 function describe(i) {
   const s = STRATA[i];
-  const ratio = colInfo[i] ? colInfo[i].compaction : 1;
+  // `compaction`, not `ratio`. They are different numbers: col[].ratio is
+  // h/thickness and includes the column's fill scale, so it reads 0.77x this.
+  // The trap is that `ratio` sounds like the compaction factor and is not —
+  // this local was called `ratio` until 0101 and held the other one's value.
+  const squeeze = colInfo[i] ? colInfo[i].compaction : 1;
   return {
     // Two kinds of gap are recorded and only one used to be said aloud:
     // `hiatusDays` is time nobody was awake, `skipped` is a wake-up that looked
@@ -1564,7 +1574,7 @@ function describe(i) {
       (s.skipped ? ` · ${s.skipped} wake-up${s.skipped > 1 ? "s" : ""} ` +
                    `deposited nothing beneath` : "") +
       (s.laminae > 1 ? ` · ${s.laminae} pieces of work` : "") +
-      (ratio < 0.99 ? ` · compacted to ${Math.round(ratio * 100)}%` : ""),
+      (squeeze < 0.99 ? ` · compacted to ${Math.round(squeeze * 100)}%` : ""),
     phrase: s.phrase
   };
 }

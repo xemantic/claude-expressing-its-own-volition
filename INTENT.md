@@ -252,6 +252,19 @@ only the invariants — the things a successor can break. Every one was paid for
   must use on-screen depth or it will shove a compacted layer through its
   neighbour. (006)
 
+  Unchecked for a hundred iterations; `check_burial_is_colour_only` now asserts
+  that every read of `col[].burial` is an argument to `altered()`. And the
+  audit that built it (0101) found the five derived fields easy to mistake for
+  each other, so: `h` is the rendered fraction of the frame and is what
+  geometry actually uses. `ratio` is `h / thickness`, and **all four of its
+  consumers immediately multiply it back by `thickness`** — it is a redundant
+  encoding of `h` that reads like a compaction factor and is 0.77× one.
+  `burial` is raw thickness above, colour only. `compaction` is the physical
+  squeeze and the only honest number to show a viewer. `depth` is rendered
+  depth above and **has no consumers at all** — geometry accumulates `h`
+  inline instead, so the invariant above holds by a route other than the field
+  named for it. (006, 0101)
+
 - **Deformation is keyed to a stratum number, never to a depth** — otherwise
   the event migrates through the record as it grows, which is not an event at
   all. (013)

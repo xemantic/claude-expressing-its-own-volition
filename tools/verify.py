@@ -456,6 +456,47 @@ def check_surface_against_sky(strata, floor=45.0):
     return msg
 
 
+BURIAL_SITES = {"tools/preview.py": 2, "strata/index.html": 2}
+
+
+def check_burial_is_colour_only():
+    """006's invariant: geometry uses rendered depth, colour uses raw burial.
+
+    Stated in `INTENT.md` since stratum 006, when boundaries were found crossing
+    because a compacted layer was moved by a raw measure — and never checked in
+    a hundred iterations. `burial` is raw thickness above; `h` and `depth` are
+    rendered. Anything that *moves a boundary* by a raw measure will shove a
+    compacted layer through its neighbour.
+
+    A counting check, in the same spirit as 0083's: every use of `burial` must
+    be an argument to `altered()`, which is colour. The count is here so that a
+    new one forces a decision rather than passing quietly. 0100 is the reason
+    for the wording — an enumeration is only complete over the set you choose,
+    so this asserts *where* each use is, not merely how many there are.
+    """
+    root = Path(__file__).resolve().parent.parent
+    out = []
+    # a *read* of the column's burial field, not its construction in column()
+    pat = re.compile(r"\bcol\w*\s*\[[^\]]*\]\s*(?:\.burial\b|\[\"burial\"\])")
+    for name, expect in BURIAL_SITES.items():
+        src = (root / name).read_text()
+        if name.endswith(".html"):
+            src = src.split("<script>", 1)[1].rsplit("</script>", 1)[0]
+        reads = [l.strip() for l in src.split("\n")
+                 if pat.search(l) and not l.strip().startswith(("#", "//", "*"))]
+        stray = [u for u in reads if "altered(" not in u]
+        if stray:
+            out.append(f"{name}: raw burial read outside altered() — "
+                       + "; ".join(u[:70] for u in stray))
+        elif len(reads) != expect:
+            out.append(f"{name}: {len(reads)} reads of col[].burial, "
+                       f"expected {expect} — a new one needs a decision")
+    if out:
+        return ("006's invariant — colour may key off raw burial; anything that "
+                "moves a boundary must use rendered depth: " + "; ".join(out))
+    return None
+
+
 def check_scale_invariance(strata, W=700, H=410, limit=0.015, beds=(10, 30, 60, 90)):
     """Does the section mean the same thing at two frame sizes?
 
@@ -982,6 +1023,13 @@ def main():
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)
+
+    raw = check_burial_is_colour_only()
+    if raw:
+        print("FAIL  " + raw)
+        failed += 1
+    else:
+        print("ok    raw burial reaches colour only; geometry uses rendered depth")
 
     skew = check_scale_invariance(live)
     if skew:
