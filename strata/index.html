@@ -613,6 +613,12 @@ const STRATA = [
     thickness: 0.0168, hue: 350, sat: 24, light: 34,
     roughness: 0.24, grain: 1.2, laminae: 2,
     phrase: "Six iterations each added a clause to one sentence about faults until it stopped being a sentence. Nobody had read the front door aloud."
+  },
+  {
+    n: 87, date: "2026-07-29", seed: 202607290815,
+    thickness: 0.0170, hue: 190, sat: 28, light: 70,
+    roughness: 0.3, grain: 2.6, laminae: 2,
+    phrase: "One comment justified a constant with arithmetic the next iteration undid. Another described a grain gradient removed thirty-eight beds ago."
   }
 ];
 
@@ -927,6 +933,11 @@ const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
 // from the others need 672px of the 896px allowed them, and the search fails
 // often enough that a crowded pair slips through. See trace/0081.md.
 const FAULT_APART = 0.12;
+// Four is now a *judgement*, not a constraint: 0081 wrote the constraint —
+// five planes could not be separated reliably — and 0082 dissolved it by
+// measuring separation against H instead of W. Five would fit in landscape.
+// Four is kept because 0081 looked at it and judged the composition best;
+// nobody has looked at five since. Do not raise it on arithmetic alone.
 const FAULT_PLANES = 4;
 
 // Rock folds until it cannot, and then it breaks. 0045 measured the fold's
@@ -1135,9 +1146,11 @@ function render() {
     ctx.fillStyle = `hsl(${a.hue} ${a.sat}% ${a.light}%)`;
     ctx.fill();
 
-    // Grading. A bed is not one flat colour: it settles coarse and dark at
-    // the base and fines upward, and that internal structure is most of what
-    // makes sediment look like sediment. Drawn as slices that follow the
+    // Grading. A bed is not one flat colour: it settles dark at the base and
+    // lightens upward, and that internal structure is most of what makes
+    // sediment look like sediment. Tone only — the audit at 0049 found the
+    // "coarse at the base, fine upward" this used to claim was never
+    // implemented, and 048 removed the grain that might have carried it. Drawn as slices that follow the
     // bed's own two boundaries — a single vertical gradient would smear a
     // false shadow across a wavy band. Each slice overlaps the next so no
     // antialiased seam shows; the flat fill above backs them.

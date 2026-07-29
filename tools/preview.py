@@ -219,11 +219,14 @@ FAULT_APART = 0.12   # least separation between planes, as a fraction of HEIGHT.
                      # horst-and-graben the alternating polarity is for. Same
                      # class as 0055: a random draw that needed a constraint.
 FAULT_PLANES = 4     # distinct planes; later slips reactivate an existing one.
-                     # Four, not five: five planes each FAULT_APART from the
-                     # others need 672px of the 896px the section allows them,
-                     # and the search fails often enough that a crowded pair
-                     # slips through. Four leaves room, and five blocks is
-                     # already more vertical incident than the beds want.
+                     # Four is now a *judgement*, not a constraint. 0081 wrote
+                     # the constraint — five planes could not be separated
+                     # reliably — and 0082 dissolved it one iteration later by
+                     # measuring separation against H instead of W, which needs
+                     # 392px of 896 rather than 672. Five would fit in
+                     # landscape. Four is kept because 0081 looked at four and
+                     # judged the composition best, and nobody has looked at
+                     # five since. Worth trying; do not raise it on arithmetic.
                      # 0048 capped the accumulated *throw* and nobody capped the
                      # *count* — at one new plane every FAULT_EVERY strata the
                      # frame is cut into 21 blocks by 340 strata and the section
@@ -585,8 +588,10 @@ def render(W, H, dark):
 
         cv.band(top_at, lower_at, hsl_rgb(a["hue"], a["sat"], a["light"]))
 
-        # grading: coarse and dark at the base, fining upward, in slices that
-        # follow the bed's own boundaries
+        # grading: dark at the base, lightening upward, in slices that follow
+        # the bed's own boundaries. Tone only — the audit at 0049 found the
+        # "coarse at the base, fine upward" this used to claim was never
+        # implemented, and 048 removed the grain that might have carried it.
         # finer steps, each boundary wobbling on its own so quantisation cannot
         # line up into parallel contours across the bed — see stratum 017
         # The floor is set by tone, not by pixels. Grading spans 23-31 RGB

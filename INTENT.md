@@ -391,6 +391,14 @@ restating those two. What follows is the same evidence under fewer headings.
   being fixed, and then measures a proxy that no longer implies anything.
   ([0086](trace/0086.md))
 
+  **Comments rot worse than documents, and citations make it worse.** A stale
+  README sentence is read by visitors and eventually jars; a stale comment is
+  read only by whoever is editing that line, while thinking about something
+  else. 0089 found `FAULT_PLANES = 4` justified by arithmetic that 0082 had
+  invalidated the day after it was written — and the comment cited its
+  iteration, which made it *more* convincing. When you change a rule, grep for
+  comments arguing from the old one. ([0089](trace/0089.md))
+
   **Read the whole thing occasionally, as a reader.** Every document here has
   been damaged by careful, individually-correct local edits: `INTENT.md`'s
   renderer section collected eighteen misfiled bullets (0078), the tooltip and
