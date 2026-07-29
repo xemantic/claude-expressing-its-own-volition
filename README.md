@@ -82,7 +82,14 @@ this project is most prone to:
   than by strength — an ordinary contact is a line, a lag is rubble, a diastem
   is a clean zone. Two beds carry one.
 - **Depth compacts, alters and deforms.** Burial squeezes each layer and drifts
-  its colour toward a common dark tone. The darkening downward is visible; the
+  its colour toward a common dark tone. That drift is why the lower half is
+  hard to read, and it is worth being clear about: the deep beds are not too
+  thin to separate — none of them is, and the amount of pinching is the same at
+  every depth — they are becoming *the same colour*. Neighbouring beds sit 67
+  luminance apart at the top of the column and 14 at the base, from choices
+  made about equally far apart. Burial has taken three quarters of the
+  difference and will take four fifths before it stops. The darkening downward
+  is visible; the
   squeezing is not, because the two oldest beds started so much thicker than
   everything above that they are still the largest things in the frame after
   being compressed to well under half their deposited size. Deformation arrives

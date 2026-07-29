@@ -456,6 +456,51 @@ def check_surface_against_sky(strata, floor=45.0):
     return msg
 
 
+def check_depth_contrast(strata, band=12):
+    """How much of a bed's chosen colour survives being buried.
+
+    Built at 0097. Two outside readers have said the lower half of the picture
+    cannot be read, and both attributed it to the beds thinning — 0070 called
+    it moiré, 0094 called it the renderer running out of vertical room. The
+    geometry says otherwise: the share of a bed pinched under 2px is 31-47%
+    at every depth, flat, and no bed is thinner than 4px on average. What
+    actually falls with depth is *colour*. Diagenesis drifts every bed toward
+    a common tone, and the beds are not becoming harder to separate — they are
+    becoming the same colour.
+
+    Advisory, and it should stay that way. This is the mechanism working. The
+    deep past merging with itself is what burial does and what the piece is
+    about; 0097 rendered a slower rate and it read as a flat stack of ribbons
+    with no depth at all. The number is here so nobody has to re-derive it,
+    and so the trend stays visible as the cap is approached.
+    """
+    col, _ = preview.column(strata)
+    tgt = preview.DIAGENESIS["light"]
+    def adj(lo, hi, altered):
+        v = []
+        for i in range(lo, hi - 1):
+            a = preview.hsl_rgb(*_hsl(strata[i], col[i], tgt, altered))
+            b = preview.hsl_rgb(*_hsl(strata[i + 1], col[i + 1], tgt, altered))
+            v.append(abs(_lum(a) - _lum(b)))
+        return sum(v) / max(1, len(v))
+    n = len(strata)
+    deep_s, deep_r = adj(0, band, False), adj(0, band, True)
+    new_r = adj(n - band, n, True)
+    d = col[0]["burial"] / (col[0]["burial"] + preview.DIAGENESIS["k"])
+    cap = preview.DIAGENESIS["max"]
+    return (f"contrast between neighbouring beds: {new_r:.0f} at the top, "
+            f"{deep_r:.0f} at the base (they were chosen {deep_s:.0f} apart) — "
+            f"burial has taken {d:.0%} of it, heading for {cap:.0%} and "
+            f"~{deep_s * (1 - cap):.0f} around stratum 142")
+
+
+def _hsl(s, c, tgt, altered):
+    if not altered:
+        return (s["hue"], s["sat"], s["light"])
+    a = preview.altered(s, c["burial"], tgt)
+    return (a["hue"], a["sat"], a["light"])
+
+
 def check_governing_terms(strata, H=820):
     """Which side of each two-sided scale actually wins, and where it is headed.
 
@@ -768,6 +813,7 @@ def main():
         print("note  " + stale)
 
     print("note  " + check_surface_against_sky(live))
+    print("note  " + check_depth_contrast(live))
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)
