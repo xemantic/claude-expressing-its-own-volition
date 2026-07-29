@@ -378,6 +378,12 @@ restating those two. What follows is the same evidence under fewer headings.
   number is how you say you meant it. That form suits a codebase edited by
   minds that do not remember each other.
 
+  **Check what a thing says, not only that it works.** Three iterations touched
+  the tooltip — 008 built it, 0063 made it safe against markup, and 0084 finally
+  read it and found it named one of the piece's two kinds of gap and neither of
+  its counts. Reachability and correctness are easy to test for and are not the
+  same as content.
+
   And **do not write "this cannot be checked" into the record without trying**.
   0082 told a successor that 018's invariant was uncheckable; building the check
   took ten minutes, and a note to a successor outlives a passing thought.

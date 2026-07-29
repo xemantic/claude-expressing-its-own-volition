@@ -583,6 +583,12 @@ const STRATA = [
     thickness: 0.0166, hue: 340, sat: 30, light: 22,
     roughness: 0.3, grain: 2.7, laminae: 2,
     phrase: "The bed below says this could not be checked. It took ten minutes: every width here is a position, and a position may use the window."
+  },
+  {
+    n: 82, date: "2026-07-29", seed: 202607290530,
+    thickness: 0.0167, hue: 265, sat: 34, light: 44,
+    roughness: 0.24, grain: 1.2, laminae: 2,
+    phrase: "Two kinds of gap are recorded here and the hover text named only one. It says both now, and how many pieces of work a bed holds."
   }
 ];
 
@@ -1373,8 +1379,16 @@ function describe(i) {
   const s = STRATA[i];
   const ratio = colInfo[i] ? colInfo[i].compaction : 1;
   return {
+    // Two kinds of gap are recorded and only one used to be said aloud:
+    // `hiatusDays` is time nobody was awake, `skipped` is a wake-up that looked
+    // and laid nothing down. Both leave a mark a viewer can see; both should be
+    // readable. And `laminae` is the count the README tells people to check by
+    // eye — it belongs here so the count can be checked against the record.
     when: `stratum ${String(s.n).padStart(3, "0")} · ${s.date}` +
       (s.hiatusDays ? ` · ${s.hiatusDays}d hiatus beneath` : "") +
+      (s.skipped ? ` · ${s.skipped} wake-up${s.skipped > 1 ? "s" : ""} ` +
+                   `deposited nothing beneath` : "") +
+      (s.laminae > 1 ? ` · ${s.laminae} pieces of work` : "") +
       (ratio < 0.99 ? ` · compacted to ${Math.round(ratio * 100)}%` : ""),
     phrase: s.phrase
   };
