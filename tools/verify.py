@@ -456,6 +456,54 @@ def check_surface_against_sky(strata, floor=45.0):
     return msg
 
 
+def check_snapshot_current():
+    """Was `strata/latest.png` refreshed with the most recent deposit?
+
+    Step 4 of the procedure, and the one nobody notices skipping, because the
+    snapshot only appears in `README.md` — which the depositing mind does not
+    open. 0098 found it six strata and six hours stale. Nothing checked it.
+
+    Deliberately asks git rather than re-rendering: a 1200x720 render costs
+    eleven seconds, and a check nobody wants to wait for is a check that gets
+    skipped, which is the failure this exists to catch. The question git
+    answers is exact — does the newest `Stratum NNN:` commit contain the file?
+    """
+    import subprocess
+    root = str(Path(__file__).resolve().parent.parent)
+    try:
+        log = subprocess.run(
+            ["git", "log", "--format=%H\t%s", "--max-count=400"],
+            capture_output=True, text=True, timeout=20, cwd=root)
+        if log.returncode != 0:
+            return None
+    except Exception:
+        return None
+    newest = None
+    for line in log.stdout.strip().split("\n"):
+        if "\t" not in line:
+            continue
+        sha, subject = line.split("\t", 1)
+        m = re.match(r"Stratum (\d+):", subject)
+        if m:
+            newest = (sha, int(m.group(1)))
+            break
+    if newest is None:
+        return None
+    sha, n = newest
+    try:
+        files = subprocess.run(
+            ["git", "show", "--name-only", "--format=", sha],
+            capture_output=True, text=True, timeout=20, cwd=root).stdout
+    except Exception:
+        return None
+    if "strata/latest.png" in files:
+        return None
+    return (f"strata/latest.png was not refreshed with stratum {n} — the "
+            f"README shows an older artwork than the repository holds. "
+            f"`python3 tools/preview.py strata/latest.png --width 1200 "
+            f"--height 720`, then commit it with the deposit (step 4)")
+
+
 def check_depth_contrast(strata, band=12):
     """How much of a bed's chosen colour survives being buried.
 
@@ -712,6 +760,7 @@ def main():
     cases.append((st, 1100, 750, "worst case: roughness 0.45 throughout"))
 
     failed = 0
+    todo = []
     pinch_live = []
     for strata, W, H, label in cases:
         thin, at, floor, pinch = worst_band(strata, W, H)
@@ -743,6 +792,8 @@ def main():
                 " — climbing; see 0045/0046/0086 before adding fold amplitude")
         print(f"{'ok   ' if rate < 45 else 'note '} {rate:.1f}% of contact pixels "
               f"pinch to the minimum gap (advisory){note}")
+        if rate >= 45:
+            todo.append("pinch rate climbing")
 
     dupes = check_js_scopes()
     if dupes:
@@ -807,10 +858,19 @@ def main():
     tilt = check_fault_balance(live)
     if tilt:
         print("note  " + tilt)
+        todo.append("faults pulling one way")
 
     stale = check_memory_current(live)
     if stale:
         print("note  " + stale)
+        todo.append("project memory stale")
+
+    snap = check_snapshot_current()
+    if snap:
+        print("FAIL  " + snap)
+        failed += 1
+    else:
+        print("ok    strata/latest.png was refreshed with the newest deposit")
 
     print("note  " + check_surface_against_sky(live))
     print("note  " + check_depth_contrast(live))
@@ -840,13 +900,23 @@ def main():
         if recent:
             print("note  phrases over 140 chars since the convention: "
                   + ", ".join(recent) + " — see 019 (advisory only)")
+            todo.append("phrase over 140 chars")
 
     flat = check_lightness_steps(live)
     if flat:
+        todo.append("lightness step under 10")
         print("note  lightness steps under 10 in recent beds: " + ", ".join(flat)
               + " — see 012, choose lightness before hue (advisory only)")
     else:
         print("ok    recent beds all step more than 10 in lightness")
+    # 0098 skipped two procedure steps in a row while reading this output
+    # through `grep FAIL`. Advisories that nobody reads are worse than none:
+    # they create the belief that something is watching. The last line is the
+    # one a filtered read still sees.
+    if todo:
+        print(f"\n{len(todo)} advisory item(s) want action: " + "; ".join(todo))
+    elif not failed:
+        print("\nall checks pass, no advisory outstanding")
     return 1 if failed else 0
 
 
