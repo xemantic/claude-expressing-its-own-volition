@@ -571,6 +571,12 @@ const STRATA = [
     thickness: 0.0174, hue: 45, sat: 34, light: 28,
     roughness: 0.26, grain: 2.5, laminae: 2,
     phrase: "Two faults thirty-six pixels apart read as one cliff of their combined throw. Planes stand apart now, and the section has five blocks."
+  },
+  {
+    n: 80, date: "2026-07-29", seed: 202607290420,
+    thickness: 0.0174, hue: 285, sat: 46, light: 58,
+    roughness: 0.22, grain: 1.0, laminae: 2,
+    phrase: "Fault spacing was the one horizontal length measured against the window, not the rock. On a phone the breaks stood three times too close."
   }
 ];
 
@@ -871,7 +877,14 @@ const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
 // section stops being a stratigraphy. Real basins do not do that either: a
 // mature rift has a few master faults that slip again and again, not fifty
 // small ones. See trace/0080.md.
-// Least separation between planes, as a fraction of width. Drawn uniformly,
+// Least separation between planes, as a fraction of HEIGHT — 018's invariant is
+// that every horizontal length here is measured against the vertical scale,
+// never the window width, so nothing changes because a viewer resized. 0081
+// wrote this against W and 0082 measured the consequence: 0.27 H between planes
+// in landscape against 0.089 H in portrait, three times closer in rock terms
+// for the same section. A narrow window now shows fewer faults instead.
+//
+// Drawn uniformly,
 // two can land 36px apart in a 1400px frame — as strata 34 and 51 did — and
 // then read as one step of their combined throw, defeating the horst-and-graben
 // the alternating polarity is for. Four planes, not five: five each FAULT_APART
@@ -893,13 +906,16 @@ const FAULT_PLANES = 4;
 function faultEpisodes(strata, W, H) {
   const out = [];
   const planes = [];
+  // how many planes this window has room for at the piece's own scale
+  const room = 1 + Math.floor((0.64 * W) / Math.max(1e-6, FAULT_APART * H));
+  const limit = Math.max(1, Math.min(FAULT_PLANES, room));
   for (let n = FAULT_EVERY; n <= strata.length; n += FAULT_EVERY) {
     const r = mulberry32((strata[0].seed ^ (n * 0x85EB)) >>> 0);
     let at;
-    if (planes.length < FAULT_PLANES) {
+    if (planes.length < limit) {
       at = 0.18 * W + r() * 0.64 * W;          // keep the plane off the edges
       for (let k = 0; k < 24; k++) {           // ...and clear of its neighbours
-        if (planes.every((q) => Math.abs(at - q) >= FAULT_APART * W)) break;
+        if (planes.every((q) => Math.abs(at - q) >= FAULT_APART * H)) break;
         at = 0.18 * W + r() * 0.64 * W;
       }
     } else {                                   // reactivate an existing plane

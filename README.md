@@ -101,7 +101,9 @@ this project is most prone to:
   into a wedge on the dropped side instead of being sheared through, and
   successive faults alternate which side they drop — so the blocks between them
   stand high and low in turn, which is called horst and graben. There are never
-  more than four planes, and they stand well apart: once the section has that
+  more than four planes and they stand well apart — measured against the frame's
+  height like everything else here, so a narrow window shows fewer faults rather
+  than the same ones crowded together: once the section has that
   many, a later break reactivates one that already exists rather than cutting a
   new one, which is what a mature basin does and what stops the picture
   becoming a mosaic.
