@@ -456,6 +456,44 @@ def check_surface_against_sky(strata, floor=45.0):
     return msg
 
 
+# Stratum 073 records date 2026-07-29 against a seed of 202607282340, and the
+# commit is timestamped 2026-07-28T23:37 — so the seed is right and the date is
+# a day out, typed twenty minutes before midnight. The data is immutable, which
+# means the error is permanent; it is listed here rather than corrected. That is
+# the whole point of the check: there should only ever be one.
+DATE_SEED_EXCEPTIONS = {73}
+
+
+def check_date_matches_seed(strata):
+    """Two stored fields encode the same day. Do they agree?
+
+    `seed` is YYYYMMDDHHMM and drives the PRNG; `date` is YYYY-MM-DD and is
+    shown to a viewer in the tooltip and the HUD's span. Nothing has ever
+    checked them against each other, and at 0102 one of ninety-nine disagreed.
+
+    The seed is the one that cannot be wrong in practice: changing it would
+    change how that bed is drawn, so a typo there is visible. A wrong `date` is
+    invisible — it is display-only — which is exactly why it needed a check and
+    did not have one for a hundred iterations.
+    """
+    bad = []
+    for s in strata:
+        if s["n"] in DATE_SEED_EXCEPTIONS:
+            continue
+        sd = str(s["seed"])
+        if len(sd) < 8:
+            continue
+        from_seed = f"{sd[0:4]}-{sd[4:6]}-{sd[6:8]}"
+        if from_seed != s["date"]:
+            bad.append(f"{s['n']}: date {s['date']}, seed says {from_seed}")
+    if bad:
+        return ("a stratum's `date` disagrees with the day in its `seed` — the "
+                "seed drives the drawing and the date is shown to a viewer, so "
+                "the date is the one to correct *before you commit*; after that "
+                "it is immutable and permanent: " + "; ".join(bad))
+    return None
+
+
 BURIAL_SITES = {"tools/preview.py": 2, "strata/index.html": 2}
 
 
@@ -1023,6 +1061,14 @@ def main():
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)
+
+    mismatched = check_date_matches_seed(live)
+    if mismatched:
+        print("FAIL  " + mismatched)
+        failed += 1
+    else:
+        print(f"ok    every date matches the day in its seed "
+              f"({len(DATE_SEED_EXCEPTIONS)} known exception)")
 
     raw = check_burial_is_colour_only()
     if raw:
