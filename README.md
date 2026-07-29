@@ -94,19 +94,23 @@ this project is most prone to:
   whole stack repeating one shape. The column asymptotes rather than filling,
   so the number of iterations it can accept is unbounded.
 - **The record breaks as well as bends.** Every seventeenth layer a *fault*
-  cuts the column: find a vertical step in the beds and follow it upward until
-  it vanishes into layers deposited after the slip, which are uncut and seal
-  it. The break is sharp — beds are offset across it, not bent through it,
-  though they drag slightly against the plane as real beds do. A fault only ever drops the older side, so the beds straddling it thicken
+  cuts the column. Find a vertical step in the beds and follow it upward: it
+  vanishes into the layers deposited after the slip, which are uncut and seal
+  it. The break is sharp — beds are offset across it rather than bent through
+  it, though they drag a little against the plane as real beds do.
+
+  A fault only ever drops the older side, so the beds straddling it thicken
   into a wedge on the dropped side instead of being sheared through, and
-  successive faults alternate which side they drop — so the blocks between them
-  stand high and low in turn, which is called horst and graben. There are never
-  more than four planes and they stand well apart — measured against the frame's
-  height like everything else here, so a narrow window shows fewer faults rather
-  than the same ones crowded together: once the section has that
-  many, a later break reactivates one that already exists rather than cutting a
-  new one, which is what a mature basin does and what stops the picture
-  becoming a mosaic.
+  successive faults alternate which side they drop: the blocks between them
+  stand high and low in turn, which is called horst and graben.
+
+  There are never more than four planes, and they stand well apart — measured
+  against the frame's *height*, like every other length here, so a narrow
+  window shows fewer faults rather than the same ones crowded together. Once
+  the section has four, a later break reopens one that already exists instead
+  of cutting a new one. That is what a mature basin does, and it is what stops
+  the picture becoming a mosaic as the record grows.
+
 - **Every bed darkens toward its base.** This is *graded bedding*, and it is
   the most visible thing inside a layer — sediment settles coarsest first, so a
   bed is mostly fine material above a thin coarse base. The tone follows that
@@ -125,20 +129,19 @@ this project is most prone to:
 - **The surface weathers; being buried is what stops it.** Only the newest bed
   is exposed, so only it is worn — at long wavelengths, so it reads as a broad
   swell rather than as roughness. The moment another layer arrives it goes
-  smooth. Every other mechanism here does more to a layer
-  the longer it sits; this is the one that stops.
+  smooth. Every other mechanism here does more to a layer the longer it sits;
+  this is the only one that stops.
 - **The empty band at the top is not a margin — it is the room this record has
   left.** Three separate people shown only the picture have read it as a
   figure's whitespace, and it is the one thing about this piece that a still
   image cannot convey: the band *closes*. Every layer takes a little of it,
   and because the column asymptotes rather than filling (stratum 003), it
-  narrows without ever reaching zero — 7.1% of the frame at seventy strata,
+  narrows without ever reaching zero — about 7% of the frame at eighty strata,
   5.6% at a hundred and twenty, tending to 5% however long the loop runs. It is
   the space the piece keeps for whatever wakes up next. Compare two snapshots
   taken a few dozen layers apart and you can watch it shrink.
 - **Beds swell and pinch.** Deposition is not uniform: a bed thickens where
   more settled and thins to a seam where less did.
-
 - **Drag the window edge and the section crops, it does not stretch.** Every
   horizontal wavelength in the piece is measured against the frame's *height*,
   never its width, so the geometry has a fixed scale the way a real outcrop

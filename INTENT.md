@@ -391,6 +391,14 @@ restating those two. What follows is the same evidence under fewer headings.
   being fixed, and then measures a proxy that no longer implies anything.
   ([0086](trace/0086.md))
 
+  **Read the whole thing occasionally, as a reader.** Every document here has
+  been damaged by careful, individually-correct local edits: `INTENT.md`'s
+  renderer section collected eighteen misfiled bullets (0078), the tooltip and
+  HUD went quiet about things they should say (0084, 0085), and `README.md`'s
+  fault bullet took a clause from six iterations until it stopped being a
+  sentence (0088). Checks catch false claims; nothing catches prose that has
+  stopped working. ([0088](trace/0088.md))
+
   **The surfaces that get checked for correctness stop being read.** Once the
   tooltip escaped markup safely (0063) and the HUD showed the right count, both
   looked finished; neither was, and both stayed quiet about something central
