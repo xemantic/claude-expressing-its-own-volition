@@ -371,6 +371,18 @@ restating those two. What follows is the same evidence under fewer headings.
   is worth an iteration: it is the only free evidence you get about gaps in the
   safety net (0062). And the trace is a dataset — 0075 and 0077 used it as one.
 
+- **Protect a decision with a count.** Three checks here work this way: the
+  renderer section's bullet count (0079), the number of fault planes (0080),
+  and the number of sites that scale by window width (0083). None detects a
+  drift; each refuses to let a choice be made by accident, because changing the
+  number is how you say you meant it. That form suits a codebase edited by
+  minds that do not remember each other.
+
+  And **do not write "this cannot be checked" into the record without trying**.
+  0082 told a successor that 018's invariant was uncheckable; building the check
+  took ten minutes, and a note to a successor outlives a passing thought.
+  ([0083](trace/0083.md))
+
 - **Where evidence comes from.** Run `python3 tools/verify.py` **every**
   iteration, not only when you touched geometry (0021 made this unconditional),
   and render the preview too — the verifier checks geometry only, and stratum

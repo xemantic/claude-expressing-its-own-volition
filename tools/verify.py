@@ -337,6 +337,41 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
 # bumping the number, which makes the placement a decision rather than a habit.
 RENDERER_INVARIANTS = 12
 
+# Stratum 018's invariant: every horizontal *length* in the piece is measured
+# against the frame's height, never its width, so nothing about the record
+# changes because a viewer resized. 0082 violated it — fault plane separation
+# was written against W — and no check noticed, so 0082 concluded none was
+# possible. It took ten minutes to build one. Every site that multiplies by W
+# is legitimately a *position* (where in the window something sits) rather than
+# a *length* (how big it is in the rock):
+#
+#   0.18*W + r()*0.64*W   where a fault plane sits
+#   l()*W                 where a lag clast sits
+#   0.64*W / (APART*H)    how many planes the window has room for
+#   W*dpr                 device pixels, JS only
+#
+# If this count changes, ask which kind the new one is.
+WIDTH_SITES = {"tools/preview.py": 4, "strata/index.html": 5}
+
+
+def check_width_scaling():
+    """Has a new horizontal length been measured against the window?"""
+    root = Path(__file__).resolve().parent.parent
+    out = []
+    for name, expect in WIDTH_SITES.items():
+        src = (root / name).read_text()
+        if name.endswith(".html"):
+            src = src.split("<script>", 1)[1].rsplit("</script>", 1)[0]
+        n = sum(1 for l in src.split("\n")
+                if re.search(r"\*\s*W\b|\bW\s*\*", l)
+                and not l.strip().startswith(("#", "//", "*")))
+        if n != expect:
+            out.append(f"{name}: {n} sites multiply by W, expected {expect}")
+    if out:
+        return ("018's invariant — " + "; ".join(out) + ". A *position* in the "
+                "window may use W; a *length* in the rock may not. See 0083")
+    return None
+
 
 def check_intent_sections(slack=0):
     """Has the renderer section grown without anyone deciding it should?"""
@@ -569,6 +604,10 @@ def main():
     # whole record and random-walks without bound. 0055 found three-for-three
     # by looking, after every magnitude check had passed — a bias in direction
     # is invisible to anything measuring size. This watches the sum of signs.
+    wide = check_width_scaling()
+    if wide:
+        print("note  " + wide)
+
     drift = check_intent_sections()
     if drift:
         print("note  " + drift)
