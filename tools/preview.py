@@ -262,18 +262,28 @@ def fault_episodes(strata, W, H):
     """
     out = []
     planes = []
-    # how many planes this window has room for at the piece's own scale
+    # Roughly how many planes this window has room for at the piece's own
+    # scale. An *estimate*: it counts whether a legal packing exists, and
+    # rejection sampling still has to find one. The fallback below is what
+    # holds the rule.
     room = 1 + int(0.64 * W / max(1e-6, FAULT_APART * H))
     limit = max(1, min(FAULT_PLANES, room))
     for n in range(FAULT_EVERY, len(strata) + 1, FAULT_EVERY):
         r = mulberry32((strata[0]["seed"] ^ (n * 0x85EB)) & M32)
+        placed = False
         if len(planes) < limit:
             at = 0.18 * W + r() * 0.64 * W      # keep the plane off the edges
             for _ in range(24):                 # ...and clear of its neighbours
                 if all(abs(at - q) >= FAULT_APART * H for q in planes):
+                    placed = True
                     break
                 at = 0.18 * W + r() * 0.64 * W
-        else:                                   # reactivate an existing plane
+        # No room found is the same situation as no room left: reactivate rather
+        # than place a plane that violates the separation. Until 0092 the loop
+        # simply fell out after 24 tries and kept the last candidate, so the
+        # separation was a *tendency*, not a rule — at 400x900 two planes landed
+        # 4px apart where the rule asks for 108. See trace/0092.md.
+        if not placed:                          # reactivate an existing plane
             r()
             at = planes[int(r() * len(planes)) % len(planes)]
         throw = FAULT_THROW * H * (0.6 + r() * 0.8)

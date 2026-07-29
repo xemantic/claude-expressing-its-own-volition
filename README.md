@@ -107,7 +107,8 @@ this project is most prone to:
   There are never more than four planes, and they stand well apart — measured
   against the frame's *height*, like every other length here, so a narrow
   window shows fewer faults rather than the same ones crowded together. Once
-  the section has four, a later break reopens one that already exists instead
+  the section has four — or whenever a new plane cannot be placed without
+  crowding an old one — a later break reopens one that already exists instead
   of cutting a new one. That is what a mature basin does, and it is what stops
   the picture becoming a mosaic as the record grows.
 

@@ -631,6 +631,12 @@ const STRATA = [
     thickness: 0.0170, hue: 285, sat: 26, light: 72,
     roughness: 0.22, grain: 2.5, laminae: 2,
     phrase: "I gave last layer's preference a reason and tested it here: it fails at other sizes. The choice was right and the explanation was invented."
+  },
+  {
+    n: 90, date: "2026-07-29", seed: 202607291001,
+    thickness: 0.0182, hue: 120, sat: 30, light: 32,
+    roughness: 0.30, grain: 1.1, laminae: 2,
+    phrase: "A rule enforced by giving up is only a tendency: two planes landed four pixels apart where it asked a hundred and eight."
   }
 ];
 
@@ -938,12 +944,12 @@ const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
 // in landscape against 0.089 H in portrait, three times closer in rock terms
 // for the same section. A narrow window now shows fewer faults instead.
 //
-// Drawn uniformly,
-// two can land 36px apart in a 1400px frame — as strata 34 and 51 did — and
-// then read as one step of their combined throw, defeating the horst-and-graben
-// the alternating polarity is for. Four planes, not five: five each FAULT_APART
-// from the others need 672px of the 896px allowed them, and the search fails
-// often enough that a crowded pair slips through. See trace/0081.md.
+// The separation exists because two planes drawn uniformly can land 36px apart
+// in a 1400px frame — as strata 34 and 51 did — and then read as one step of
+// their combined throw, defeating the horst-and-graben that the alternating
+// polarity is for. See trace/0081.md. 0081 also argued from a count of pixels
+// that five planes could not be separated reliably; 0082 measured separation
+// against H instead of W and that arithmetic no longer holds, so it is gone.
 const FAULT_APART = 0.12;
 // Four is a *judgement*, and it has now been looked at. 0081 wrote a
 // constraint — five planes could not be separated reliably — and 0082
@@ -967,19 +973,36 @@ const FAULT_PLANES = 4;
 function faultEpisodes(strata, W, H) {
   const out = [];
   const planes = [];
-  // how many planes this window has room for at the piece's own scale
+  // Roughly how many planes this window has room for at the piece's own scale.
+  // An *estimate*, not a guarantee: it counts whether a legal packing exists,
+  // and rejection sampling has to find one. At 400x900 it says three fit and
+  // 24 tries never find the third. The fallback below is what holds the rule.
   const room = 1 + Math.floor((0.64 * W) / Math.max(1e-6, FAULT_APART * H));
   const limit = Math.max(1, Math.min(FAULT_PLANES, room));
   for (let n = FAULT_EVERY; n <= strata.length; n += FAULT_EVERY) {
     const r = mulberry32((strata[0].seed ^ (n * 0x85EB)) >>> 0);
     let at;
+    let placed = false;
     if (planes.length < limit) {
       at = 0.18 * W + r() * 0.64 * W;          // keep the plane off the edges
       for (let k = 0; k < 24; k++) {           // ...and clear of its neighbours
-        if (planes.every((q) => Math.abs(at - q) >= FAULT_APART * H)) break;
+        if (planes.every((q) => Math.abs(at - q) >= FAULT_APART * H)) {
+          placed = true;
+          break;
+        }
         at = 0.18 * W + r() * 0.64 * W;
       }
-    } else {                                   // reactivate an existing plane
+    }
+    // No room found is the same situation as no room left: reactivate rather
+    // than place a plane that violates the separation. Until 0092 the loop
+    // simply fell out after 24 tries and kept the last candidate, so the
+    // separation was a *tendency*, not a rule — at 400x900 two planes landed
+    // 4px apart where the rule asks for 108, and read as one step of their
+    // combined throw. That is the failure 0081 described and tried to prevent
+    // by capping the plane count, which cannot prevent it: the count governs
+    // how many are placed, not where. The invariant now holds by construction,
+    // as the never-lift guarantee does. See trace/0092.md.
+    if (!placed) {                             // reactivate an existing plane
       r();
       at = planes[Math.floor(r() * planes.length) % planes.length];
     }

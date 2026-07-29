@@ -407,6 +407,61 @@ def check_fault_balance(strata, W=1400, H=820, limit=0.06):
     return None
 
 
+SEPARATION_SIZES = [
+    (1400, 820), (1920, 1080), (900, 560), (760, 460), (400, 900),
+    (390, 700), (320, 400), (2400, 700), (600, 600), (1280, 720),
+    (500, 1000), (360, 640), (1024, 768), (800, 1200), (3000, 900),
+    (280, 500),
+]
+
+
+def fault_plane_positions(strata, W, H):
+    """Where each fault plane actually cut, read back out of its profile.
+
+    Deliberately measured from the rendered ramp rather than from the `at`
+    variable inside `fault_episodes`. A check that reads the internal value
+    can only confirm the code agrees with itself; this confirms the *section*
+    has the planes the rule promises. The ramp is FAULT_ZONE wide, so the
+    midpoint crossing sits within a pixel of the plane.
+    """
+    ats = []
+    for f in preview.fault_episodes(strata, W, H):
+        s = f["samples"]
+        mid = (min(s) + max(s)) / 2.0
+        for x in range(W):
+            if (s[x] - mid) * (s[x + 1] - mid) <= 0 and s[x] != s[x + 1]:
+                ats.append(x + 0.5)
+                break
+    return sorted(set(round(a) for a in ats))
+
+
+def check_fault_separation(strata, tol=2.0):
+    """No two planes closer than FAULT_APART of the frame's height.
+
+    Built at 0092, after the sweep found the shipped configuration violating
+    its own rule at three of these sixteen sizes — worst at 400x900, where two
+    planes sat 4px apart against a rule asking 108. The placement loop gave up
+    after 24 tries and kept the last candidate, so the separation held wherever
+    rejection sampling happened to succeed and nowhere else. Sixteen sizes
+    because one frame cannot show this: 1400x820 passed throughout.
+    """
+    need_frac = preview.FAULT_APART
+    bad = []
+    for (W, H) in SEPARATION_SIZES:
+        ats = fault_plane_positions(strata, W, H)
+        if len(ats) < 2:
+            continue
+        need = need_frac * H
+        gap = min(ats[i + 1] - ats[i] for i in range(len(ats) - 1))
+        if gap < need - tol:
+            bad.append(f"{W}x{H}: {gap:.0f}px apart, rule asks {need:.0f}px")
+    if bad:
+        return ("fault planes crowd closer than FAULT_APART * H — they read as "
+                "one step of their combined throw, which is what the rule "
+                "exists to prevent: " + "; ".join(bad))
+    return None
+
+
 MEMORY = Path.home() / (".claude/projects/-home-claude-git-claude-"
                         "expressing-its-own-volition/memory/strata-project.md")
 
@@ -626,6 +681,14 @@ def main():
     stale = check_memory_current(live)
     if stale:
         print("note  " + stale)
+
+    crowded = check_fault_separation(live)
+    if crowded:
+        print("FAIL  " + crowded)
+        failed += 1
+    else:
+        print(f"ok    fault planes hold their separation at all "
+              f"{len(SEPARATION_SIZES)} frame sizes")
 
     unrecorded = check_skips_recorded(live)
     if unrecorded:

@@ -246,6 +246,16 @@ only the invariants — the things a successor can break. Every one was paid for
   the first three all landed the same way and read as one staircase. Alternating
   gives horst and graben. (045, 0053)
 
+  Fault planes stand at least `FAULT_APART` of the **frame's height** apart,
+  and that too holds by construction: when no legal position is found the slip
+  **reactivates an existing plane**, exactly as it does when the count is full.
+  For eleven iterations the search instead fell out after 24 tries and kept its
+  last candidate, so the separation held wherever rejection sampling happened
+  to succeed — at 400x900 two planes sat 4px apart and read as one break of
+  their combined throw, which is the whole thing the rule exists to prevent.
+  A constraint enforced by *searching* is a tendency; give the failure a
+  defined behaviour or it has none. (0092)
+
 - **Exposure touches only the newest bed. Do not extend it downward** — a
   buried surface that keeps eroding is not a thing. Every other mechanism
   accumulates with depth; this is the only one that stops. (014)
