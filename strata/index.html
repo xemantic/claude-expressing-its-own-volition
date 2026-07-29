@@ -559,6 +559,12 @@ const STRATA = [
     thickness: 0.029, hue: 275, sat: 24, light: 32,
     roughness: 0.28, grain: 2.3, laminae: 2,
     phrase: "Tried to tell rules about the rock from rules about me by their words. Cannot: the good ones about me are made of rock. So it counts them."
+  },
+  {
+    n: 78, date: "2026-07-29", seed: 202607290310,
+    thickness: 0.0176, hue: 150, sat: 22, light: 64,
+    roughness: 0.3, grain: 1.1, laminae: 2,
+    phrase: "The throw was capped and the count was not: twenty-one blocks by three hundred layers. Five planes now, and later breaks reopen an old one."
   }
 ];
 
@@ -853,6 +859,13 @@ const FAULT_ZONE = 8;
 const FAULT_RAMP = 3;     // strata over which the slip is taken up
 const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
                           // the column by, before the fault field is rescaled
+// Distinct planes; later slips reactivate an existing one. 0048 capped the
+// accumulated *throw* and nobody capped the *count* — at one new plane every
+// FAULT_EVERY strata the frame is cut into 21 blocks by 340 strata and the
+// section stops being a stratigraphy. Real basins do not do that either: a
+// mature rift has a few master faults that slip again and again, not fifty
+// small ones. See trace/0080.md.
+const FAULT_PLANES = 5;
 
 // Rock folds until it cannot, and then it breaks. 0045 measured the fold's
 // displacement outgrowing the beds it bends; real columns do not accumulate
@@ -866,9 +879,16 @@ const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
 // straddling the break thicken into a wedge, which is what growth strata do.
 function faultEpisodes(strata, W, H) {
   const out = [];
+  const planes = [];
   for (let n = FAULT_EVERY; n <= strata.length; n += FAULT_EVERY) {
     const r = mulberry32((strata[0].seed ^ (n * 0x85EB)) >>> 0);
-    const at = 0.18 * W + r() * 0.64 * W;      // keep the plane off the edges
+    let at;
+    if (planes.length < FAULT_PLANES) {
+      at = 0.18 * W + r() * 0.64 * W;          // keep the plane off the edges
+    } else {                                   // reactivate an existing plane
+      r();
+      at = planes[Math.floor(r() * planes.length) % planes.length];
+    }
     const throwPx = FAULT_THROW * H * (0.6 + r() * 0.8);
     // Polarity alternates rather than being drawn independently. Three
     // independent flips at 0055 all landed the same way, and the section read
@@ -886,6 +906,7 @@ function faultEpisodes(strata, W, H) {
       const k = t * t * (3 - 2 * t);           // the smoothstep the folds use
       prof[x] = throwPx * (downRight ? k : 1 - k);
     }
+    planes.push(at);
     out.push({ n, samples: prof });
   }
 

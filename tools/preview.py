@@ -204,6 +204,13 @@ FAULT_ZONE = 8       # A fault cuts; it does not bend. Until 0070 the throw was 
 FAULT_RAMP = 3       # strata over which the slip is taken up
 FAULT_MAX = 0.22     # most of the frame the accumulated throw may stretch the
                      # column by, before the whole fault field is rescaled
+FAULT_PLANES = 5     # distinct planes; later slips reactivate an existing one.
+                     # 0048 capped the accumulated *throw* and nobody capped the
+                     # *count* — at one new plane every FAULT_EVERY strata the
+                     # frame is cut into 21 blocks by 340 strata and the section
+                     # stops being a stratigraphy. Real basins do not do that
+                     # either: a mature rift has a few master faults that slip
+                     # again and again, not fifty small ones. See trace/0080.md.
 
 
 def fault_episodes(strata, W, H):
@@ -221,9 +228,14 @@ def fault_episodes(strata, W, H):
     strata actually do.
     """
     out = []
+    planes = []
     for n in range(FAULT_EVERY, len(strata) + 1, FAULT_EVERY):
         r = mulberry32((strata[0]["seed"] ^ (n * 0x85EB)) & M32)
-        at = 0.18 * W + r() * 0.64 * W          # keep the plane off the edges
+        if len(out) < FAULT_PLANES:
+            at = 0.18 * W + r() * 0.64 * W      # keep the plane off the edges
+        else:                                   # reactivate an existing plane
+            r()
+            at = planes[int(r() * len(planes)) % len(planes)]
         throw = FAULT_THROW * H * (0.6 + r() * 0.8)
         # Polarity alternates rather than being drawn independently. Three
         # independent flips at 0055 all landed the same way, and the section
@@ -240,6 +252,7 @@ def fault_episodes(strata, W, H):
             t = 0.0 if t < 0 else (1.0 if t > 1 else t)
             k = t * t * (3 - 2 * t)             # same smoothstep the folds use
             prof.append(throw * (k if down_right else 1 - k))
+        planes.append(at)
         out.append({"n": n, "samples": prof})
 
     # Faults accumulate. Measured at 0048: twenty of them stretch the column by

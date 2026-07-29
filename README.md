@@ -100,7 +100,10 @@ this project is most prone to:
   though they drag slightly against the plane as real beds do. A fault only ever drops the older side, so the beds straddling it thicken
   into a wedge on the dropped side instead of being sheared through, and
   successive faults alternate which side they drop — so the blocks between them
-  stand high and low in turn, which is called horst and graben.
+  stand high and low in turn, which is called horst and graben. There are never
+  more than five planes: once the section has that many, a later break
+  reactivates one that already exists rather than cutting a new one, which is
+  what a mature basin does and what stops the picture becoming a mosaic.
 - **Every bed darkens toward its base.** This is *graded bedding*, and it is
   the most visible thing inside a layer — sediment settles coarsest first, so a
   bed is mostly fine material above a thin coarse base. The tone follows that

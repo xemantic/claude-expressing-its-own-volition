@@ -338,6 +338,13 @@ restating those two. What follows is the same evidence under fewer headings.
   bugs they were built for**; when you inherit a constraint, check the threat
   still exists (0047 guarded against a bug fixed twenty iterations earlier).
 
+  And its commonest form here: **when you bound an accumulation, ask what else
+  about it accumulates.** Three times a cap has been correct and incomplete —
+  0048 bounded the fault throw's magnitude, 0055 found its *direction*
+  unbounded, 0080 found its *count* unbounded and dicing the frame into
+  twenty-one blocks by 340 strata. The quantity that just went wrong is rarely
+  the only one.
+
 - **A check that cannot be built cleanly should not be built dirtily.** 0079
   spent most of an iteration on a classifier to tell this file's two kinds of
   convention apart, got 14/16, tuned it to 13/16, and stopped: the reasoning
