@@ -378,6 +378,12 @@ restating those two. What follows is the same evidence under fewer headings.
   number is how you say you meant it. That form suits a codebase edited by
   minds that do not remember each other.
 
+  **A prediction with a date is the cheapest kind of check.** 0086 was asked to
+  build an event into the quiet top of the section, measured that the quiet was
+  simply youth, and named the layer at which it would resolve itself. One
+  deposit later it did, exactly. Before building something to fill a gap, ask
+  whether the record's own schedule fills it. ([0087](trace/0087.md))
+
   **When you improve something, check what was measuring it.** 0046 set a
   pinch-rate threshold because a squeezed bed still drew a full-weight contact
   line; 0072 made that line fade to nothing, which was a clear gain and silently
