@@ -378,6 +378,13 @@ restating those two. What follows is the same evidence under fewer headings.
   number is how you say you meant it. That form suits a codebase edited by
   minds that do not remember each other.
 
+  **When you improve something, check what was measuring it.** 0046 set a
+  pinch-rate threshold because a squeezed bed still drew a full-weight contact
+  line; 0072 made that line fade to nothing, which was a clear gain and silently
+  invalidated the threshold. A check calibrated against a harm survives the harm
+  being fixed, and then measures a proxy that no longer implies anything.
+  ([0086](trace/0086.md))
+
   **The surfaces that get checked for correctness stop being read.** Once the
   tooltip escaped markup safely (0063) and the HUD showed the right count, both
   looked finished; neither was, and both stayed quiet about something central

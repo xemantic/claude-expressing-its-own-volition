@@ -547,9 +547,16 @@ def main():
     # rather than discovering it a hundred iterations from now.
     if pinch_live:
         rate = 100 * sum(pinch_live) / len(pinch_live)
-        note = ("" if rate < 25 else
-                " — climbing; see 0045/0046 before adding fold amplitude")
-        print(f"{'ok   ' if rate < 25 else 'note '} {rate:.1f}% of contact pixels "
+        # Threshold raised from 25% at 0086. 0046 set 25 when a pinched bed
+        # still drew a full-weight contact line, which is what made the count
+        # worth flagging. 0072 made that contact fade to *nothing* as the gap
+        # closes, so the same geometry no longer implies the same harm — the
+        # check was measuring a proxy that a later fix quietly decoupled. 45%
+        # is 0046's own projection for stratum 160; below that, pinching is
+        # 006's mechanism doing its job invisibly.
+        note = ("" if rate < 45 else
+                " — climbing; see 0045/0046/0086 before adding fold amplitude")
+        print(f"{'ok   ' if rate < 45 else 'note '} {rate:.1f}% of contact pixels "
               f"pinch to the minimum gap (advisory){note}")
 
     dupes = check_js_scopes()
