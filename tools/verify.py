@@ -51,7 +51,7 @@ def worst_band(strata, W, H):
         # competence — a bed answers the fold with its own strength and its own
         # sideways lag. Omitted here until 0046, which meant this check had been
         # guaranteeing a geometry the renderer stopped drawing at 0041.
-        comp = preview.competence(s)
+        comp = preview.competence(s, H)
         # per-bed, not per-pixel: recomputing the fault sum inside the pixel
         # loop made this check time out on the 244-stratum configuration
         drop = [preview.fault_offset(faults, idx + 1, x) for x in range(W + 1)]
@@ -454,6 +454,71 @@ def check_surface_against_sky(strata, floor=45.0):
                 f"one theme. Roughly L 28-78 clears this floor; do not aim for "
                 f"the peak at 55, or you forbid it to the next bed. See 0095")
     return msg
+
+
+def check_scale_invariance(strata, W=700, H=410, limit=0.015, beds=(10, 30, 60, 90)):
+    """Does the section mean the same thing at two frame sizes?
+
+    018's invariant, tested as a *property* rather than as a list of sites.
+    Render the same column into two frames of identical aspect and different
+    size, and compare each bed's top boundary in rock coordinates (x/W, y/H).
+    Every horizontal length measured against H, and the two agree.
+
+    This replaces nothing — `check_width_scaling` still counts `* W` sites —
+    but it catches what that one structurally cannot. 0083 enumerated the nine
+    multiplications by W, found every one to be a *position* rather than a
+    length, and concluded the invariant was exactly satisfied. It was complete
+    over the wrong set: `LAG = 150` and `FAULT_ZONE = 8` were horizontal
+    lengths in the rock measured against **neither** dimension, so they never
+    appeared in a search for W. Measured at 0100, the disagreement was 3.4% of
+    frame height; against H it is 0.86%.
+
+    The tolerance is not zero on purpose. The 1.2px floor under every drawn
+    band is a length in the *eye*, not in the rock — it exists so a bed stays
+    visible, and it must not scale, which is also why the drawing has a ceiling
+    (0099). It accounts for the whole residual: removing it as well takes the
+    disagreement to 0.08%. Rock scales; the eye does not.
+    """
+    def boundaries(w, h):
+        col, _ = preview.column(strata)
+        eps, _ = preview.fold_episodes(strata, w, h)
+        faults = preview.fault_episodes(strata, w, h)
+        fa = [sum(e["samples"][x] for e in eps) for x in range(w + 1)]
+        sink = max(0.0, -min(fa))
+        lower = [h + sink + fa[x] + preview.fault_offset(faults, 1, x)
+                 for x in range(w + 1)]
+        out, cum = {}, 0.0
+        for idx, s in enumerate(strata):
+            cum += col[idx]["h"]
+            base = h * (1 - cum) + sink
+            gap = max(1.2, col[idx]["h"] * h * 0.22)
+            noise = preview.boundary_fn(s, w, h, col[idx]["ratio"])
+            weights = [preview.episode_weight(e["n"], idx + 1) for e in eps]
+            comp = preview.competence(s, h)
+            live = [(e["samples"], q) for e, q in zip(eps, weights) if q > 0]
+            drop = [preview.fault_offset(faults, idx + 1, x) for x in range(w + 1)]
+            arr = [min(base + noise(x)
+                       + sum(sm[min(max(x + comp["lag"], 0), w)] * q * comp["amp"]
+                             for sm, q in live) + drop[x], lower[x] - gap)
+                   for x in range(w + 1)]
+            if idx + 1 in beds:
+                out[idx + 1] = [arr[round(i * w / 40)] / h for i in range(41)]
+            lower = arr
+        return out
+    small, large = boundaries(W, H), boundaries(W * 2, H * 2)
+    worst, at = 0.0, None
+    for n in sorted(set(small) & set(large)):
+        d = max(abs(p - q) for p, q in zip(small[n], large[n]))
+        if d > worst:
+            worst, at = d, n
+    if worst > limit:
+        return (f"018's invariant — the same column drawn at {W}x{H} and "
+                f"{W*2}x{H*2} disagrees by {worst:.1%} of frame height at "
+                f"stratum {at}. A length in the rock is being measured in "
+                f"pixels, so the record changes because a viewer resized. "
+                f"An absolute constant will not show up in a search for `* W`; "
+                f"see 0100")
+    return None
 
 
 def check_frame_headroom(strata, H=400, floor_px=1.2, warn=100):
@@ -917,6 +982,13 @@ def main():
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)
+
+    skew = check_scale_invariance(live)
+    if skew:
+        print("FAIL  " + skew)
+        failed += 1
+    else:
+        print("ok    the section reads the same at 700x410 and 1400x820")
 
     crowded = check_fault_separation(live)
     if crowded:

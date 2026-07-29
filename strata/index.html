@@ -679,6 +679,12 @@ const STRATA = [
     thickness: 0.0186, hue: 90, sat: 26, light: 34,
     roughness: 0.29, grain: 2.5, laminae: 3,
     phrase: "The column asymptotes so it never fills — but the clamp that keeps a bed visible does not. The oldest layer leaves the frame in a fortnight."
+  },
+  {
+    n: 98, date: "2026-07-29", seed: 202607291700,
+    thickness: 0.0183, hue: 0, sat: 40, light: 64,
+    roughness: 0.27, grain: 1.2, laminae: 2,
+    phrase: "Two horizontal lengths were in raw pixels, so the rock deformed further on a phone. The check built to forbid that searched only for W."
   }
 ];
 
@@ -990,7 +996,16 @@ function episodeWeight(n, i) {
 // are the weak ones. So a bed's own grain sets how much of an episode it takes
 // and how far its response lags laterally.
 const COMPETENCE = 0.3;   // spread in how strongly a bed answers, either side of 1
-const LAG = 150;          // furthest a weak bed's response slides sideways, px.
+// Furthest a weak bed's response slides sideways, as a fraction of frame
+// HEIGHT. It was 150 *absolute pixels* until 0100 — a horizontal length in
+// the rock, measured against neither the height nor the width, so it ran from
+// 0.083 H in a tall window to 0.225 H on a phone: the same rock, deformed
+// nearly three times as far, because someone resized. That is exactly what
+// 018's invariant forbids and 0082 fixed for FAULT_APART. 0083's check could
+// not see it, because it enumerates multiplications by W and an absolute
+// constant never touches W. 150/820 is the value it had at the reference
+// height, so a landscape window is unchanged.
+const LAG = 0.183;
 
 const FAULT_EVERY = 17;   // strata between breaks — rarer than folds by design
 const FAULT_THROW = 0.055; // slip, as a fraction of frame height
@@ -1002,7 +1017,11 @@ const FAULT_THROW = 0.055; // slip, as a fraction of frame height
 // really do bend as they are pulled along the plane, but for a fraction of
 // their thickness, not three times it. 0047 chose 26 to avoid steep-stroke
 // artifacts, which stratum 027 had already fixed.
-const FAULT_ZONE = 8;
+// The width of the ramp, as a fraction of frame HEIGHT — 8 absolute pixels
+// until 0100, for the same reason and with the same consequence: 0.0074 H wide
+// in a tall window against 0.0200 H on a phone. 8/820 keeps the reference
+// height as it was.
+const FAULT_ZONE = 0.0098;
 const FAULT_RAMP = 3;     // strata over which the slip is taken up
 const FAULT_MAX = 0.22;   // most of the frame the accumulated throw may stretch
                           // the column by, before the fault field is rescaled
@@ -1093,7 +1112,7 @@ function faultEpisodes(strata, W, H) {
     const downRight = (out.length % 2 === 0);
     const prof = new Float64Array(W + 1);
     for (let x = 0; x <= W; x++) {
-      let t = (x - at) / FAULT_ZONE;
+      let t = (x - at) / (FAULT_ZONE * H);
       t = t < 0 ? 0 : t > 1 ? 1 : t;
       const k = t * t * (3 - 2 * t);           // the smoothstep the folds use
       prof[x] = throwPx * (downRight ? k : 1 - k);
@@ -1142,7 +1161,7 @@ function faultOffset(faults, i, x) {
                           // 0.948. Past 250 neighbours fold in opposition, which
                           // conformable beds do not do.
 
-function competence(s) {
+function competence(s, H) {
   const c = mulberry32((s.seed + 12) >>> 0);
   // Mapped to the range grain is actually chosen in, not its nominal one.
   // Audited at 042: beds cluster hard around 1.5, so spreading them over the
@@ -1155,7 +1174,7 @@ function competence(s) {
   const jitter = (c() - 0.5) * 0.2;
   return {
     amp: 1 + COMPETENCE * (0.5 - soft + jitter),
-    lag: Math.round(LAG * (soft - 0.5 + jitter))
+    lag: Math.round(LAG * H * (soft - 0.5 + jitter))
   };
 }
 
@@ -1229,7 +1248,7 @@ function render() {
       : 1;
     const noise = boundaryFn(s, W, H, col[idx].ratio, damp);
     const weights = episodes.map((e) => episodeWeight(e.n, idx + 1));
-    const comp = competence(s);
+    const comp = competence(s, H);
     const minGap = Math.max(1.2, col[idx].h * H * 0.22);
     const weather = idx === STRATA.length - 1
       ? exposureFn(s, W, H, col[idx].h * H)

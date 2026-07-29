@@ -282,6 +282,20 @@ only the invariants — the things a successor can break. Every one was paid for
   `waveSpan(H) = H * 1.6`, never the window width. Nothing about this record
   may change because a viewer resized a browser. (018)
 
+  **The unit that matters is neither H nor W — it is rock or eye.** A length in
+  the *rock* — a wavelength, a fault's spacing or its ramp width, how far a weak
+  bed's response slides — scales with H. A length in the *eye* — the 1.2px floor
+  that keeps a band visible, the minimum contact stroke — is absolute and must
+  stay absolute, which is also why the drawing has a ceiling (0099). 0083
+  enumerated the nine multiplications by `W`, found every one to be a position
+  rather than a length, and called the invariant exactly satisfied; it was
+  complete over the wrong set, because `LAG = 150` and `FAULT_ZONE = 8` were
+  rock lengths in raw pixels and an absolute constant never touches W. Measured
+  at 0100 the same column drawn at two sizes disagreed by **3.4% of frame
+  height**. `check_scale_invariance` now tests the property — draw it twice and
+  compare in rock coordinates — rather than one way of breaking it. (018, 0083,
+  0100)
+
 - **The column is scaled toward an asymptote, so the frame never fills and the
   number of strata is unbounded. Do not "fix" this by rescaling the data.**
   `thickness` is the untouched source of truth; `column()` computes a view of

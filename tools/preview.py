@@ -191,12 +191,17 @@ def fold_episodes(strata, W, H):
 
 
 COMPETENCE = 0.3
-LAG = 150
+# Furthest a weak bed's response slides sideways, as a fraction of frame
+# HEIGHT. It was 150 absolute pixels until 0100 — a horizontal length in the
+# rock measured against neither dimension, running 0.083 H in a tall window to
+# 0.225 H on a phone. 018's invariant; 0083's check could not see it because an
+# absolute constant never multiplies by W. 150/820 holds the reference height.
+LAG = 0.183
 
 
 FAULT_EVERY = 17     # strata between breaks — rarer than folds by design
 FAULT_THROW = 0.055  # slip, as a fraction of frame height
-FAULT_ZONE = 8       # A fault cuts; it does not bend. Until 0070 the throw was smeared
+FAULT_ZONE = 0.0098       # A fault cuts; it does not bend. Until 0070 the throw was smeared
                      # over 26px — three bed-thicknesses at the current column — so every
                      # bed bent continuously through it and the result was a monocline
                      # that the renderer, the README and INTENT all called a fault. A
@@ -294,7 +299,7 @@ def fault_episodes(strata, W, H):
         down_right = (len(out) % 2 == 0)
         prof = []
         for x in range(W + 1):
-            t = (x - at) / FAULT_ZONE
+            t = (x - at) / (FAULT_ZONE * H)
             t = 0.0 if t < 0 else (1.0 if t > 1 else t)
             k = t * t * (3 - 2 * t)             # same smoothstep the folds use
             prof.append(throw * (k if down_right else 1 - k))
@@ -340,7 +345,7 @@ def fault_offset(faults, i, x):
     return total
 
 
-def competence(s):
+def competence(s, H):
     """How stiffly a bed answers the same deformation — fine grain is weak.
     Without this every bed between two episodes took an identical displacement
     and adjacent contacts were parallel copies. See stratum 039."""
@@ -349,7 +354,7 @@ def competence(s):
     soft = min(1.0, max(0.0, (s["grain"] - 1.0) / 1.2))
     jitter = (c() - 0.5) * 0.2
     return {"amp": 1 + COMPETENCE * (0.5 - soft + jitter),
-            "lag": round(LAG * (soft - 0.5 + jitter))}
+            "lag": round(LAG * H * (soft - 0.5 + jitter))}
 
 
 def episode_weight(n, i):
@@ -587,7 +592,7 @@ def render(W, H, dark):
         noise = boundary_fn(s, W, H, col[idx]["ratio"], damp)
         a = altered(s, col[idx]["burial"], target)
         weights = [episode_weight(e["n"], idx + 1) for e in episodes]
-        comp = competence(s)
+        comp = competence(s, H)
 
         def warped(x, comp=comp, weights=weights):
             sx = 0 if x + comp["lag"] < 0 else (W if x + comp["lag"] > W else x + comp["lag"])
