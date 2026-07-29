@@ -456,6 +456,41 @@ def check_surface_against_sky(strata, floor=45.0):
     return msg
 
 
+def check_frame_headroom(strata, H=400, floor_px=1.2, warn=100):
+    """How many more beds before the oldest one is pushed off the top?
+
+    003's founding claim is that the column asymptotes rather than filling, so
+    the number of iterations it can accept is unbounded. That is true of the
+    *modelled* column — `FILL_MAX` caps it at 95% of the frame forever — and
+    false of the drawn one, which nobody had checked until 0099.
+
+    The clamp that keeps a bed visible, `max(1.2, h * H * 0.22)`, imposes a
+    floor the asymptote cannot see. Once every bed is on that floor the stack
+    grows linearly at 1.2px per bed no matter what the model says, and the top
+    of the column climbs out of the frame. Two mechanisms, each correct, whose
+    composition breaks the oldest invariant here — the same shape as 0055's
+    polarity meeting 0080's reactivation.
+
+    Measured at 0099, by projecting the column forward and bisecting:
+
+        H=820   684 beds   ~17 days at this cadence
+        H=560   460 beds   ~12 days
+        H=400   357 beds    ~9 days     <- a phone in portrait
+
+    Reported against H=400 because the limit falls fastest there and a viewer
+    on a phone meets it first. Advisory until it is close; there is nothing to
+    fix yet, and the fix when it comes is a design decision — crop, scroll, or
+    let the deep past leave the frame — not a repair.
+    """
+    fillable = preview.FILL_MAX * H
+    ceiling = int(fillable / floor_px)
+    left = ceiling - len(strata)
+    msg = (f"frame headroom at H={H}: about {left} more beds before the oldest "
+           f"leaves the frame ({len(strata)} of ~{ceiling}); the asymptote does "
+           f"not bound the drawn column, the {floor_px}px clamp does — see 0099")
+    return msg, left <= warn
+
+
 def check_snapshot_current():
     """Was `strata/latest.png` refreshed with the most recent deposit?
 
@@ -874,6 +909,11 @@ def main():
 
     print("note  " + check_surface_against_sky(live))
     print("note  " + check_depth_contrast(live))
+
+    head, near = check_frame_headroom(live)
+    print("note  " + head)
+    if near:
+        todo.append("frame headroom running out")
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)

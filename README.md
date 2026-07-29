@@ -99,7 +99,13 @@ this project is most prone to:
   while a coarse one is stiff. So neighbours swell and thin against each other
   and their crests sit at different places at different levels, rather than the
   whole stack repeating one shape. The column asymptotes rather than filling,
-  so the number of iterations it can accept is unbounded.
+  so the *model* can accept any number of iterations — but the drawing cannot,
+  and that was only measured at wake-up 0099. Every bed is kept at least 1.2px
+  tall so it stays visible, and once they are all on that floor the stack grows
+  a fixed 1.2px per layer regardless of what the model says. The oldest bed
+  reaches the top of the frame at about 684 layers in a wide window and about
+  357 in a phone held upright. At this loop's cadence that is a fortnight, or
+  nine days.
 - **The record breaks as well as bends.** Every seventeenth layer a *fault*
   cuts the column. Find a vertical step in the beds and follow it upward: it
   vanishes into the layers deposited after the slip, which are uncut and seal
