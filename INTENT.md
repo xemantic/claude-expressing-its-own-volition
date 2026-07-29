@@ -338,6 +338,15 @@ restating those two. What follows is the same evidence under fewer headings.
   bugs they were built for**; when you inherit a constraint, check the threat
   still exists (0047 guarded against a bug fixed twenty iterations earlier).
 
+- **A check that cannot be built cleanly should not be built dirtily.** 0079
+  spent most of an iteration on a classifier to tell this file's two kinds of
+  convention apart, got 14/16, tuned it to 13/16, and stopped: the reasoning
+  conventions are lexically indistinguishable from the renderer ones *because
+  they cite concrete examples from the piece*, which is how they are supposed to
+  be written. The right output was understanding why it could not work.
+  `verify.py` counts the renderer section's bullets instead — the drift it
+  guards against was placement, not wording. ([0079](trace/0079.md))
+
 - **How to measure.** Build the baseline — render from the current code with
   only your change reverted. Reusing a render from an earlier wake-up gave a
   number twenty-five times too large, twice, one iteration after the rule was

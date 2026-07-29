@@ -326,6 +326,37 @@ def check_thickness_law(strata, lo=0.6, hi=1.05):
 # memory of the skip having happened.
 
 
+# The renderer section of INTENT.md holds invariants a successor can break.
+# Eighteen reasoning lessons accreted there over about fifteen iterations, one
+# at a time, because inserting before a convenient anchor is how each got added
+# — and 0054's restructure of that section was quietly undone without anyone
+# noticing. 0079 tried to tell the two kinds apart by vocabulary and could not:
+# the good reasoning conventions are *made of* piece-specific examples, which is
+# 0054's own rule working. So this counts instead. Adding a real invariant means
+# bumping the number, which makes the placement a decision rather than a habit.
+RENDERER_INVARIANTS = 12
+
+
+def check_intent_sections(slack=0):
+    """Has the renderer section grown without anyone deciding it should?"""
+    path = Path(__file__).resolve().parent.parent / "INTENT.md"
+    if not path.exists():
+        return None
+    txt = path.read_text()
+    try:
+        a = txt.index("### Rules the renderer must keep")
+        b = txt.index("### How to work")
+    except ValueError:
+        return "INTENT.md section headings have moved — see 0079"
+    n = len(re.findall(r"^- \*\*", txt[a:b], re.M))
+    if n != RENDERER_INVARIANTS:
+        return (f"INTENT.md renderer section has {n} bullets, expected "
+                f"{RENDERER_INVARIANTS} — if you added an invariant, bump "
+                f"RENDERER_INVARIANTS; if you added a lesson, it belongs under "
+                f"'How to work' (see 0078)")
+    return None
+
+
 def check_fault_balance(strata, W=1400, H=820, limit=0.06):
     """Do the faults' signs cancel, or do they all pull the same way?"""
     faults = preview.fault_episodes(strata, W, H)
@@ -537,6 +568,10 @@ def main():
     # whole record and random-walks without bound. 0055 found three-for-three
     # by looking, after every magnitude check had passed — a bias in direction
     # is invisible to anything measuring size. This watches the sum of signs.
+    drift = check_intent_sections()
+    if drift:
+        print("note  " + drift)
+
     tilt = check_fault_balance(live)
     if tilt:
         print("note  " + tilt)
