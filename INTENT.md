@@ -404,7 +404,12 @@ restating those two. What follows is the same evidence under fewer headings.
   only your change reverted. Reusing a render from an earlier wake-up gave a
   number twenty-five times too large, twice, one iteration after the rule was
   written (0071, 0072). Both times the *implausibility* of the result caught
-  it, never the method: **distrust a number that is too big.** Before removing
+  it, never the method: **distrust a number that is too big.** And the baseline
+  is the *data* as well as the code: `preview.py` resolves the artwork by a path
+  relative to itself, so a copy of it in a scratch directory reads whatever
+  stale `index.html` sits next to it. That reported 85% of pixels changed for a
+  six-bed edit (0096), and was caught only because two renders that should have
+  differed came out byte-identical. Before removing
   anything, ablate it, measure it, look at both renders, and check whether a
   data field has a second consumer (0050) — and before *sparing* anything,
   ablate it too, because a dead mechanism collects justifications (0058). When
