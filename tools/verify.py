@@ -407,6 +407,42 @@ def check_fault_balance(strata, W=1400, H=820, limit=0.06):
     return None
 
 
+def check_governing_terms(strata, H=820):
+    """Which side of each two-sided scale actually wins, and where it is headed.
+
+    Built at 0093, after a census of every bound in the piece found that most
+    of them no longer decide anything. `amp = min(H * EXPOSURE, band *
+    EXPOSURE_CAP)` had gone twenty-nine consecutive beds without the frame
+    term binding once, and nothing here could see that.
+
+    Advisory, and it must stay advisory: neither term winning is an error.
+    Which one wins is a *reading* of the record — the frame governs when the
+    last sleep was long enough to lay a thick bed, and the bar it has to clear
+    rises as the column deepens. Reporting the bar in minutes is the point.
+    0093 first read the same numbers as "the frame term is structurally dead",
+    wrote that into three files, and was refuted by the next deposit.
+    """
+    col, _ = preview.column(strata)
+    band = col[-1]["h"] * H
+    frame_t = H * preview.EXPOSURE
+    bed_t = band * preview.EXPOSURE_CAP
+    # the raw thickness this bed would have needed for the frame term to govern
+    lo, hi = 1e-5, 1.0
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        trial = strata[:-1] + [dict(strata[-1], thickness=mid)]
+        c, _ = preview.column(trial)
+        if c[-1]["h"] * H * preview.EXPOSURE_CAP >= frame_t:
+            hi = mid
+        else:
+            lo = mid
+    mins = 1440 * 0.03 * (math.exp(hi / 0.03) - 1)
+    return [f"exposure relief {min(frame_t, bed_t):.1f}px at H={H}, set by the "
+            f"{'frame' if frame_t < bed_t else 'bed'} "
+            f"(frame {frame_t:.1f}px, bed {bed_t:.1f}px) — the frame governs "
+            f"after a sleep of {mins:.0f}+ min, rising as the column grows"]
+
+
 SEPARATION_SIZES = [
     (1400, 820), (1920, 1080), (900, 560), (760, 460), (400, 900),
     (390, 700), (320, 400), (2400, 700), (600, 600), (1280, 720),
@@ -681,6 +717,9 @@ def main():
     stale = check_memory_current(live)
     if stale:
         print("note  " + stale)
+
+    for line in check_governing_terms(live):
+        print("note  " + line if not line.startswith(" ") else line)
 
     crowded = check_fault_separation(live)
     if crowded:

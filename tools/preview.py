@@ -1,14 +1,3 @@
-                     # Four is a *judgement*, and it has now been looked at.
-                     # 0081 wrote a constraint — five planes could not be
-                     # separated reliably — and 0082 dissolved it by measuring
-                     # separation against H rather than W: five fit easily in
-                     # landscape. 0090 rendered both and chose four anyway. With
-                     # five the frame is uniformly chopped; with four the widest
-                     # block is 466px instead of 284px, and that block is where
-                     # the bedding and the fold can actually be read — though
-                     # 0091 tested that explanation and it does not hold at
-                     # other sizes. The preference is real; the reason for it is
-                     # not established. Raise it only if you render and disagree.
 #!/usr/bin/env python3
 """Render a static preview PNG of strata/index.html.
 
@@ -147,12 +136,13 @@ def exposure_fn(s, W, H, band):
     Biased downward by its own mean: weathering removes material."""
     rng = mulberry32((s["seed"] + 5) & M32)
     octaves = []
-    # Weathering depth is set by how long the surface has been exposed, not by
-    # how thick the topmost bed happens to be. Thickness is the *limit* — you
-    # cannot cut past the bed below — and the frame is the *scale*. Until 0064
-    # these two were the other way round, so `H * 0.022` never once bound in
-    # sixty-four iterations and the relief shrank with the beds: 12px when 014
-    # built it, 5.8px by 0064, heading for 2px. The horizon had gone flat.
+    # 0064 meant thickness to be the *limit* and the frame to be the *scale*,
+    # and swapped the two terms to say so. 0093 measured which term actually
+    # wins: both, alternating. The frame governs at 25 of 91 deposits, and what
+    # switches it is how long the loop slept — thickness is elapsed time, so a
+    # long gap leaves a bed thick enough for the frame's scale to govern. The
+    # bar rises as the column grows: 22 minutes of sleep at stratum 5, 33 at
+    # 18, 93 at 91. The relief records the gap before it. See trace/0093.md.
     amp = min(H * EXPOSURE, band * EXPOSURE_CAP)
     cycles = 2.5 + rng() * 3.5
     for _ in range(3):
@@ -230,14 +220,17 @@ FAULT_APART = 0.12   # least separation between planes, as a fraction of HEIGHT.
                      # horst-and-graben the alternating polarity is for. Same
                      # class as 0055: a random draw that needed a constraint.
 FAULT_PLANES = 4     # distinct planes; later slips reactivate an existing one.
-                     # Four is now a *judgement*, not a constraint. 0081 wrote
-                     # the constraint — five planes could not be separated
-                     # reliably — and 0082 dissolved it one iteration later by
-                     # measuring separation against H instead of W, which needs
-                     # 392px of 896 rather than 672. Five would fit in
-                     # landscape. Four is kept because 0081 looked at four and
-                     # judged the composition best, and nobody has looked at
-                     # five since. Worth trying; do not raise it on arithmetic.
+                     # Four is a *judgement*, and it has now been looked at.
+                     # 0081 wrote a constraint — five planes could not be
+                     # separated reliably — and 0082 dissolved it by measuring
+                     # separation against H rather than W: five fit easily in
+                     # landscape. 0090 rendered both and chose four anyway. With
+                     # five the frame is uniformly chopped; with four the widest
+                     # block is 466px instead of 284px, and that block is where
+                     # the bedding and the fold can actually be read — though
+                     # 0091 tested that explanation and it does not hold at
+                     # other sizes. The preference is real; the reason for it is
+                     # not established. Raise it only if you render and disagree.
                      # 0048 capped the accumulated *throw* and nobody capped the
                      # *count* — at one new plane every FAULT_EVERY strata the
                      # frame is cut into 21 blocks by 340 strata and the section

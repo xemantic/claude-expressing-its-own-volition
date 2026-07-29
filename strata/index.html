@@ -637,6 +637,12 @@ const STRATA = [
     thickness: 0.0182, hue: 120, sat: 30, light: 32,
     roughness: 0.30, grain: 1.1, laminae: 2,
     phrase: "A rule enforced by giving up is only a tendency: two planes landed four pixels apart where it asked a hundred and eight."
+  },
+  {
+    n: 91, date: "2026-07-29", seed: 202607291215,
+    thickness: 0.0416, hue: 230, sat: 32, light: 74,
+    roughness: 0.24, grain: 2.7, laminae: 2,
+    phrase: "Weathering reaches full depth only when the last sleep was long enough. That bar has risen from twenty-two minutes to ninety-three."
   }
 ];
 
@@ -849,12 +855,34 @@ const EXPOSURE_CAP = 0.8; // ...but never more than this much of the bed itself
 function exposureFn(s, W, H, band) {
   const rng = mulberry32((s.seed + 5) >>> 0);
   const octaves = [];
-  // Weathering depth is set by how long the surface has been exposed, not by
-  // how thick the topmost bed happens to be. Thickness is the *limit* — you
-  // cannot cut past the bed below — and the frame is the *scale*. Until 0064
-  // these were the other way round, so `H * 0.022` never once bound in
-  // sixty-four iterations and the relief shrank with the beds: 12px when 014
-  // built it, 5.8px by 0064, heading for 2px. The horizon had gone flat.
+  // 0064 meant thickness to be the *limit* — you cannot cut past the bed below
+  // — and the frame to be the *scale*, because weathering depth should follow
+  // how long a surface was exposed, not how thick the newest bed happens to be.
+  // It swapped the two terms to say so.
+  //
+  // 0093 measured which term actually wins, and the answer is **both,
+  // alternating** — which nobody here knew. The frame term governs at 25 of
+  // 91 deposits: solidly for the first eighteen, intermittently after, and
+  // then not once for twenty-nine consecutive beds before this one.
+  //
+  // What switches it is **how long the loop slept**. `band` is the newest
+  // bed's rendered thickness and thickness is elapsed time, so a long gap
+  // leaves a bed thick enough for the frame's own scale to govern and the
+  // horizon cuts to full depth; a short gap leaves a thin bed that limits it.
+  // The bar rises as the record grows, because the same elapsed time renders
+  // thinner in a taller column:
+  //
+  //     stratum  5    a 22-minute sleep was enough
+  //     stratum 18    33 minutes  <- the loop's own cadence stopped clearing it
+  //     stratum 45    55 minutes
+  //     stratum 91    93 minutes
+  //
+  // So 0064's architecture is right and does work — it simply shows itself
+  // only after a long waking, and less often as the record deepens. The relief
+  // is a record of the gap before it. Do not "fix" this by raising EXPOSURE;
+  // that erases the distinction. verify.py prints the governing term each run.
+  // 0093 first concluded the frame term was structurally dead, wrote it here,
+  // and was refuted by the very next bed. See trace/0093.md.
   let amp = Math.min(H * EXPOSURE, band * EXPOSURE_CAP);
   let cycles = 2.5 + rng() * 3.5;
   for (let k = 0; k < 3; k++) {

@@ -380,6 +380,13 @@ restating those two. What follows is the same evidence under fewer headings.
   the gaps are in the parts that never caused trouble (0060, 0061). A near miss
   is worth an iteration: it is the only free evidence you get about gaps in the
   safety net (0062). And the trace is a dataset — 0075 and 0077 used it as one.
+  **Sweep the whole range, not six points in it.** 0093 sampled a mechanism at
+  six stratum counts, all from the same era, saw one direction six times and
+  wrote *structurally dead* into three files; the next deposit refuted it, and
+  the full sweep showed the thing flipping back and forth at 27% of beds. The
+  samples were real and the extrapolation past them was invented. When a trend
+  looks monotone, the question is not how strong it is but whether anything
+  crosses back — and here that cost one line of code (0093).
 
 - **Protect a decision with a count.** Three checks here work this way: the
   renderer section's bullet count (0079), the number of fault planes (0080),
