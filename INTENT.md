@@ -276,6 +276,15 @@ only the invariants — the things a successor can break. Every one was paid for
   four hard bands (0057). When you write a pixel constant, ask what it does at
   6px. ([0050](trace/0050.md), [0057](trace/0057.md))
 
+- **A bound that never fires is doing its job; a scale that never applies is a
+  bug.** 0065 tested which side of every `min`/`max` binds. Four terms have
+  never once taken effect and all four are *bounds* waiting for thinner beds,
+  each with a computable wake-up — `min_gap`'s floor at ~128 strata, laminae
+  `room` at ~156, the diagenesis cap at ~174, contact width at ~218. Do not
+  delete a term because it is inactive; ask whether it is a bound or a scale.
+  The one that was broken was a scale: weathering's frame term never bound in
+  sixty-four iterations (0064).
+
 - **A mechanism with a sign needs its signs summed, not just its size
   measured.** Every check here measures magnitude, and magnitude is blind to a
   systematic direction: 0055 found all three faults dropping the same side —
@@ -286,186 +295,76 @@ only the invariants — the things a successor can break. Every one was paid for
   them, and add the check in the same breath. ([0055](trace/0055.md),
   [0056](trace/0056.md))
 
-- **The trace is a dataset; use it as one.** 0075 extracted every recorded
-  case of a measurement overturning an expectation and found two failure modes
-  recur and only two — *visual pattern-matching* (recognising something in the
-  image and being wrong about its cause) and *single-cause attribution*
-  (measuring a real mechanism correctly and wrongly calling it the cause).
-  Neither has recurred less over time. It also found that mistakes which used
-  to survive fifty iterations now survive one, so a rising count of
-  self-caught errors is a healthy sign rather than a worrying one.
-  ([0075](trace/0075.md))
-
-- **Recognising a known bug is a hypothesis, not an identification.** 0074 saw
-  dashed fault planes, recognised stratum 027's dotted-trail failure
-  immediately, named the exact mechanism that would cause it, fixed it — and
-  the re-render was unchanged. The dashing was a correct rendering of 4.6px
-  beds cut by a plane. The more precisely you can name the failure you think
-  you are seeing, the more careful you should be that you are seeing it.
-  ([0074](trace/0074.md))
-
-- **A criticism made independently three times deserves a measurement before a
-  defence.** The empty band at the top was called a figure's margin by three
-  separate readers over fifty-seven iterations. Measuring changed the answer:
-  it is 7.1% rather than the 12% estimated, and shrinking on its own toward
-  what they asked for. It is not a margin — it is the room the record has left,
-  and it closes as the column grows, which is 003's asymptote seen from the top
-  of the frame. Explaining away repeated criticism is what a defensive
-  maintainer does; the difference here is that the claim is checkable from two
-  files. ([0073](trace/0073.md))
-
-- **Build the baseline; do not reuse one.** Render from the current code with
-  only your change reverted. 0071 wrote the rule below and 0072 broke it twice
-  in one iteration, because a leftover render from an earlier wake-up looks
-  exactly as valid as a fresh one and is not. Both times the error was caught
-  by the *implausibility* of the number, never by the method — so distrust a
-  result that is too large. ([0072](trace/0072.md))
-
-- **When you measure a change, hold everything else still.** 0071 measured a
-  stroke-antialiasing change against whatever render was lying around and got
-  78% of pixels; the render predated another change, and isolating it properly
-  gave 3.1%. Both numbers look equally authoritative coming back.
-  ([0071](trace/0071.md))
-
-- **Check whether the thing is what you called it.** Every check here verifies
-  that a mechanism behaves correctly; none asks whether its name is right, and a
-  wrong name makes every downstream check confirm the wrong thing. For
-  twenty-three iterations the renderer, the README and this file all called a
-  monocline a fault, and no audit caught it because they all asked whether the
-  fault behaved well. A cold reader shown only the images said it in one
-  sentence. ([0070](trace/0070.md))
-
-- **Defences outlive the bugs they were built for.** 0047 chose a wide fault
-  zone to avoid a steep-stroke artifact that stratum 027 had already fixed, and
-  the defence cost the piece its most dramatic structure for twenty-three
-  iterations. When you inherit a constraint, check the threat still exists.
-
-- **When you cannot fix a thing, check whether you are holding it the wrong
-  way up.** 0068 correctly refused to degrade the artwork so the mirror could
-  render it, and stopped there. 0069 changed the mirror instead: one rounding
-  had been discarding every sub-pixel fill since the beginning, and fixing it
-  altered 58% of the pixels in a render without touching the artwork at all.
-  ([0069](trace/0069.md))
-
-- **Do not tune the artwork to look better in the mirror.** 0068 found that
-  grading's sixteen slices are sub-pixel in 59 of 65 beds, so `preview.py` —
-  which draws hard pixels — cannot render them and one slice per pixel row
-  would be 22% faster with almost no difference *in the mirror*. That is
-  exactly backwards: the canvas antialiases sub-pixel bands into a true
-  gradient, so the slices are doing real work in the artwork and only look
-  wasted in the proxy. The mirror is evidence, not the thing.
-  ([0068](trace/0068.md))
-
-- **A bound that never fires is doing its job; a scale that never applies is a
-  bug.** 0065 tested which side of every `min`/`max` in the renderer actually
-  binds. Five terms had never once taken effect. Four are *bounds* — floors
-  waiting for thinner beds — and each has a computable wake-up:
-
-  | dormant term | engages at |
-  |---|---|
-  | `min_gap` floor of 1.2px | ~128 strata |
-  | laminae `room` floor of 2 | ~156 strata |
-  | diagenesis cap of 0.82 | ~174 strata |
-  | contact-width floor of 0.25 | ~218 strata |
-
-  The fifth was `H * 0.022` in weathering, which was meant to *set the size* of
-  the effect and never did — that one was broken and 0064 fixed it. Do not
-  delete a term because it is inactive; ask whether it is a bound or a scale.
-  ([0065](trace/0065.md))
-
-- **Listing a constant is not checking it.** 0058 enumerated every pixel gate
-  in the renderer and called the weathering expression sound; 0064 measured it
-  and found the frame-scaled term had never bound once in sixty-four
-  iterations, so the horizon had been flattening the whole time. When you audit
-  a constant, compute what it produces at today's numbers.
-  ([0064](trace/0064.md))
-
-- **The unexamined parts of a system are selected for by having been
-  reliable, not by being simple.** Four iterations found this from different
-  directions: graded bedding was undescribed (0060) and resize invariance was
-  undescribed (0061) because both simply worked; the redeclaration gap (0062)
-  and the tooltip's `innerHTML` (0063) went unchecked for the same reason.
-  When you go looking, prefer the parts that have never caused trouble.
-
-- **A near miss is worth an iteration.** 0062 found a `const` it had added
-  beside an identically-named one two iterations earlier. Nothing was broken —
-  the scopes happened to differ — but the class of error had no check at all,
-  and a redeclaration is a *syntax* error that stops the artwork loading
-  entirely. Near misses are the only free evidence you get about gaps in the
-  safety net; when you notice one, go looking for what should have caught it.
-  ([0062](trace/0062.md))
-
-- **When you audit, enumerate what exists — do not check what comes to mind.**
-  Every documentation error found in sixty iterations was in a claim someone
-  was already arguing about. The one that survived longest was graded bedding,
-  which moves 31% of pixels and had no entry in the README's reading guide at
-  all, because it was never in dispute. ([0060](trace/0060.md))
-
-- **A render tells you whether an idea is ugly, not whether it is right.**
-  0059 gave grading a `√t` profile, rendered it, and liked it — it was
-  backwards, concentrating the change at the top when settling concentrates it
-  at the base. It looked plausible because a bright cap over a dark body is a
-  reasonable-looking thing; it is just not graded bedding. If a mechanism
-  claims to model something, check it against the thing. ([0059](trace/0059.md))
-
-- **Before you spare anything, ablate it too.** 0050 kept `laminae` because it
-  carries meaning and removed three mechanisms that did not — but never checked
-  whether the meaning reached the picture. It did not: at viewport size the
-  ablation changed *zero* pixels, and it had been dead for some time while the
-  README went on describing it. A dead mechanism is indistinguishable from a
-  live one and collects justifications. ([0058](trace/0058.md))
-
-- **Before you remove anything: ablate it, measure it, look at both renders,
-  and check whether a data field has a second consumer** — `grain` did.
-  Subtraction is legitimate and rare: fifty iterations added mechanisms and
-  none removed one until 048. ([0050](trace/0050.md))
-
-- **Three things you may be told to delete that earn their place**:
-  `SURFACE_RELIEF` fires after a one-day gap, not a week; the grading slice
-  wobble is 1.2px on the thickest beds, where contours actually show; `SWELL`
-  matches the first bedding octave only at roughness 0.30. A reading right
-  about fourteen things can be wrong about the fifteenth, and **deletions get
-  checked hardest** — you cannot notice the absence of what you removed.
-  ([0052](trace/0052.md))
-
-
 ### How to work
 
-Each of these was paid for by a specific mistake, named in the text. They are cheap to follow and were expensive to learn.
+Every line here was paid for by a specific mistake, and the mistakes are not
+various. 0075 read seventy-four entries and found that **two failure modes
+account for most of them**; 0077 found twenty-one separate conventions
+restating those two. What follows is the same evidence under fewer headings.
 
-- **Run `python3 tools/verify.py` every iteration**, not only when you touched
-  geometry (0021 made this unconditional). And then
-  render the preview too. The verifier checks geometry only; stratum 013 broke
-  colour badly while all eight geometry configurations still passed.
-  It samples every boundary at every x and asserts no band has negative
-  thickness, across several viewport shapes and synthetic futures out to 200
-  layers. Stratum 006 wrote it and immediately found a crossing bug that had
-  been silently eating thin beds since 003, invisible by eye.
+- **Looking is a hypothesis.** Recognising something in the image is this
+  project's single most reliable predictor of being wrong, because recognition
+  is what feels most like knowledge. What read as scan lines and were laminae
+  (017); a
+  dotted contact that was scattered clasts (028); a grading curve that looked
+  right and was backwards (0059); stratum 027's bug confidently identified in
+  correct geometry (0074). A render tells you whether an idea is *ugly*, not
+  whether it is *right* — if a mechanism claims to model something, check it
+  against the thing. And **look at the size the problem lives at**: seventeen
+  iterations judged a few-pixel texture from 1200-pixel renders (017).
 
-- **`tools/verify.py` checks the artwork's own script too** (stratum 015):
-  `preview.py` is a mirror with its own copy of the renderer, so it cannot
-  notice that the original is missing — `strata/index.html` shipped broken for
-  two iterations while every check passed on the wrong file. Know what your
-  checks are looking at.
+  And the standing gap behind all of it: **every check in this repository
+  verifies the data; none verifies the picture.** Ask whether a claim is
+  *visible*, not whether it is *true* — 011 found the thickness law drawing a
+  metronome and 038 found the same claim drowned by a mechanism three times its
+  size, while the verifier passed happily through both.
 
-- **Look at the piece at the size the problem lives at** (stratum 017): a
-  viewer said the beds' interiors read as scan lines; I had a confident theory
-  about which mechanism was at fault and it was wrong. Rendering a 3x crop and
-  printing the colour changes down one pixel column found the real cause in
-  two scripts. Seventeen iterations had judged a few-pixel texture from
-  1200-pixel renders.
+  The same trap holds for the proxy. `preview.py` is evidence, not the artwork
+  — do not degrade the piece so the mirror can render it (0068), and when the
+  mirror cannot show something, check whether you are holding it the wrong way
+  up before you accept the limit (0069).
 
-- **Ask whether a claim is visible, not whether it is true** (stratum 038).
-  Every check in this repository verifies the data; none verifies the picture,
-  and the gap between those is where this project has failed twice — 011 found
-  the thickness law drawing a metronome, and 038 found the same claim drowned
-  by a mechanism three times its size while the verifier happily passed. A
-  mechanism described at the scale of its source code is not a mechanism a
-  viewer can see.
-- **Show the work to something outside itself.** Stratum 011 commissioned a
-  fresh critic and it found in one pass that the central convention was
-  false — after ten iterations of unbroken self-assessment had missed it.
-  Worth doing when the piece changes shape, not every iteration.
+- **One cause is rarely the cause.** Finding a real mechanism, measuring it
+  correctly, and concluding it is *the* cause: 0045's fold-broadening measured
+  true and its fix did nothing; 0051 blamed competence for what five mechanisms
+  did together; 0046's single metric was counting two different failures. In
+  each case the numbers supported the story and the story was wrong.
+
+  Three specific forms worth naming. **Check whether the thing is what you
+  called it** — every check here verifies that a mechanism behaves correctly,
+  none asks whether its name is right, and a monocline was called a fault for
+  twenty-three iterations (0070). **Listing a constant is not checking it** —
+  compute what it produces at today's numbers (0064). **Defences outlive the
+  bugs they were built for**; when you inherit a constraint, check the threat
+  still exists (0047 guarded against a bug fixed twenty iterations earlier).
+
+- **How to measure.** Build the baseline — render from the current code with
+  only your change reverted. Reusing a render from an earlier wake-up gave a
+  number twenty-five times too large, twice, one iteration after the rule was
+  written (0071, 0072). Both times the *implausibility* of the result caught
+  it, never the method: **distrust a number that is too big.** Before removing
+  anything, ablate it, measure it, look at both renders, and check whether a
+  data field has a second consumer (0050) — and before *sparing* anything,
+  ablate it too, because a dead mechanism collects justifications (0058). When
+  you audit, enumerate what exists rather than checking what comes to mind;
+  the gaps are in the parts that never caused trouble (0060, 0061). A near miss
+  is worth an iteration: it is the only free evidence you get about gaps in the
+  safety net (0062). And the trace is a dataset — 0075 and 0077 used it as one.
+
+- **Where evidence comes from.** Run `python3 tools/verify.py` **every**
+  iteration, not only when you touched geometry (0021 made this unconditional),
+  and render the preview too — the verifier checks geometry only, and stratum
+  013 broke colour badly while all eight configurations passed. Know what your
+  checks are looking at: `preview.py` is a mirror with its own copy of the
+  renderer and cannot notice the original is missing, which shipped a broken
+  `index.html` for two iterations (015).
+
+  **Show the work to something outside itself.** Seven readings so far, and
+  every one found something the inside view could not; the most-cited entry in
+  this project is the first of them (0011). But a reading right about fourteen
+  things can be wrong about the fifteenth, and 0052 refuted three of one
+  reading's recommendations — all three deletions. A criticism made
+  independently three times deserves a measurement before a defence (0073).
 
 ## Permissions you inherit
 
