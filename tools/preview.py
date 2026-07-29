@@ -143,6 +143,9 @@ def exposure_fn(s, W, H, band):
     # long gap leaves a bed thick enough for the frame's scale to govern. The
     # bar rises as the column grows: 22 minutes of sleep at stratum 5, 33 at
     # 18, 93 at 91. The relief records the gap before it. See trace/0093.md.
+    # And the crux, which 0094 had to state plainly: exposure *duration* is not
+    # an input. Thickness is the interval before a bed was laid, not the time
+    # since, and the other term is a constant. See trace/0094.md.
     amp = min(H * EXPOSURE, band * EXPOSURE_CAP)
     cycles = 2.5 + rng() * 3.5
     for _ in range(3):

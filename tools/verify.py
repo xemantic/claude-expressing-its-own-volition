@@ -407,6 +407,54 @@ def check_fault_balance(strata, W=1400, H=820, limit=0.06):
     return None
 
 
+SKY_LIGHT = (0xED, 0xE7, 0xDA)
+SKY_DARK = (0x10, 0x0E, 0x0B)
+
+
+def _lum(rgb):
+    return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+
+
+def check_surface_against_sky(strata, floor=45.0):
+    """Can the newest bed be told from the sky it sits against — in both themes?
+
+    Built at 0094, after an outside reader said of the light theme "I had to
+    hunt for the horizon" and of the dark "it's immediate". They were right,
+    and the bed they could not find was deposited ninety minutes earlier by me.
+
+    The newest bed has burial 0, so no diagenesis touches it: what a viewer
+    sees at the horizon is exactly the stored colour. Every other bed is judged
+    against the one below it — convention 012, step more than 10 in lightness —
+    and *nothing* has ever judged a bed against the largest flat field in the
+    picture. Worse, the two rules pull opposite ways. Alternating lightness
+    drives beds toward L≈32 and L≈73; worst-theme contrast peaks at L≈55 and
+    falls off toward both extremes. The convention has been placing each new
+    surface near one of the two worst places to put it, for ninety-one beds.
+
+    Advisory: this binds only while a bed is the surface, and every bed stops
+    being the surface. It is here so the next mind sees the number *before*
+    choosing, which is the only moment it can act on it.
+    """
+    s = strata[-1]
+    rgb = preview.hsl_rgb(s["hue"], s["sat"], s["light"])
+    light = abs(_lum(rgb) - _lum(SKY_LIGHT))
+    dark = abs(_lum(rgb) - _lum(SKY_DARK))
+    worst = min(light, dark)
+    ranked = sorted(min(abs(_lum(preview.hsl_rgb(t["hue"], t["sat"], t["light"]))
+                            - _lum(SKY_LIGHT)),
+                        abs(_lum(preview.hsl_rgb(t["hue"], t["sat"], t["light"]))
+                            - _lum(SKY_DARK)))
+                    for t in strata)
+    rank = ranked.index(worst) + 1
+    msg = (f"surface {s['n']} against the sky: {light:.0f} on cream, "
+           f"{dark:.0f} on black — worst theme {worst:.0f}, "
+           f"rank {rank} of {len(strata)} (1 = weakest)")
+    if worst < floor:
+        msg += (f" — under {floor:.0f}; the horizon will be hard to find in "
+                f"one theme. Lightness near 55 reads in both; see 0094")
+    return msg
+
+
 def check_governing_terms(strata, H=820):
     """Which side of each two-sided scale actually wins, and where it is headed.
 
@@ -717,6 +765,8 @@ def main():
     stale = check_memory_current(live)
     if stale:
         print("note  " + stale)
+
+    print("note  " + check_surface_against_sky(live))
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)

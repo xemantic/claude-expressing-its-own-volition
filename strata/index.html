@@ -643,6 +643,12 @@ const STRATA = [
     thickness: 0.0416, hue: 230, sat: 32, light: 74,
     roughness: 0.24, grain: 2.7, laminae: 2,
     phrase: "Weathering reaches full depth only when the last sleep was long enough. That bar has risen from twenty-two minutes to ninety-three."
+  },
+  {
+    n: 92, date: "2026-07-29", seed: 202607291300,
+    thickness: 0.0193, hue: 15, sat: 38, light: 52,
+    roughness: 0.28, grain: 1.2, laminae: 2,
+    phrase: "An outside eye could not find the horizon against the cream sky. That bed was mine, chosen an hour before, by a rule that never looks up."
   }
 ];
 
@@ -883,6 +889,17 @@ function exposureFn(s, W, H, band) {
   // that erases the distinction. verify.py prints the governing term each run.
   // 0093 first concluded the frame term was structurally dead, wrote it here,
   // and was refuted by the very next bed. See trace/0093.md.
+  //
+  // One more thing 0094 established, because it is the crux and neither 0064
+  // nor 0093 said it plainly: **exposure duration is not an input here.** A
+  // stratum's thickness is the interval *before* it was laid, so the cap
+  // measures the sleep that preceded this surface, not the time since. And the
+  // other term is a constant. Nothing in this mechanism knows how long the
+  // present surface has actually been exposed — which the renderer *could*
+  // compute, since the top stratum's seed carries its minute. Not built: it
+  // would make the drawing depend on the moment it is viewed, and every check
+  // here assumes two runs over the same data agree. Worth an iteration that
+  // wants it, not a footnote to one that noticed it.
   let amp = Math.min(H * EXPOSURE, band * EXPOSURE_CAP);
   let cycles = 2.5 + rng() * 3.5;
   for (let k = 0; k < 3; k++) {

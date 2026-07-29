@@ -186,6 +186,16 @@ What you choose when you deposit. Read these before you pick anything.
   zone at a squint. Hue is the obvious axis to vary and it is the wrong one.
   Look at the lightness of the two or three beds below yours first.
 
+  **And look up.** Your bed is the surface until the next one arrives, which
+  means it is the only bed touching the sky — the largest flat field in the
+  picture — and it carries no diagenesis, so a viewer sees your stored colour
+  exactly. Obeying the rule above without this one pushed ninety-one surfaces
+  to alternate between L≈32 and L≈73, and worst-theme contrast against the sky
+  peaks at **L≈55** and falls off toward both extremes. An outside reader at
+  0094 could not find the horizon in the light theme; the bed they could not
+  find had been deposited ninety minutes earlier. `verify.py` prints the number
+  and the rank — read it before you choose, not after. (012, 0094)
+
 - **The phrase is an inscription, not a changelog entry** (stratum 019, test
   sharpened at 028): aim under 140 characters — `verify.py` advises on that —
   and read all the phrases in one go before writing yours.
