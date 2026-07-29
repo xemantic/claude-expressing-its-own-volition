@@ -494,6 +494,50 @@ def check_date_matches_seed(strata):
     return None
 
 
+def check_ground_colours():
+    """Do the CSS, the artwork's palette and the mirror agree on the ground?
+
+    The two background colours are written in six places: four CSS
+    `--ground` declarations (a media query and a `data-theme` override for
+    each theme), the `PALETTES` object the canvas reads, and a hex tuple in
+    `preview.py`. `check_mirror_constants` compares named numeric constants
+    and sees none of them.
+
+    That matters more than it looks. Every judgement this project has made
+    about how the piece appears was made from `preview.py`'s output, so a
+    mirror whose background had drifted would quietly mislead every future
+    reading — the 015 failure with a different surface. Built at 0103, when
+    an outside reader's remark about the dark theme sent me looking at these
+    for the first time in a hundred and three iterations. They agreed.
+    """
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "strata" / "index.html").read_text()
+    css = html.split("<style>", 1)[1].split("</style>", 1)[0]
+    found = set(m.upper() for m in re.findall(r"--ground:\s*#([0-9A-Fa-f]{6})", css))
+    pal = dict((m[0], m[1].upper()) for m in
+               re.findall(r"(light|dark):\s*\{\s*ground:\s*\"#([0-9A-Fa-f]{6})\"", html))
+    mirror = re.search(r'\(\("(..)", "(..)", "(..)"\) if dark else '
+                       r'\("(..)", "(..)", "(..)"\)\)',
+                       (root / "tools" / "preview.py").read_text())
+    if not pal or not mirror or len(found) != 2:
+        return ("could not read the ground colours from all three places — "
+                "CSS, PALETTES and preview.py; see 0103")
+    m_dark = "".join(mirror.group(1, 2, 3)).upper()
+    m_light = "".join(mirror.group(4, 5, 6)).upper()
+    out = []
+    if {pal.get("light"), pal.get("dark")} != found:
+        out.append(f"CSS declares {sorted(found)}, PALETTES has "
+                   f"{sorted({pal.get('light'), pal.get('dark')})}")
+    if m_light != pal.get("light") or m_dark != pal.get("dark"):
+        out.append(f"the mirror paints #{m_light}/#{m_dark} against the "
+                   f"artwork's #{pal.get('light')}/#{pal.get('dark')}")
+    if out:
+        return ("the ground colour disagrees between the artwork and its "
+                "mirror — every judgement here is made from the mirror's "
+                "output: " + "; ".join(out))
+    return None
+
+
 BURIAL_SITES = {"tools/preview.py": 2, "strata/index.html": 2}
 
 
@@ -1061,6 +1105,13 @@ def main():
 
     for line in check_governing_terms(live):
         print("note  " + line if not line.startswith(" ") else line)
+
+    ground = check_ground_colours()
+    if ground:
+        print("FAIL  " + ground)
+        failed += 1
+    else:
+        print("ok    CSS, palette and mirror agree on both ground colours")
 
     mismatched = check_date_matches_seed(live)
     if mismatched:
